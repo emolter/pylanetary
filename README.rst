@@ -5,6 +5,16 @@ data processing and modeling tools for ring, moon, and planet observations
     :target: http://www.astropy.org
     :alt: Powered by Astropy Badge
 
+Scope and Goal
+--------------
+The idea behind pylanetary is to bring solar system science tools into the open-source Python 3 / Astropy ecosystem. We, and many of our colleagues, rely heavily on useful code snippets passed down from other solar system scientists. But these pieces of code are untested, in multiple languages (IDL, Python 2, etc.), closed-source, and have many untracked dependencies.
+
+At present, we are working on two main packages:
+1. model planet/moon ellipsoids with latitude-longitude grids, projecting those into arbitrary observing geometries and pixel scales, comparing those models with observational data, and projecting observational data onto lat-lon grids;
+2. model ring systems, projecting those into arbitrary observing geometries and pixel scales, and comparing those models with observational data
+
+The eventual goal is to become Astropy-affiliated, but that is a long way off.
+At present, this repository is just a skeleton. We would love your help developing it!  See Contributing.
 
 License
 -------
@@ -19,7 +29,7 @@ more information.
 Contributing
 ------------
 
-We love contributions! planetary_toolkit is open source,
+We love contributions! pylanetary is open source,
 built on open source, and we'd love to have you hang out in our community.
 
 **Imposter syndrome disclaimer**: We want your help. No, really.
@@ -45,5 +55,5 @@ the errors and assumptions that seasoned contributors have glossed over.
 Note: This disclaimer was originally written by
 `Adrienne Lowe <https://github.com/adriennefriend>`_ for a
 `PyCon talk <https://www.youtube.com/watch?v=6Uj746j9Heo>`_, and was adapted by
-planetary_toolkit based on its use in the README file for the
+pylanetary based on its use in the README file for the
 `MetPy project <https://github.com/Unidata/MetPy>`_.
