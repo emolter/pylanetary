@@ -4,8 +4,7 @@ import numpy as np
 
 def lat_lon(x,y,ob_lon,ob_lat,pixscale_km,np_ang,req,rpol):
     '''
-    Find latitude and longitude on planet given x,y pixel locations and
-    planet equatorial and polar radius
+    Projection of an ellipsoid onto a 2-D array with latitude and longitude grid
     
     Parameters
     ----------
@@ -69,7 +68,7 @@ def lat_lon(x,y,ob_lon,ob_lat,pixscale_km,np_ang,req,rpol):
 
 class ModelPlanetEllipsoid:
     '''
-    Projection of an ellipsoid onto a 2-D array withlatitude and longitude grid
+    Projection of an ellipsoid onto a 2-D array with latitude and longitude grid
     '''
     
     def __init__(self, shape, ob_lon, ob_lat, pixscale, np_ang, req, rpol):
@@ -98,6 +97,21 @@ class ModelPlanetEllipsoid:
         
         # TO DO: test lon_e vs lon_w for different planets!
         # different systems are default for different planets!
+        
+        
+    def __str__(self):
+        '''
+        String representation
+        
+        Examples
+        --------
+        >>> from pylanetary.planetnav import ModelPlanetEllipsoid
+        >>> uranus_model = ModelPlanetEllipsoid(whatever)
+        >>> print(uranus_model)
+        ModelPlanetEllipsoid instance; req=whatever, rpol=whatever
+        '''
+        return f'ModelPlanetEllipsoid instance; req={self.req}, rpol={self.rpol}'
+        
         
     def surface_normal(self):
         '''
@@ -180,9 +194,23 @@ class PlanetNav(ModelPlanetEllipsoid):
         super.__init__(self.image.shape,self.ephem['PDObsLon'],self.ephem['PDObsLat'],self.pixscale_km,self.ephem['NPole_ang'],self.req,self.rpol)
         self.surf_n = self.surface_normal()
         self.mu = self.emission_angle()
+        
+          
+    def __str__(self):
+        '''
+        String representation
+        
+        Examples
+        --------
+        >>> from pylanetary.planetnav import PlanetNav
+        >>> uranus_obs = PlanetNav(whatever)
+        >>> print(uranus_obs)
+        PlanetNav instance; req=whatever, rpol=whatever, pixscale=whatever
+        '''
+        return f'PlanetNav instance; req={self.req}, rpol={self.rpol}, pixscale={self.pixscale}'
     
         
-    def overlay_model(self, mode = 'canny', **kwargs):
+    def colocate(self, mode = 'canny', **kwargs):
         '''
         Co-locate the model planet with the observed planet
             using any of several different methods
@@ -226,7 +254,8 @@ class PlanetNav(ModelPlanetEllipsoid):
     def reproject(self):
         
         # would be cool to be able to project to any geometry
-        # need Chris here
+        # need Chris for that
+        # should also look into what already exists for this stuff
         return
     
     

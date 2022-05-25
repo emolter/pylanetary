@@ -1,13 +1,16 @@
 
 from astropy import table
 from astroquery.solarsystem.pds import RingNode
+from astroquery.solarsystem.jpl import Horizons
 from astropy.coordinates import Angle
 import astropy.units as u
+from astropy import convolution
 
 from photutils import aperture
 import numpy as np
 from PyAstronomy import pyasl
 from collections import OrderedDict
+from scipy.spatial.transform import Rotation
 
 '''
 goal: 
@@ -23,7 +26,7 @@ goal:
 
 class Ring:
     
-    def __init__(self, a, e, omega, i, w, width = 0.0, flux = 0.0):
+    def __init__(self, a, e, omega, i, w, width = 1.0, flux = 1.0):
         '''
         model of a planetary ring
 
@@ -34,8 +37,8 @@ class Ring:
         Omega : longitude of ascending node
         i : inclination
         w : argument of periapsis
-        width : 
-        flux : 
+        width : float or Quantity, optional. default 1 km (i.e., very thin)
+        flux : float or Quantity, optional. default 1.0.
         
         Attributes
         ----------
@@ -44,6 +47,7 @@ class Ring:
         omega : longitude of ascending node
         i : inclination
         w : argument of periapsis
+        width : 
         flux : 
         
         
@@ -51,13 +55,28 @@ class Ring:
         --------
         
         '''
-        self.a = a
+        # to do: write tests that pass astropy Quantities with units other than km and deg
+        
+        self.a = u.Quantity(a, unit=u.km)
         self.e = e
-        self.omega = Angle(omega, 'deg')
-        self.i = Angle(i, 'deg')
-        self.w = Angle(w, 'deg')
-        self.width = width
+        self.omega = u.Quantity(omega, unit=u.deg)
+        self.i = u.Quantity(i, unit=u.deg)
+        self.w = u.Quantity(w, unit=u.deg)
+        self.width = u.Quantity(width, unit=u.km)
         self.flux = flux
+        
+    def __str__(self):
+        '''
+        String representation
+        
+        Examples
+        --------
+        >>> from pylanetary.rings import Ring
+        >>> epsilon_ring = Ring(whatever)
+        >>> print(epsilon_ring)
+        Ring instance; a=whatever, e=whatever, i=whatever, width=whatever
+        '''
+        return f'Ring instance; a={self.a}, e={self.e}, i={self.i}, width={self.width}'
     
             
     def as_elliptical_annulus(shape, pixscale, width, center = None):
@@ -66,12 +85,13 @@ class Ring:
         
         
         '''
+        
         if center is None:
             center = (data.shape[0]/2.0, data.shape[1]/2.0)
         ann = aperture.EllipticalAnnulus(center, 
                             a_in=self.a - width/2., 
                             a_out=self.a + width/2., 
-                            b_out= abs(self.a + width/2. * np.sin(self.i)), 
+                            b_out= abs((self.a + width/2.) * np.sin(90*u.deg - self.i)).value, 
                             b_in= None, 
                             theta = Angle(self.w, 'deg'))
                             
@@ -123,7 +143,7 @@ class Ring:
         ke = pyasl.KeplerEllipse(self.a, T, tau = self.tau, e = self.e, Omega = self.omega, i = self.i, w = self.w)
         return ke
         
-    def as_2d_array(shape, pixscale, width=None, flux=None, beamsize=None):
+    def as_2d_array(self, shape, pixscale, opening_angle=90.*u.deg, center=None, width=None, flux=None, beamsize=None):
         '''
         return a 2-d array that looks like a mock observation
         optional smearing over Gaussian beam
@@ -155,16 +175,36 @@ class Ring:
         
         
         '''
+        # to do: write a test that passes pixscale with units other than km
+        
         if flux is None:
             flux = self.flux
         if width is None:
-            width = self.width
+            width = self.width   
+        pixscale = u.Quantity(pixscale, u.km)
+
+        # put the ring onto a 2-D array using EllipticalAnnulus
+        if center is None:
+            center = (shape[0]/2.0, shape[1]/2.0)
+            
+        ann = aperture.EllipticalAnnulus(center, 
+                            a_in=((self.a - width/2.)/pixscale).value, 
+                            a_out=((self.a + width/2.)/pixscale).value, 
+                            b_out= (abs((self.a + width/2.) * np.sin(90*u.deg - self.i))/pixscale).value, 
+                            theta = self.w.to(u.radian)
+                            )
+        arr_sharp = ann.to_mask(method='exact').to_image(shape)
         
-        # can I leverage EllipticalAnnulus again here?
+        # project to opening angle
         
-        # use whatever functionality Astropy has for convolving with beam
-        
-        return
+        if beamsize is None:
+            return arr_sharp
+        else:
+            # make the Gaussian beam. convert FWHM to sigma
+            beam = convolution.Gaussian2DKernel(beamsize[0] / 2.35482004503,
+                                                beamsize[1] / 2.35482004503, 
+                                                Angle(beamsize[2], unit=u.deg))
+            return convolution.convolve_fft(arr_sharp, beam)
 
         
 class RingSystemModelObservation:
@@ -172,7 +212,7 @@ class RingSystemModelObservation:
     def __init__(self, 
                 planet, 
                 location=None, 
-                obs_time=None, 
+                epoch=None, 
                 ringnames=None,
                 fluxes='default'):
         '''
@@ -181,9 +221,9 @@ class RingSystemModelObservation:
         Parameters
         ----------
         planet: str, required. one of Jupiter, Saturn, Uranus, Neptune
-        obs_time : `~astropy.time.Time` object, or str in format YYYY-MM-DD hh:mm, optional.
+        epoch : `~astropy.time.Time` object, or str in format YYYY-MM-DD hh:mm, optional.
                 If str is provided then UTC is assumed.
-                If no obs_time is provided, the current time is used.
+                If no epoch is provided, the current time is used.
         location : array-like, or `~astropy.coordinates.EarthLocation`, optional
             Observer's location as a
             3-element array of Earth longitude, latitude, altitude, or
@@ -196,15 +236,14 @@ class RingSystemModelObservation:
             if no ringnames provided then all rings are assumed.
             Case-sensitive! Typically capitalized, e.g. "Alpha"
                 (for now - annoying to make case-insensitive)
-        fluxes : 'default' or list, optional. the fluxes of each ring in ringnames,
-            in units of XXXXX
+        if fluxes == 'default':
+            fluxes = list(self.ringtable['Optical Depth'])
         
         Attributes
         ----------
         planetname : str, name of planet
         rings : dict of ringmodel.Ring objects, with ring names as keys
                 note ring names are case-sensitive! Typically capitalized, e.g. "Alpha"
-        fluxes : 
         ringtable : table of ephemeris data as well as time-invariant parameters for 
         
         
@@ -223,23 +262,27 @@ class RingSystemModelObservation:
         self.planetname = planet
         
         # query planetary ring node and static data
-        systemtable, bodytable, ringtable = RingNode.ephemeris(planet, obs_time=obs_time, location=location)
+        self.systemtable, self.bodytable, ringtable = RingNode.ephemeris(planet, epoch=epoch, location=location)
         ring_static_data = table.Table.read(f'data/{planet}_ring_data.hdf5', format = 'hdf5')
-        planet_ephem = bodytable.loc[planet]
-        ob_lat, ob_lon = planet_ephem['sub_obs_lat'], planet_ephem['sub_obs_lon']
-        # TO DO: change the way the data tables are read in to be more package-y
+        planet_ephem = self.bodytable.loc[planet]
+        #self.ob_lat, self.ob_lon = planet_ephem['sub_obs_lat'], planet_ephem['sub_obs_lon']
+        
+        # TO DO: change the way the static data tables are read in to be more package-y
         
         # match the static and ephemeris data for rings using a table merge
         ring_static_data.rename_column('Feature', 'ring')
         ringtable = table.join(ringtable, ring_static_data, keys='ring', join_type='right')
         ringtable.add_index('ring')
         
-
         if ringnames is None:
             ringnames = list(ringtable['ring'])
+            
+        # make self.ringtable and fluxes contain only the rings in ringnames
+        self.ringtable = ringtable.loc[ringnames]
+        if fluxes == 'default':
+            fluxes = list(self.ringtable['Optical Depth'])
         
         self.rings = {}
-        self.fluxes = {}  
         for i in range(len(ringnames)):
             ringname = ringnames[i]
             flux = fluxes[i]
@@ -250,12 +293,13 @@ class RingSystemModelObservation:
             
             # make a Ring object for each one
             # TO DO: MORE MATH HERE
-            omega = Angle(ringparams['ascending node'], 'deg') # plus whatever is needed for Uranus orientation wrt observer
-            i = Angle(ringparams['Inclination (deg)'], 'deg') + (90*u.deg - systemtable['opening_angle'])
-            w = Angle(ringparams['pericenter'], 'deg') # plus whatever is needed for planet orientation wrt observer
-            # note it is fine that many of the less-well-observed rings have masked values
+            omega = ringparams['ascending node'] # CHECK THIS
+            i = u.Quantity(ringparams['Inclination (deg)'], unit=u.deg) # CHECK THIS
+            w = ringparams['pericenter'] # CHECK THIS
+
+            # many of the less-well-observed rings have masked values
             # for many of these quantities, particularly omega, i, w, or even e. these go to
-            # zero when made into floats, so 
+            # zero when made into floats, so it is ok
             thisring = Ring(ringparams['Middle Boundary (km)'] * u.km, 
                         ringparams['Eccentricity'], 
                         omega, 
@@ -263,18 +307,16 @@ class RingSystemModelObservation:
                         w, 
                         width = ringparams['Width'], 
                         flux = flux)
-            self.fluxes[ringname] = flux
             self.rings[ringname] = thisring
             
         #print(ringtable.loc['Epsilon'])
         
-        # make self.ringtable contain only the rings in ringnames
-        self.ringtable = ringtable.loc[ringnames]
+        
         # TO DO: does the line above actually work?
         
         
         
-    def as_2d_array(shape, pixscale, beamsize=None, fluxes='default'):
+    def as_2d_array(self, shape, pixscale, center=None, beamsize=None):
         '''
         return a 2-d array that looks like a mock observation
         optional smearing over Gaussian beam
@@ -301,17 +343,35 @@ class RingSystemModelObservation:
     
         
         '''
-        
+
         arr_out = np.zeros(shape)
-        
         for ringname in self.rings.keys():
             
-            arr_out += self.rings[ringname].as_2d_array(shape, pixscale, width, beamsize=beamsize)
+            arr_out += self.rings[ringname].as_2d_array(shape, pixscale, center=center, beamsize=None)
         
+        ## project this onto the observer plane using ring opening angle and north pole angle
+        r = Rotation('xyz', [self.systemtable['sub_obs_lon'], 0, 90*u.deg - self.systemtable[opening_angle]], degrees=True)
+        rvec = r.as_rotvec()
+        # TO DO: finish this!
         
-    
-        return 
+            
+        # run convolution with beam outside loop so it is only done once
+        if beamsize is None:
+            return arr_out
+        else:
+            # make the Gaussian beam. convert FWHM to sigma
+            beam = convolution.Gaussian2DKernel(beamsize[0] / 2.35482004503,
+                                                beamsize[1] / 2.35482004503, 
+                                                Angle(beamsize[2], unit=u.deg))
+            return convolution.convolve(arr_out, beam)
         
 if __name__ == "__main__":
     
-    uranus = RingSystemModelObservation('uranus', ringnames = ['Six', 'Five', 'Four', 'Alpha', 'Beta', 'Eta', 'Gamma', 'Delta', 'Epsilon'])           
+    uranus_rings = RingSystemModelObservation('uranus',
+                     epoch='2022-05-03 11:50',
+                     ringnames = ['Six', 'Five', 'Four', 'Alpha', 'Beta', 'Eta', 'Gamma', 'Delta', 'Epsilon'])
+    obs = uranus_rings.as_2d_array((500, 500), 300*u.km, beamsize = (7,4,30*u.degree)) 
+    
+    import matplotlib.pyplot as plt
+    plt.imshow(obs, origin = 'lower')
+    plt.show()         
