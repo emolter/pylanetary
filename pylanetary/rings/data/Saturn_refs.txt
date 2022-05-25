@@ -1,0 +1,39 @@
+1. 
+Murray, C.D., and S.F. Dermott 1999. Solar System Dynamics, Cambridge University Press. DOI:10.1017/CBO9781139174817
+
+2. 
+Porco, C.C., and the Cassini Imaging Team 2006. Rings of Saturn (R/2006 S 1, R/2006 S 2, R/2006 S 3, R/2006 S 4). IAU Circulars 8759
+
+3. 
+Roussos, E., et al. 2008. Energetic electron signatures of Saturn’s smaller moons: Evidence of an arc of material at Methone. Icarus 193, 455-464. DOI:10.1016/j.icarus.2007.03.034
+
+4. 
+Porco, C.C., on behalf of the Cassini Imaging Team, 2008. R/2006 S 5 and R/2007 S 1. IAU Circulars 8970.
+
+5. 
+Verbiscer, A.J., Skrutskie, M.F., and D.P. Hamilton 2009. Saturn’s largest ring, Nature 461, 1098-1100. DOI:10.1038/nature08515
+
+6. 
+The Gazetteer of Planetary Nomenclature, https://planetarynames.wr.usgs.gov/Page/Rings
+
+7. 
+Nicholson, P.D., et al. 2014. Noncircular features in Saturn’s rings II. The C ring. Icarus 241, 373-396. DOI:10.1016/j.icarus.2014.06.024
+
+8. 
+French, R.G., et al. 2016. Noncircular features in Saturn’s rings III. The Cassini Division. Icarus 274, 131-162. DOI:10.1016/j.icarus.2016.03.017
+
+9. 
+Colwell, J.E., et al. 2009. The structure of Saturn’s rings, In M.K. Dougherty et al. (eds), Saturn from Cassini-Huygens, Springer, London, 375-408. DOI:10.1007/978-1-4020-9217-6
+
+10. 
+French, R.G., et al. 2017. Noncircular features in Saturn’s rings IV. Absolute radius scale and Saturn’s pole direction. Icarus 290, 14-45. DOI:10.1016/j.icarus.2017.02.007
+
+11. 
+Nicholson, P.D., et al. 2014. Noncircular features in Saturn’s rings I. The edge of the B ring. Icarus 227, 152-175. DOI:10.1016/j.icarus.2013.09.002
+
+12. 
+El Moutamid, M., et al. 2016. How Janus’ orbital swap affects the edge of Saturn’s A ring. Icarus 279, 125-140. DOI:10.1016/j.icarus.2015.10.025
+
+13. 
+Cooper, N.J., Murray, C.D., Williams, G.A. 2013. Local variability in the orbit of Saturn’s F ring. The Astronomical Journal 145, 161. DOI:10.1088/0004-6256/145/6/161
+
