@@ -32,12 +32,13 @@ class Ring:
 
         Parameters
         ----------
-        a : semimajor axis
+        a : semimajor axis. assumes km if not an astropy Quantity
         e : eccentricity
-        Omega : longitude of ascending node
-        i : inclination
-        w : argument of periapsis
-        width : float or Quantity, optional. default 1 km (i.e., very thin)
+        Omega : longitude of ascending node. assumes degrees if not an astropy Quantity
+        i : inclination. assumes degrees if not an astropy Quantity
+        w : argument of periapsis. assumes degrees if not an astropy Quantity
+        width : float or Quantity, optional. default 1 km (i.e., very thin). 
+            assumes km if not an astropy Quantity
         flux : float or Quantity, optional. default 1.0.
         
         Attributes
@@ -47,7 +48,7 @@ class Ring:
         omega : longitude of ascending node
         i : inclination
         w : argument of periapsis
-        width : 
+        width : ring width; semimajor axis a is at center.
         flux : 
         
         
@@ -59,9 +60,9 @@ class Ring:
         
         self.a = u.Quantity(a, unit=u.km)
         self.e = e
-        self.omega = u.Quantity(omega, unit=u.deg)
-        self.i = u.Quantity(i, unit=u.deg)
-        self.w = u.Quantity(w, unit=u.deg)
+        self.omega = Angle(omega, u.deg)
+        self.i = Angle(i, u.deg)
+        self.w = Angle(w, u.deg)
         self.width = u.Quantity(width, unit=u.km)
         self.flux = flux
         
@@ -79,27 +80,45 @@ class Ring:
         return f'Ring instance; a={self.a}, e={self.e}, i={self.i}, width={self.width}'
     
             
-    def as_elliptical_annulus(shape, pixscale, width, center = None):
+    def as_elliptical_annulus(self, focus, pixscale, width=None):
         '''
         return elliptical annulus surrounding the ring of the given width
+        in pixel space
         
-        
+        focus : tuple, required. location of planet (one ellipse focus) in pixels
+        pixscale : float or Quantity, required. assumes km if not an astropy Quantity
+        width : 
         '''
         
-        if center is None:
-            center = (data.shape[0]/2.0, data.shape[1]/2.0)
+        if width is None:
+            width = self.width
+        pixscale = u.Quantity(pixscale, unit=u.km)
+            
+        # convert between focus and center of ellipse based on eccentricity
+        c = self.e*self.a / pixscale # distance of focus from center
+        cy = c*np.sin(self.w.radian)
+        cx = c*np.cos(self.w.radian)
+        center = (focus[0] - cx, focus[1] - cy)
+        
+        def b_from_ae(a,e):
+            return a*np.sqrt(1 - e**2)
+        
+        a_in = ((self.a - width/2.)/pixscale).value
+        a_out = ((self.a + width/2.)/pixscale).value
+        b_out = b_from_ae(a_out,self.e) # account for eccentricity
+        b_out = abs(b_out * np.cos(self.i)).value # account for inclination, which effectively shortens b even more
         ann = aperture.EllipticalAnnulus(center, 
-                            a_in=self.a - width/2., 
-                            a_out=self.a + width/2., 
-                            b_out= abs((self.a + width/2.) * np.sin(90*u.deg - self.i)).value, 
+                            a_in=a_in, 
+                            a_out=a_out, 
+                            b_out=b_out, 
                             b_in= None, 
-                            theta = Angle(self.w, 'deg'))
+                            theta = self.w.to(u.radian).value)
                             
         # test whether the angles coming in here are actually correct
         
         return ann
         
-    def as_keplers3rd_wedges(width, n):
+    def as_keplers3rd_wedges(self, width, n):
         '''
         return n partial elliptical annulus wedges with equal orbital time spent in each
         useful for ring as f(azimuth) because should take out foreshortening correction
@@ -111,7 +130,7 @@ class Ring:
         
         return ann_list
         
-    def as_orbit(T=1, tau=0):
+    def as_orbit(self, T=1, tau=0):
         '''
         make a PyAstronomy.KeplerEllipse object at the ring's orbit
         to get position of ring particles as a function of time
@@ -143,7 +162,7 @@ class Ring:
         ke = pyasl.KeplerEllipse(self.a, T, tau = self.tau, e = self.e, Omega = self.omega, i = self.i, w = self.w)
         return ke
         
-    def as_2d_array(self, shape, pixscale, opening_angle=90.*u.deg, center=None, width=None, flux=None, beamsize=None):
+    def as_2d_array(self, shape, pixscale, opening_angle=90.*u.deg, focus=None, width=None, flux=None, beamsize=None):
         '''
         return a 2-d array that looks like a mock observation
         optional smearing over Gaussian beam
@@ -154,6 +173,9 @@ class Ring:
         pixscale : float/int or astropy Quantity, required. pixel scale
             of the output image. If float/int (i.e. no units specified), then
             kilometers is assumed
+        opening_angle : astropy Angle 
+        focus : tuple, optional. pixel location of planet around which ring orbits. 
+            if not specified, center of image is assumed
         width : float/int or astropy Quantity. If float/int (i.e. no units specified), then
             kilometers is assumed
         flux : float/int or astropy Quantity. sets brightness of the array
@@ -184,18 +206,11 @@ class Ring:
         pixscale = u.Quantity(pixscale, u.km)
 
         # put the ring onto a 2-D array using EllipticalAnnulus
-        if center is None:
-            center = (shape[0]/2.0, shape[1]/2.0)
+        if focus is None:
+            focus = (shape[0]/2.0, shape[1]/2.0)
             
-        ann = aperture.EllipticalAnnulus(center, 
-                            a_in=((self.a - width/2.)/pixscale).value, 
-                            a_out=((self.a + width/2.)/pixscale).value, 
-                            b_out= (abs((self.a + width/2.) * np.sin(90*u.deg - self.i))/pixscale).value, 
-                            theta = self.w.to(u.radian)
-                            )
+        ann = self.as_elliptical_annulus(focus, pixscale, width)
         arr_sharp = ann.to_mask(method='exact').to_image(shape)
-        
-        # project to opening angle
         
         if beamsize is None:
             return arr_sharp
@@ -231,7 +246,7 @@ class RingSystemModelObservation:
             latitude should be anything that initializes an
             `~astropy.coordinates.Angle` object, and altitude should
             initialize an `~astropy.units.Quantity` object (with units
-            of length).  If ``None``, then the geocenter is used.
+            of length).  If ``None``, then the geofocus is used.
         ringnames : list, optional. which rings to include in the model
             if no ringnames provided then all rings are assumed.
             Case-sensitive! Typically capitalized, e.g. "Alpha"
@@ -316,7 +331,7 @@ class RingSystemModelObservation:
         
         
         
-    def as_2d_array(self, shape, pixscale, center=None, beamsize=None):
+    def as_2d_array(self, shape, pixscale, focus=None, beamsize=None):
         '''
         return a 2-d array that looks like a mock observation
         optional smearing over Gaussian beam
@@ -347,7 +362,7 @@ class RingSystemModelObservation:
         arr_out = np.zeros(shape)
         for ringname in self.rings.keys():
             
-            arr_out += self.rings[ringname].as_2d_array(shape, pixscale, center=center, beamsize=None)
+            arr_out += self.rings[ringname].as_2d_array(shape, pixscale, focus=focus, beamsize=None)
         
         ## project this onto the observer plane using ring opening angle and north pole angle
         r = Rotation('xyz', [self.systemtable['sub_obs_lon'], 0, 90*u.deg - self.systemtable[opening_angle]], degrees=True)
