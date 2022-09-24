@@ -5,10 +5,11 @@ from astroquery.solarsystem.jpl import Horizons
 from astropy.coordinates import Angle
 import astropy.units as u
 from astropy import convolution
+from astropy.coordinates import EarthLocation, Angle
+from astropy.time import Time
 
 from photutils import aperture
 import numpy as np
-from PyAstronomy import pyasl
 from collections import OrderedDict
 from scipy.spatial.transform import Rotation
 
@@ -22,6 +23,116 @@ goal:
         yes, but it is annoying to use
         much later: get an undergrad to make Keplerian ellipse module of Astropy
 '''
+
+def vector_normalize(v):
+    '''turn vector into unit vector'''
+    norm = np.linalg.norm(v)
+    if norm == 0: 
+       return v
+    return v / norm
+    
+
+def vector_magnitude(a):
+    '''expects np array of shape (x, 3) or (x, 2)
+    corresponding to a bunch of vectors
+        this is a bit faster than using np.linalg.norm'''
+    if len(a.shape) == 1:
+        return np.sum(np.sqrt(a*a))
+    return np.sqrt((a*a).sum(axis=1))
+    
+
+def plane_project(x,z):
+    '''projects x onto plane where z is normal vector to that plane'''
+    z = vector_normalize(z)
+    return np.cross(z, np.cross(x, z))
+    
+
+def make_rot(i,omega,w):
+    '''use i, omega, and w as Euler rotation angles and return a rotation object'''
+    return Rotation.from_euler('zxz', [w, i, omega], degrees=True)
+    
+
+def rotate_and_project(vec,rot,proj_plane=[0,0,1]):
+    '''
+    use i, omega, and w as Euler rotation angles to project a vector
+    first into 3-D then onto a 2-D plane
+    '''
+    return plane_project(rot.apply(vec), proj_plane)
+    
+
+def b_from_ae(a,e):
+    return a*np.sqrt(1 - e**2)
+    
+    
+def vector_ellipse(u, v, t, origin=np.array([0,0,0])):
+    '''
+    https://math.stackexchange.com/questions/3994666/parametric-equation-of-an-ellipse-in-the-3d-space#:~:text=In%20the%20parametric%20equation%20x,a%20point%20with%20minimum%20curvature.
+    u, v are vectors corresponding to the vectorized a, b
+    t are the data points from 0 to 2pi
+    '''
+    u = u[np.newaxis,:]
+    v = v[np.newaxis,:]
+    t = t[:,np.newaxis]
+    #print(u*np.cos(t))
+    
+    return origin + u*np.cos(t) + v*np.sin(t)
+
+
+def project_ellipse(a,e,i,omega,w,n=1000, origin = np.array([0,0,0]), proj_plane = [0,0,1]):
+    '''
+    make a projection of an ellipse with the given params using i,omega,w as Euler rotation angles
+    a: any distance unit
+    e: unitless
+    i, omega, w: assume degrees
+    n: number of points in ellipse circumference
+    origin: units of a, expects array
+    '''
+    
+    # simple pre-calculations
+    b = a*np.sqrt(1-e**2)
+    c = a*e
+    f0 = np.array([origin[0] + c, origin[1], 0]) # foci
+    f1 = np.array([origin[0] - c, origin[1], 0])
+    a_vec = np.array([a,0,0])
+    b_vec = np.array([0,b,0])
+    
+    # apply projections to a, b, f0, f1
+    rot = make_rot(i,omega,w)
+    f0p = rotate_and_project(f0, rot, proj_plane=proj_plane)
+    f1p = rotate_and_project(f1, rot, proj_plane=proj_plane)
+    a_vec_p = rotate_and_project(a_vec, rot, proj_plane=proj_plane)
+    b_vec_p = rotate_and_project(b_vec, rot, proj_plane=proj_plane)
+    
+    # make and project ellipse circumference
+    t = np.linspace(0,2*np.pi,int(n))
+    ell = vector_ellipse(a_vec, b_vec, t, origin=origin)
+    ell_p = rotate_and_project(ell, rot, proj_plane=proj_plane)
+    
+    # dict of outputs
+    output = {'a':a_vec_p,
+             'b':b_vec_p,
+             'f0':f0p,
+             'f1':f1p,
+             'ell':ell_p}
+    
+    return output
+
+
+def calc_abtheta(ell):
+    '''
+    given vectors defining the circumference of an ellipse, 
+    find corresponding values of a, b, and theta
+    using the fact that locations of a, b are max, min of ellipse vectors
+    '''
+    mag = vector_magnitude(ell)
+    a, b = np.max(mag), np.min(mag)
+    wherea = np.argmax(mag)
+    whereb = np.argmin(mag)
+    xa, ya, _ = ell[wherea]
+    #xb, yb, _ = ell_proj[whereb]
+    theta = np.rad2deg(np.arctan(ya/xa))
+    
+    return a, b, theta
 
 
 class Ring:
@@ -60,6 +171,8 @@ class Ring:
         
         self.a = u.Quantity(a, unit=u.km)
         self.e = e
+        self.b = b_from_ae(self.a, self.e)
+        self.c = self.e*self.a
         self.omega = Angle(omega, u.deg)
         self.i = Angle(i, u.deg)
         self.w = Angle(w, u.deg)
@@ -79,61 +192,11 @@ class Ring:
         '''
         return f'Ring instance; a={self.a}, e={self.e}, i={self.i}, width={self.width}'
     
-            
-    def as_elliptical_annulus(self, focus, pixscale, width=None):
-        '''
-        return elliptical annulus surrounding the ring of the given width
-        in pixel space
-        
-        focus : tuple, required. location of planet (one ellipse focus) in pixels
-        pixscale : float or Quantity, required. assumes km if not an astropy Quantity
-        width : 
-        '''
-        
-        if width is None:
-            width = self.width
-        pixscale = u.Quantity(pixscale, unit=u.km)
-            
-        # convert between focus and center of ellipse based on eccentricity
-        c = self.e*self.a / pixscale # distance of focus from center
-        cy = c*np.sin(self.w.radian)
-        cx = c*np.cos(self.w.radian)
-        center = (focus[0] - cx, focus[1] - cy)
-        
-        def b_from_ae(a,e):
-            return a*np.sqrt(1 - e**2)
-        
-        a_in = ((self.a - width/2.)/pixscale).value
-        a_out = ((self.a + width/2.)/pixscale).value
-        b_out = b_from_ae(a_out,self.e) # account for eccentricity
-        b_out = abs(b_out * np.cos(self.i)).value # account for inclination, which effectively shortens b even more
-        ann = aperture.EllipticalAnnulus(center, 
-                            a_in=a_in, 
-                            a_out=a_out, 
-                            b_out=b_out, 
-                            b_in= None, 
-                            theta = self.w.to(u.radian).value)
-                            
-        # test whether the angles coming in here are actually correct
-        
-        return ann
-        
-    def as_keplers3rd_wedges(self, width, n):
-        '''
-        return n partial elliptical annulus wedges with equal orbital time spent in each
-        useful for ring as f(azimuth) because should take out foreshortening correction
-        but should check this! what did I do for the paper?
-        also perfect data experiments would be good
-        '''
-        
-        # do this later, it's complicated to do right
-        
-        return ann_list
-        
+    
     def as_orbit(self, T=1, tau=0):
         '''
-        make a PyAstronomy.KeplerEllipse object at the ring's orbit
-        to get position of ring particles as a function of time
+        Is this a good idea to have velocities and stuff?
+        Might want to re-think what functionality we really want here
         
         Parameters
         ----------
@@ -159,10 +222,84 @@ class Ring:
         # would require planet masses in a data table
         # if so, can do later
         
-        ke = pyasl.KeplerEllipse(self.a, T, tau = self.tau, e = self.e, Omega = self.omega, i = self.i, w = self.w)
-        return ke
+        #from PyAstronomy import pyasl
+        #ke = pyasl.KeplerEllipse(self.a, T, tau = self.tau, e = self.e, Omega = self.omega, i = self.i, w = self.w)
+        #return ke
+        return
+    
+            
+    def as_elliptical_annulus(self, focus, pixscale, width=None, n=1e3):
+        '''
+        return elliptical annulus surrounding the ring of the given width
+        in pixel space
         
-    def as_2d_array(self, shape, pixscale, opening_angle=90.*u.deg, focus=None, width=None, flux=None, beamsize=None):
+        focus : tuple, required. location of planet (one ellipse focus) in pixels
+        pixscale : float or Quantity, required. assumes km if not an astropy Quantity
+        width : true (non-projected) width of ring. astropy quantity required
+        n: number of data points to rotate and project; higher n means more accurate estimation
+            of projected a, b, theta
+        
+        To do:
+            experiment with using manually-defined b_in to make epsilon-like ring
+        '''
+        
+        # convert to simple floats instead of astropy unit quantities
+        a, b = self.a.to(u.km).value, self.b.to(u.km).value
+        omega, i, w = self.omega.to(u.deg).value, self.i.to(u.deg).value, self.w.to(u.deg).value
+        if width is None:
+            width = self.width
+        width = width.to(u.km).value
+        pixscale = u.Quantity(pixscale, unit=u.km)
+        
+        # rotate and project the ellipse
+        true_params = project_ellipse(a,self.e,i,omega,w,n=int(n), origin = np.array([0,0,0]), proj_plane = [0,0,1])
+        a_f,b_f,theta_f = calc_abtheta(true_params['ell'])
+        a_f, b_f = np.abs(a_f), np.abs(b_f)
+        
+        # scale the width with the geometry
+        # test this!
+        a_outer = a_f + (a_f/a)*(width/2)
+        a_inner = a_f - (a_f/a)*(width/2)
+        b_outer = b_f + (b_f/b)*(width/2)
+        #b_inner = b_f - (b_f/self.b)*(width/2)
+        
+        # put center of image at one focus
+        center = -true_params['f0'][:2] #remove extraneous zero in z dimension
+
+        # convert to pixel values
+        a_inner = a_inner/pixscale.value
+        a_outer = a_outer/pixscale.value
+        b_outer = b_outer/pixscale.value # account for inclination, which effectively shortens b even more
+        center = np.array(focus) - center/pixscale.value
+
+        # finally make the annulus object
+        ann = aperture.EllipticalAnnulus(center, 
+                            a_in=a_inner, 
+                            a_out=a_outer, 
+                            b_out=b_outer, 
+                            b_in= None, 
+                            theta = np.deg2rad(theta_f))
+        
+        return ann
+    
+        
+    def as_keplers3rd_wedges(self, width, n):
+        '''
+        return n partial elliptical annulus wedges with equal orbital time spent in each
+        useful for ring as f(azimuth) because should take out foreshortening correction
+        but should check this! what did I do for the paper?
+        also perfect data experiments would be good
+        '''
+        
+        # do this later, it's complicated to do
+        # can be done with the ellipse generation we have now
+        # but still annoying to define custom photutils aperture objects
+        # probably possible to somehow subtract two aperture objects
+        
+        return ann_list
+    
+        
+    def as_2d_array(self, shape, pixscale, focus=None, width=None, flux=None, beamsize=None):
         '''
         return a 2-d array that looks like a mock observation
         optional smearing over Gaussian beam
@@ -173,7 +310,6 @@ class Ring:
         pixscale : float/int or astropy Quantity, required. pixel scale
             of the output image. If float/int (i.e. no units specified), then
             kilometers is assumed
-        opening_angle : astropy Angle 
         focus : tuple, optional. pixel location of planet around which ring orbits. 
             if not specified, center of image is assumed
         width : float/int or astropy Quantity. If float/int (i.e. no units specified), then
@@ -232,6 +368,9 @@ class RingSystemModelObservation:
                 fluxes='default'):
         '''
         make a model of a ring system 
+        combines static data tables, originally from e.g. https://pds-rings.seti.org/uranus/uranus_rings_table.html
+            with the Ring Node query tool
+            and the 
 
         Parameters
         ----------
@@ -251,8 +390,11 @@ class RingSystemModelObservation:
             if no ringnames provided then all rings are assumed.
             Case-sensitive! Typically capitalized, e.g. "Alpha"
                 (for now - annoying to make case-insensitive)
-        if fluxes == 'default':
-            fluxes = list(self.ringtable['Optical Depth'])
+        fluxes : list-like, optional. surface brightness units are expected, e.g. brightness temperature
+            if fluxes == 'default', the optical depths are read in from the static table
+                and exponentiated to more closely resemble surface brightness units
+                so the result is the attenuation, ATT = 1 - exp(ringtable['Optical Depth'])
+                assuming the emittance is small (violated for thermal observations, obviously)
         
         Attributes
         ----------
@@ -260,7 +402,10 @@ class RingSystemModelObservation:
         rings : dict of ringmodel.Ring objects, with ring names as keys
                 note ring names are case-sensitive! Typically capitalized, e.g. "Alpha"
         ringtable : table of ephemeris data as well as time-invariant parameters for 
-        
+        systemtable : 
+        bodytable : 
+        np_ang : 
+                
         
         Examples
         --------
@@ -276,45 +421,60 @@ class RingSystemModelObservation:
         planet = planet.lower().capitalize()
         self.planetname = planet
         
-        # query planetary ring node and static data
-        self.systemtable, self.bodytable, ringtable = RingNode.ephemeris(planet, epoch=epoch, location=location)
+        # fix inputs
+        if epoch is None:
+            raise NotImplementedError("not done yet; please provide epoch for now")
+        if location is None:
+            raise NotImplementedError("not done yet; please provide location for now")
+
+        # send query to Planetary Ring Node, and query static data table
+        node = RingNode()
+        self.bodytable, self.ringtable = node.ephemeris(
+                    planet=planet, epoch=epoch, location=location, cache=False)
+        self.systemtable = self.bodytable.meta
         ring_static_data = table.Table.read(f'data/{planet}_ring_data.hdf5', format = 'hdf5')
         planet_ephem = self.bodytable.loc[planet]
         #self.ob_lat, self.ob_lon = planet_ephem['sub_obs_lat'], planet_ephem['sub_obs_lon']
         
-        # TO DO: change the way the static data tables are read in to be more package-y
+        # query Horizons for the north polar angle
+        obj = Horizons(id="799", location='-7', epochs={'start':epoch.to_value('iso'), 'stop':(epoch + 1*u.day).to_value('iso'), 'step':'1d'})
+        eph = obj.ephemerides()
+        self.np_ang = eph['NPole_ang'][0]
         
+        
+        # TO DO: change the way the static data tables are read in to be more package-y
         # match the static and ephemeris data for rings using a table merge
         ring_static_data.rename_column('Feature', 'ring')
-        ringtable = table.join(ringtable, ring_static_data, keys='ring', join_type='right')
-        ringtable.add_index('ring')
+        self.ringtable = table.join(self.ringtable, ring_static_data, keys='ring', join_type='right')
+        self.ringtable.add_index('ring')
         
         if ringnames is None:
-            ringnames = list(ringtable['ring'])
+            ringnames = list(self.ringtable['ring'])
             
         # make self.ringtable and fluxes contain only the rings in ringnames
-        self.ringtable = ringtable.loc[ringnames]
+        self.ringtable = self.ringtable.loc[ringnames]
         if fluxes == 'default':
             fluxes = list(self.ringtable['Optical Depth'])
+            fluxes = [1 - np.exp(-val) for val in fluxes] # optical depth to 1 - transmittance
         
         self.rings = {}
         for i in range(len(ringnames)):
             ringname = ringnames[i]
             flux = fluxes[i]
             try:
-                ringparams = ringtable.loc[ringname]
+                ringparams = self.ringtable.loc[ringname]
             except Exception as e:
                 raise ValueError(f"Ring name {ringname} not found in the data table of known rings")
             
             # make a Ring object for each one
-            # TO DO: MORE MATH HERE
-            omega = ringparams['ascending node'] # CHECK THIS
-            i = u.Quantity(ringparams['Inclination (deg)'], unit=u.deg) # CHECK THIS
-            w = ringparams['pericenter'] # CHECK THIS
+            omega = self.np_ang*u.deg + self.ringtable.loc['ring','Epsilon']['ascending node'].filled(0.0)# + self.systemtable['sub_obs_lon']
+            i = 90*u.deg + self.systemtable['opening_angle']
+            w = self.ringtable.loc['ring','Epsilon']['pericenter'].filled(0.0) # filled() just turns from a masked array, which doesn't pass, to an unmasked array. the fill value is not used
 
             # many of the less-well-observed rings have masked values
             # for many of these quantities, particularly omega, i, w, or even e. these go to
             # zero when made into floats, so it is ok
+            #print(omega, i, w)
             thisring = Ring(ringparams['Middle Boundary (km)'] * u.km, 
                         ringparams['Eccentricity'], 
                         omega, 
@@ -323,11 +483,6 @@ class RingSystemModelObservation:
                         width = ringparams['Width'], 
                         flux = flux)
             self.rings[ringname] = thisring
-            
-        #print(ringtable.loc['Epsilon'])
-        
-        
-        # TO DO: does the line above actually work?
         
         
         
@@ -364,11 +519,6 @@ class RingSystemModelObservation:
             
             arr_out += self.rings[ringname].as_2d_array(shape, pixscale, focus=focus, beamsize=None)
         
-        ## project this onto the observer plane using ring opening angle and north pole angle
-        r = Rotation('xyz', [self.systemtable['sub_obs_lon'], 0, 90*u.deg - self.systemtable[opening_angle]], degrees=True)
-        rvec = r.as_rotvec()
-        # TO DO: finish this!
-        
             
         # run convolution with beam outside loop so it is only done once
         if beamsize is None:
@@ -377,16 +527,23 @@ class RingSystemModelObservation:
             # make the Gaussian beam. convert FWHM to sigma
             beam = convolution.Gaussian2DKernel(beamsize[0] / 2.35482004503,
                                                 beamsize[1] / 2.35482004503, 
-                                                Angle(beamsize[2], unit=u.deg))
+                                                Angle(beamsize[2], unit=u.deg).to(u.radian).value)
             return convolution.convolve(arr_out, beam)
         
 if __name__ == "__main__":
     
-    uranus_rings = RingSystemModelObservation('uranus',
-                     epoch='2022-05-03 11:50',
-                     ringnames = ['Six', 'Five', 'Four', 'Alpha', 'Beta', 'Eta', 'Gamma', 'Delta', 'Epsilon'])
-    obs = uranus_rings.as_2d_array((500, 500), 300*u.km, beamsize = (7,4,30*u.degree)) 
-    
+    # for simple testing
     import matplotlib.pyplot as plt
-    plt.imshow(obs, origin = 'lower')
-    plt.show()         
+    a = 51149 #km
+    e = 0.
+    i = 80.0
+    omega = 0.0
+    w = 0.
+    imsize = 300 #px
+    pixscale = 500 #km/px
+    simple_ring = Ring(a, e, omega, i, w, width=5000)
+    img = simple_ring.as_2d_array((imsize, imsize), pixscale) #shape (pixels), pixscale (km)
+    
+    plt.imshow(img, origin = 'lower')
+    plt.show()
+        
