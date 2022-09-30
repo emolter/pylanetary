@@ -136,6 +136,21 @@ def calc_abtheta(ell):
     return a, b, theta
 
 
+def foreshortening(theta, i):
+    '''
+    from de Pater et al 2006, doi:10.1016/j.icarus.2005.08.011
+    corrects for foreshortening of inclined rings
+    
+    TO DO: accept astropy Angles, put into the ring modeling scripts
+    
+    i: degrees
+    theta: radians
+        (deal with it)
+    '''
+    B = np.pi/2 - np.abs(np.deg2rad(i))
+    return np.sqrt( np.sin(theta)**2 * np.sin(B)**2 + np.cos(theta)**2 )
+
+
 class Ring:
     
     def __init__(self, a, e, omega, i, w, width = 1.0, flux = 1.0):
