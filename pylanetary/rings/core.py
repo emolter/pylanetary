@@ -12,6 +12,7 @@ from photutils import aperture
 import numpy as np
 from collections import OrderedDict
 from scipy.spatial.transform import Rotation
+from scipy import ndimage
 
 '''
 goal: 
@@ -190,7 +191,7 @@ class Ring:
         >>> print(epsilon_ring)
         Ring instance; a=whatever, e=whatever, i=whatever, width=whatever
         '''
-        return f'Ring instance; a={self.a}, e={self.e}, i={self.i}, width={self.width}'
+        return f'Ring instance; a={self.a}, e={self.e}, i={self.i}, omega={self.omega}, w={self.w}, width={self.width}'
     
     
     def as_orbit(self, T=1, tau=0):
@@ -228,16 +229,20 @@ class Ring:
         return
     
             
-    def as_elliptical_annulus(self, focus, pixscale, width=None, n=1e3):
+    def as_elliptical_annulus(self, focus, pixscale, width=None, n=1e3, return_params = False):
         '''
         return elliptical annulus surrounding the ring of the given width
         in pixel space
         
+        Parameters
+        ----------
         focus : tuple, required. location of planet (one ellipse focus) in pixels
         pixscale : float or Quantity, required. assumes km if not an astropy Quantity
         width : true (non-projected) width of ring. astropy quantity required
         n: number of data points to rotate and project; higher n means more accurate estimation
             of projected a, b, theta
+        return_params: bool, optional. default False. If True, 
+            also return dict with the model ellipse included
         
         To do:
             experiment with using manually-defined b_in to make epsilon-like ring
@@ -280,23 +285,110 @@ class Ring:
                             b_in= None, 
                             theta = np.deg2rad(theta_f))
         
+        if return_params:
+            return ann, true_params
         return ann
     
         
-    def as_keplers3rd_wedges(self, width, n):
+    def as_azimuthal_wedges(self, shape, focus, pixscale, nwedges=60, width=None, n=1e4, z=5):
         '''
-        return n partial elliptical annulus wedges with equal orbital time spent in each
-        useful for ring as f(azimuth) because should take out foreshortening correction
-        but should check this! what did I do for the paper?
-        also perfect data experiments would be good
+        return n partial elliptical annulus wedges 
+        
+        Parameters
+        ----------
+        shape: tuple, required. shape of image in pixels
+        focus: tuple, required. location of planet (one ellipse focus) in pixels
+        pixscale: astropy Quantity or float in km
+        nwedges: number of wedges to compute
+        width: astropy quantity required
+        n: number of points for as_elliptical_annulus to compute. see that docstring
+            for details
+        z: factor for ndimage zoom; larger makes more accurate wedge areas
+        
+        Returns
+        -------
+        theta_list: angle corresponding to lower corner of wedge
+        ann_list: list of wedge masks
+        
+        Notes
+        -----
+        current implementation makes them equal in angle in projected space
+        but should really be equal in real azimuth... to fix!
+        perfect data experiments would be good to check if 
+        making equal azimuth wedges removes foreshortening correction
+        
+        This is computationally expensive!
+        a better implementation would be to make a photutils object
+        for wedges of an ellipse. but this is hard to do
         '''
         
-        # do this later, it's complicated to do
-        # can be done with the ellipse generation we have now
-        # but still annoying to define custom photutils aperture objects
-        # probably possible to somehow subtract two aperture objects
+        # handle input params
+        if width is None:
+            width = self.width
+        pixscale = u.Quantity(pixscale, unit=u.km)
         
-        return ann_list
+        zshape = (shape[0]*z, shape[1]*z)
+        zfocus = (focus[0]*z, focus[1]*z)
+        ann = self.as_elliptical_annulus(zfocus, pixscale/z, width=width, n=n, return_params=False)
+        #_, ringplane_params = self.as_elliptical_annulus(zfocus, pixscale/z, width=width, n=nwedges, return_params=True) #this to get equal ring plane azimuth angles of length (nwedges,)
+        ann = ann.to_mask().to_image(zshape)
+        width = z*width.to(u.km).value
+        
+        '''
+        # use ellipse params to find ring-plane azimuth angles
+        x = ringplane_params['ell'].T[0]
+        y = ringplane_params['ell'].T[1]
+        theta_list = np.arctan2(y,x)
+        theta_list[theta_list < 0.0] += 2*np.pi
+        theta_list = np.sort(theta_list)
+        
+        dtheta_list = theta_list[1:] - theta_list[:-1]
+        last_element = 2*np.pi - (theta_list[-1] - theta_list[0]) # handle circle wrapping
+        dtheta_list = np.concatenate([dtheta_list, np.array([last_element])])
+        '''
+        
+        # image plane azimuth angles
+        theta_list = np.linspace(0, 2*np.pi - 2*np.pi/nwedges, nwedges)
+        dtheta_list = 2*np.pi / nwedges * np.ones(theta_list.shape)
+        
+        # constants in every loop; rectangle width and height to make wedges
+        h = np.max(zshape) #just make it huge
+        w = 2*z*(self.a * np.sin(np.max(dtheta_list))/pixscale).value #this can be large, just make it double a reasonable width scaling
+        
+        # iterate over angle
+        ann_list = []
+        for i, theta in enumerate(theta_list): #radians assumed everywhere
+            dtheta = dtheta_list[i]
+            
+            # make a wedge out of two rectangles.
+            # first find center knowing that one corner has to be at zfocus
+            d = 0.5*np.sqrt(w**2 + h**2) #distance from corner to center
+            phi = np.arctan(w/h) #angle from rectangle base to center
+            center1 = zfocus + d*np.array([np.cos(theta + phi), np.sin(theta + phi)])
+            center2 = zfocus + d*np.array([np.cos(theta + phi + dtheta), np.sin(theta + phi + dtheta)])
+            
+            rect1 = aperture.RectangularAperture(center1, w, h, theta+np.pi/2).to_mask().to_image(zshape)
+            rect2 = aperture.RectangularAperture(center2, w, h, theta+np.pi/2 + dtheta).to_mask().to_image(zshape)
+            wedge = rect1 - rect2
+            wedge[wedge<0] = 0.0
+            
+            wedge_ann = wedge * ann # this is only an approximation; zooming image recommended
+            
+            '''
+            # diagnostic plot
+            if theta <0.5:
+                
+                fig, (ax0, ax1, ax2) = plt.subplots(1,3,figsize = (15,6))
+                ax0.imshow(ann, origin = 'lower')
+                ax1.imshow(wedge, origin = 'lower')
+                ax2.imshow(wedge_ann, origin = 'lower')
+                plt.show()
+            '''
+            
+            wedge_out = ndimage.zoom(wedge_ann, 1.0/z)
+            ann_list.append(wedge_out)
+            
+        return theta_list, ann_list
     
         
     def as_2d_array(self, shape, pixscale, focus=None, width=None, flux=None, beamsize=None):
@@ -535,15 +627,24 @@ if __name__ == "__main__":
     # for simple testing
     import matplotlib.pyplot as plt
     a = 51149 #km
-    e = 0.
-    i = 80.0
-    omega = 0.0
+    e = 0.007
+    i = 45.0
+    omega = 80.0
     w = 0.
     imsize = 300 #px
     pixscale = 500 #km/px
+    focus = np.array([imsize/2, imsize/2])
     simple_ring = Ring(a, e, omega, i, w, width=5000)
-    img = simple_ring.as_2d_array((imsize, imsize), pixscale) #shape (pixels), pixscale (km)
     
-    plt.imshow(img, origin = 'lower')
+    thetas, wedges = simple_ring.as_azimuthal_wedges((imsize, imsize), focus, pixscale, nwedges=60, width=5000*u.km, n=1e3, z=1)
+    
+    # check if wedges add up to a full ellipse
+    wedges_arr = np.asarray(wedges)
+    wedges_sum = np.sum(wedges, axis=0)
+    plt.imshow(wedges_sum, origin = 'lower')
     plt.show()
+    
+    #img = simple_ring.as_2d_array((imsize, imsize), pixscale) #shape (pixels), pixscale (km)
+    #plt.imshow(img, origin = 'lower')
+    #plt.show()
         
