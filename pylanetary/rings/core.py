@@ -7,12 +7,15 @@ import astropy.units as u
 from astropy import convolution
 from astropy.coordinates import EarthLocation, Angle
 from astropy.time import Time
-
 from photutils import aperture
+
 import numpy as np
 from collections import OrderedDict
 from scipy.spatial.transform import Rotation
 from scipy import ndimage
+import importlib
+
+
 
 '''
 goal: 
@@ -539,7 +542,10 @@ class RingSystemModelObservation:
         self.bodytable, self.ringtable = node.ephemeris(
                     planet=planet, epoch=epoch, location=location, cache=False)
         self.systemtable = self.bodytable.meta
-        ring_static_data = table.Table.read(f'data/{planet}_ring_data.hdf5', format = 'hdf5')
+        
+        ring_data_source = importlib.resources.open_binary('pylanetary.pylanetary.rings.data', f'{planet}_ring_data.hdf5')
+        #ring_static_data = table.Table.read(f'data/{planet}_ring_data.hdf5', format = 'hdf5')
+        ring_static_data = table.Table.read(ring_data_source, format = 'hdf5')
         planet_ephem = self.bodytable.loc[planet]
         #self.ob_lat, self.ob_lon = planet_ephem['sub_obs_lat'], planet_ephem['sub_obs_lon']
         
