@@ -88,10 +88,9 @@ def vector_ellipse(u, v, t, origin=np.array([0, 0, 0])):
     # print(u*np.cos(t))
 
     return origin + u * np.cos(t) + v * np.sin(t)
-
-
-def project_ellipse(a, e, i, omega, w, n=1000,
-                    origin=np.array([0, 0, 0]), proj_plane=[0, 0, 1]):
+    
+    
+def project_ellipse(a,e,i,omega,w,n=100, origin = np.array([0,0,0]), proj_plane = [0,0,1]):
     '''
     make a projection of an ellipse with the given params using i,omega,w as Euler rotation angles
     a: any distance unit
@@ -100,40 +99,40 @@ def project_ellipse(a, e, i, omega, w, n=1000,
     n: number of points in ellipse circumference
     origin: units of a, expects array
     '''
-
+    
     # simple pre-calculations
-    b = a * np.sqrt(1 - e**2)
-    c = a * e
-    f0 = np.array([origin[0] + c, origin[1], 0])  # foci
+    b = a*np.sqrt(1-e**2)
+    c = a*e
+    f0 = np.array([origin[0] + c, origin[1], 0]) # foci
     f1 = np.array([origin[0] - c, origin[1], 0])
-    a_vec = np.array([a, 0, 0])
-    b_vec = np.array([0, b, 0])
-
+    a_vec = np.array([a,0,0])
+    b_vec = np.array([0,b,0])
+    
     # apply projections to a, b, f0, f1
-    rot = make_rot(i, omega, w)
+    rot = make_rot(i,omega,w)
     f0p = rotate_and_project(f0, rot, proj_plane=proj_plane)
     f1p = rotate_and_project(f1, rot, proj_plane=proj_plane)
     a_vec_p = rotate_and_project(a_vec, rot, proj_plane=proj_plane)
     b_vec_p = rotate_and_project(b_vec, rot, proj_plane=proj_plane)
-
+    
     # make and project ellipse circumference
-    t = np.linspace(0, 2 * np.pi, int(n))
+    t = np.linspace(0,2*np.pi,n)
     ell = vector_ellipse(a_vec, b_vec, t, origin=origin)
     ell_p = rotate_and_project(ell, rot, proj_plane=proj_plane)
-
+    
     # dict of outputs
-    output = {'a': a_vec_p,
-              'b': b_vec_p,
-              'f0': f0p,
-              'f1': f1p,
-              'ell': ell_p}
-
+    output = {'a':a_vec_p,
+             'b':b_vec_p,
+             'f0':f0p,
+             'f1':f1p,
+             'ell':ell_p}
+    
     return output
 
 
 def calc_abtheta(ell):
     '''
-    given vectors defining the circumference of an ellipse,
+    given vectors defining the circumference of an ellipse, 
     find corresponding values of a, b, and theta
     using the fact that locations of a, b are max, min of ellipse vectors
     '''
@@ -143,8 +142,8 @@ def calc_abtheta(ell):
     whereb = np.argmin(mag)
     xa, ya, _ = ell[wherea]
     #xb, yb, _ = ell_proj[whereb]
-    theta = np.rad2deg(np.arctan(ya / xa))
-
+    theta = np.rad2deg(np.arctan(ya/xa))
+    
     return a, b, theta
 
 
@@ -282,18 +281,14 @@ class Ring:
 
         # convert to simple floats instead of astropy unit quantities
         a, b = self.a.to(u.km).value, self.b.to(u.km).value
-        omega, i, w = self.omega.to(
-            u.deg).value, self.i.to(
-            u.deg).value, self.w.to(
-            u.deg).value
+        omega, i, w = self.omega.to(u.deg).value, self.i.to(u.deg).value, self.w.to(u.deg).value
         if width is None:
             width = self.width
         width = width.to(u.km).value
         pixscale = u.Quantity(pixscale, unit=u.km)
 
         # rotate and project the ellipse
-        true_params = project_ellipse(a, self.e, i, omega, w, n=int(
-            n), origin=np.array([0, 0, 0]), proj_plane=[0, 0, 1])
+        true_params = project_ellipse(a, self.e, i, omega, w, n=int(n), origin=np.array([0, 0, 0]), proj_plane=[0, 0, 1])
         a_f, b_f, theta_f = calc_abtheta(true_params['ell'])
         a_f, b_f = np.abs(a_f), np.abs(b_f)
 
@@ -642,13 +637,24 @@ class RingSystemModelObservation:
                     f"Ring name {ringname} not found in the data table of known rings")
 
             # make a Ring object for each one
-            if 'ascending node' in self.ringtable.loc['ring', ringname]:
+            if 'ascending node' in self.ringtable.loc['ring', ringname].keys():
                 # + self.systemtable['sub_obs_lon']
-                omega = self.np_ang * u.deg + \
-                    self.ringtable.loc['ring', ringname]['ascending node'].filled(0.0)
+                
+                ## TO DO: FIX HERE ###
+                ## the omega values in the Planetary Ring node correspond to the additional
+                ## inclination values given in the static table.
+                ## so we need to do a second rotation after the first one, 
+                ## with the small inclinations
+                ## given in the static table
+                ## and this omega. 
+                ## for now, just force omega to be the system omega
+                
+                #omega = self.np_ang * u.deg + \
+                #    self.ringtable.loc['ring', ringname]['ascending node'].filled(0.0)
+                omega = self.np_ang * u.deg
             else:
-                omega = 0.0 * u.deg
-            if 'pericenter' in self.ringtable.loc['ring', ringname]:
+                omega = self.np_ang * u.deg
+            if 'pericenter' in self.ringtable.loc['ring', ringname].keys():
                 # filled() just turns from a masked array, which doesn't pass,
                 # to an unmasked array. the fill value is not used
                 w = self.ringtable.loc['ring',
