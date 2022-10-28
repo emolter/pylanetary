@@ -25,7 +25,7 @@ def nonremote_request(self, request_type, url, **kwargs):
 
     return response
 
-    
+
 # use a pytest fixture to create a dummy 'requests.get' function,
 # that mocks(monkeypatches) the actual 'requests.get' function:
 @pytest.fixture
@@ -34,57 +34,69 @@ def patch_request(request):
 
     mp.setattr(pds.core.RingNodeClass, "_request", nonremote_request)
     return mp
-   
-    
+
+
 # --------------------------------- actual test functions
 
+def test_project_ellipse():
+
+    ell = project_ellipse(a, e, i, omega, w, n=1000,
+                          origin=np.array([0, 0, 0]), proj_plane=[0, 0, 1])
+
+    assert ell['a'] == whatever
+    assert ell['b'] == whatever
+    assert ell['f0'] == whatever
+    assert ell['f1'] == whatever
+    assert ell['ell'] == whatever
+    # look in ellipse projection play Jupyter notebook
+
+
 def test_ring_as_annulus():
-    
+
     model_ring = rings.Ring(a, e, omega, i, w)
-    ann = model_ring.as_elliptical_annulus(shape, pixscale, width, center = None)
-    
-    # actually use annulus on some data?
-    
+    ann, params = model_ring.as_elliptical_annulus(focus,
+                                                   pixscale,
+                                                   width=None,
+                                                   n=1e3,
+                                                   return_params=True)
+
     assert whatever
-    
-    
+
+
 def test_ring_as_wedges():
-    
+
     model_ring = rings.Ring(a, e, omega, i, w)
     ann_list = model_ring.as_keplers3rd_wedges(width, n)
-    
+
     assert whatever
-    
-    
+
+
 def test_ring_as_orbit():
-    
+
     model_ring = rings.Ring(a, e, omega, i, w)
     ke = model_ring.as_orbit(T, tau)
-    
+
     assert whatever
-    
-    
+
+
 def test_ring_as_array():
-    
+
     model_ring = rings.Ring(a, e, omega, i, w)
-    arr = model_ring.as_2d_array(shape, pixscale, width=None, flux=None, beamsize=None)
-    
+    arr = model_ring.as_2d_array(
+        shape,
+        pixscale,
+        width=None,
+        flux=None,
+        beamsize=None)
+
     assert whatever
-    
-    
+
+
 def test_model_system_Uranus(patch_request):
-    
+
     assert whatever
-    
-    
+
+
 def test_model_system_Saturn(patch_request):
-    
+
     assert whatever
-    
-    
-    
-    
-    
-    
-    
-    
