@@ -15,16 +15,16 @@ from scipy.spatial.transform import Rotation
 from scipy import ndimage
 import importlib
 
+# fix imports later
+from pylanetary.pylanetary.utils.core import *
 
 '''
-goal:
-    pull together JPL Horizons query, ring node query,
-    and static ring data from data/ to make model ring
-    systems as observed from any location
-
-    is there a better/more astropy-like library to import for keplerian ellipses than PyAstronomy?
-        yes, but it is annoying to use
-        much later: get an undergrad to make Keplerian ellipse module of Astropy
+To implement
+------------
+* class that inherits from Ring for asymmetric rings like Uranus's epsilon ring
+* make azimuthal wedges code much faster by implementing wedges as a photutils object
+* make RingSystemModelObservation account for the peculiar rotation angles of each ring
+    relative to the system
 '''
 
 horizons_lookup = {
@@ -162,6 +162,36 @@ def foreshortening(theta, i):
     return np.sqrt(np.sin(theta)**2 * np.sin(B)**2 + np.cos(theta)**2)
 
 
+def ring_area(a, e, width, delta_width=0.0, B=90.0):
+    '''
+    Compute projected area of an eccentric ring with arbitrary opening angle
+    and  from geometry
+    
+    Parameters
+    ----------
+    a: float or Quantity, required. semimajor axis [distance]
+    e: float, required. eccentricity
+    width: float or Quantity, required. average width of ring [distance]
+        for an asymmetric ring, use (apoapsis_width + periapsis_width)/2
+    delta_width: float or Quantity, optional. default 0.0. apoapsis width minus periapsis width [distance]
+    B: float or Quantity, optional. default 90 (i.e., open). opening angle in degrees
+    
+    Returns: projected area in [distance unit]^2
+    '''
+    w_p = width - delta_width/2.
+    w_a = width + delta_width/2.
+    c = a*e
+    a_i = a - (w_p + w_a)/4
+    a_o = a + (w_p + w_a)/4
+    c_i = c - (w_a - w_p)/4
+    c_o = c + (w_a - w_p)/4
+    e_i = c_i / a_i
+    e_o = c_o / a_o
+    A = np.pi * a_o**2 * np.sqrt(1 - e_o**2) - np.pi * a_i**2 * np.sqrt(1 - e_i**2)
+    Ab = A * np.sin(np.radians(B))
+    return Ab
+
+
 class Ring:
 
     def __init__(self, a, e, omega, i, w, width=1.0, flux=1.0):
@@ -192,7 +222,7 @@ class Ring:
 
         Examples
         --------
-
+        
         '''
         # to do: write tests that pass astropy Quantities with units other than
         # km and deg
@@ -277,6 +307,7 @@ class Ring:
 
         To do:
             experiment with using manually-defined b_in to make epsilon-like ring
+            make this return the periapsis and apoapsis angle
         '''
 
         # convert to simple floats instead of astropy unit quantities
@@ -352,14 +383,14 @@ class Ring:
 
         Notes
         -----
-        current implementation makes them equal in angle in projected space
-        but should really be equal in real azimuth... to fix!
-        perfect data experiments would be good to check if
-        making equal azimuth wedges removes foreshortening correction
+        current implementation removes foreshortening correction "magically"
+            by making the 
 
+        To-do list
+        ----------
         This is computationally expensive!
         a better implementation would be to make a photutils object
-        for wedges of an ellipse. but this is hard to do
+        for wedges of an ellipse. but this requires Cython programming
         '''
 
         # handle input params
@@ -573,7 +604,14 @@ class RingSystemModelObservation:
         should be possible by just changing the ringmodel.Ring() object
             in the dict self.ring
 
+        To-do list
+        ----------
+        Right now we are not accounting for the peculiar inclinations and
+            arguments of periapsis of individual rings relative to the system
+            but they are being passed into this code
+            just need to write more geometry
         '''
+
         planet = planet.lower().capitalize()
         self.planetname = planet
 
@@ -742,31 +780,3 @@ class RingSystemModelObservation:
                     unit=u.deg).to(
                     u.radian).value)
             return convolution.convolve(arr_out, beam)
-
-
-if __name__ == "__main__":
-
-    # for simple testing
-    import matplotlib.pyplot as plt
-    a = 51149  # km
-    e = 0.007
-    i = 45.0
-    omega = 80.0
-    w = 0.
-    imsize = 300  # px
-    pixscale = 500  # km/px
-    focus = np.array([imsize / 2, imsize / 2])
-    simple_ring = Ring(a, e, omega, i, w, width=5000)
-
-    thetas, wedges = simple_ring.as_azimuthal_wedges(
-        (imsize, imsize), focus, pixscale, nwedges=60, width=5000 * u.km, n=1e3, z=1)
-
-    # check if wedges add up to a full ellipse
-    wedges_arr = np.asarray(wedges)
-    wedges_sum = np.sum(wedges, axis=0)
-    plt.imshow(wedges_sum, origin='lower')
-    plt.show()
-
-    # img = simple_ring.as_2d_array((imsize, imsize), pixscale) #shape (pixels), pixscale (km)
-    #plt.imshow(img, origin = 'lower')
-    # plt.show()
