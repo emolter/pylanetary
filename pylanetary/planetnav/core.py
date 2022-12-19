@@ -5,6 +5,7 @@ import astropy.units as u
 from image_registration.chi2_shifts import chi2_shift
 from image_registration.fft_tools.shift import shiftnd, shift2d
 from scipy import ndimage
+from skimage import feature
 from scipy.interpolate import griddata
 import matplotlib.pyplot as plt
 
@@ -15,9 +16,11 @@ from pylanetary.pylanetary.utils.core import *
 To implement
 ------------
 * make lat_lon accept either east or west longitudes with a flag
-* test PlanetNav.reproject()
-* writing ModelPlanetEllipsoid and PlanetNav.reproject() outputs to fits
-* support for 2-D Gaussian beams and measured PSFs in ldmodel() and elsewhere
+* function to write ModelPlanetEllipsoid and PlanetNav.reproject() outputs to fits
+* test support for 2-D Gaussian beams and measured PSFs
+* test edge detector
+* implement quadratic limb darkening
+* why are there two functions for surface normal and sun normal? should surface normal also account for latitude?
 '''
 
 def lat_lon(x,y,ob_lon,ob_lat,pixscale_km,np_ang,req,rpol):
@@ -26,9 +29,17 @@ def lat_lon(x,y,ob_lon,ob_lat,pixscale_km,np_ang,req,rpol):
     
     Parameters
     ----------
+    x, y : 
+    ob_lon, ob_lat : 
+    pixscale_km : 
+    np_ang : 
+    req, rpol : 
     
     Returns
     -------
+    lat_g : planetographic latitudes, shape ???
+    lat_c : planetocentric latitudes, shape ???
+    lon_w : West longitudes, shape ???
     
     Examples
     --------
@@ -37,7 +48,7 @@ def lat_lon(x,y,ob_lon,ob_lat,pixscale_km,np_ang,req,rpol):
     ----------
     write lots of tests to ensure all the geometry is correct
     but what to test against?
-    this has been working well for years against real data, but there might
+    this has been working reasonably well for years with real data, but there might
         still be small bugs.
     for example, should figure out *actually* whether longitudes are E or W when
         passed sub-observer longitudes in each formalism.
@@ -110,6 +121,24 @@ def surface_normal(lat_g, lon_w, ob_lon):
     nz = np.sin(np.radians(lat_g))
     return np.asarray([nx,ny,nz])
     
+
+def sun_normal(lat_g, lon_w, sun_lon, sun_lat):
+    '''Computes the normal vector to the surface of the planet.
+    Taking the dot product of output with sub-obs or sub-sun vector
+         gives the cosine of emission angle
+    
+    Parameters
+    ----------
+    
+    Returns
+    -------
+    
+    '''
+    nx = np.cos(np.radians(lat_g-sun_lat))*np.cos(np.radians(lon_w-sun_lon))
+    ny = np.cos(np.radians(lat_g-sun_lat))*np.sin(np.radians(lon_w-sun_lon))
+    nz = np.sin(np.radians(lat_g-sun_lat))
+    return np.asarray([nx,ny,nz])
+    
     
 def emission_angle(ob_lat, surf_n):
     '''
@@ -126,15 +155,23 @@ def emission_angle(ob_lat, surf_n):
     return np.dot(surf_n.T, ob).T
     
     
-def limb_darkening(mu, a, law='exp'):
+def limb_darkening(mu, a, law='exp', mu0=None):
     '''
     Parameters
     ----------
     mu: float or array-like, required. cosine of emission angle
     a: float or array-like, required. limb-darkening parameter(s)
-        if law=="exp" or law=="linear", a must have length 1
+        if law=="exp", "linear", or "minnaert", a must have length 1
         if law=="quadratic", a must have length 2 such that [a0, a1] are 
             the free parameters in the ??? and ??? terms, respectively.
+    law: str, optional. default "exp".
+        what type of limb darkening law to use. options are:
+        linear:
+        quadratic:
+        exp:
+        minnaert:
+    mu0: float or array-like, optional. default None. cosine of solar incidence angle.
+        has no effect unless law=="minnaert", in which case it is required.
     
     Returns
     -------
@@ -143,22 +180,28 @@ def limb_darkening(mu, a, law='exp'):
     To-do list
     ----------
     add quadratic fits, e.g. Equation 12 of https://doi.org/10.1029/2020EA001254
+    support for nonzero solar incidence angles - see JWST Io model
+    what should be done when mu > 1 or mu < 0 is passed?
     '''
     
+    mu = np.array(mu) #necessary so when floats are passed in, the line mu[bad] = 0 doesnt complain about indexing a float
     bad = np.isnan(mu)
     mu[bad] = 0.0
-    if law == 'exp' or law == 'exponential':
+    if law.lower() == 'exp' or law.lower() == 'exponential':
         ld = mu**a
-        ld[bad] = np.nan
-        return ld
-    elif law == 'linear':
+    elif law.lower() == 'linear':
         ld = 1 - a * (1 - mu)
-        ld[bad] = np.nan
-        return ld
-    elif law == 'quadratic':
-        raise NotImplementedError
+    elif law.lower() == 'quadratic':
+        raise NotImplementedError()
+    elif law.lower() == 'minnaert':
+        if mu0 is None:
+            raise ValueError('mu0 must be specified if law == minnaert')
+        ld = mu0**a * mu**(a-1)
     else:
         raise ValueError('limb darkening laws accepted: "linear", "exp"')
+    ld = np.array(ld)
+    ld[bad] = np.nan
+    return ld
     
 
 class ModelPlanetEllipsoid:
@@ -181,6 +224,15 @@ class ModelPlanetEllipsoid:
         
         Attributes
         ----------
+        req, rpol : see parameters
+        ob_lon, ob_lat : see parameters
+        pixscale_km : see parameters
+        deg_per_px : approximate size of pixel on planet, in degrees, at sub-observer point
+        lat_g : 2-D array, same shape as data. planetographic latitudes. NaN where off planet disk
+        lon_w : 2-D array, same shape as data. west longitudes. NaN where off planet disk
+        mu : 2-D array, same shape as data. cosines of the emission angle. NaN where off planet disk
+        surf_n : 3-D array, shape (3,x,y) CHECK THIS. Normal vector to the surface 
+            of the planet at each pixel. NaN where off planet disk
         
         Examples
         --------
@@ -188,6 +240,8 @@ class ModelPlanetEllipsoid:
         '''
         
         # TO DO: handle Astropy units here
+        self.req, self.rpol = req, rpol
+        self.pixscale_km = pixscale_km
         self.ob_lon = ob_lon
         self.ob_lat = ob_lat
         self.np_ang = np_ang
@@ -266,6 +320,8 @@ class PlanetNav(ModelPlanetEllipsoid):
     def __init__(self, data, ephem, req, rpol, pixscale):
         '''
         Build the planet model according to the observation parameters
+        Model (i.e. self.lat_g, self.lon_w, self.mu) are same shape as data and
+             initially at center of array. 
         
         Parameters
         ----------
@@ -280,16 +336,17 @@ class PlanetNav(ModelPlanetEllipsoid):
         
         Attributes
         ----------
-        data : 
-        req, rpol : 
-        pixscale_arcsec : 
-        pixscale_km :
-        ephem : 
+        data : see parameters
+        req, rpol : see parameters
+        pixscale_arcsec : pixel scale of image in arcsec
+        pixscale_km : pixel scale of image in km based on data in ephem
+        ephem : see parameters
         deg_per_px : approximate size of pixel on planet, in degrees, at sub-observer point
-        lat_g :
-        lon_w : 
-        mu :
-        surf_n :
+        lat_g : 2-D array, same shape as data. planetographic latitudes. NaN where off planet disk
+        lon_w : 2-D array, same shape as data. west longitudes. NaN where off planet disk
+        mu : 2-D array, same shape as data. cosines of the emission angle. NaN where off planet disk
+        surf_n : 3-D array, shape (3,x,y) CHECK THIS. Normal vector to the surface 
+            of the planet at each pixel. NaN where off planet disk
         
         Examples
         --------
@@ -299,17 +356,21 @@ class PlanetNav(ModelPlanetEllipsoid):
         
         # TO DO: fix these all to accept Astropy quantities
         self.data = data
-        self.req = req
-        self.rpol = rpol
         self.pixscale_arcsec = pixscale
         self.ephem = ephem
         self.pixscale_km = self.ephem['delta']*u.au.to(u.km)*np.radians(self.pixscale_arcsec/3600.)
+        
+        super().__init__(self.data.T.shape,
+                    self.ephem['PDObsLon'],
+                    self.ephem['PDObsLat'],
+                    self.pixscale_km,
+                    self.ephem['NPole_ang'],
+                    req,rpol)
         
         avg_circumference = 2*np.pi*((self.req + self.rpol)/2.0)
         self.deg_per_px = self.pixscale_km * (1/avg_circumference) * 360 
         
         # build the planet model onto the x-y array of the detector
-        super().__init__(self.data.T.shape,self.ephem['PDObsLon'],self.ephem['PDObsLat'],self.pixscale_km,self.ephem['NPole_ang'],self.req,self.rpol)
         
           
     def __str__(self):
@@ -326,37 +387,47 @@ class PlanetNav(ModelPlanetEllipsoid):
         return f'PlanetNav instance; req={self.req}, rpol={self.rpol}, pixscale={self.pixscale}'
     
         
-    def ldmodel(self, tb, a, fwhm = 0.0, law='exp'):
+    def ldmodel(self, tb, a, beamsize = None, law='exp'):
         '''
         Make a limb-darkened model disk convolved with the beam
         Parameters
         ----------
-        tb: float. brightness temperature of disk at mu=1
-        a: float, required. limb darkening parameter
-        fwhm: float, optional. FWHM of 1-D gaussian to convolve, units arcsec. 
-            if set to 0 (default), does not convolve with beam
-        law: str, optional. options 'exp' or 'linear'. type of limb darkening law to use
+        tb : float. brightness temperature of disk at mu=1
+        a : float, required. limb darkening parameter
+        beamsize : float/int or 3-element array-like, optional.
+            FWHM of Gaussian beam with which to convolve the observation
+            units of fwhm are number of pixels.
+            if array-like, has form (FWHM_X, FWHM_Y, POSITION_ANGLE)
+            units of position angle are assumed degrees unless astropy Angle is passed
+            if float/int, this is FWHM of assumed circular beam
+            if no beamsize is specified, will make infinite-resolution
+        law : str, optional. options 'exp' or 'linear'. type of limb darkening law to use
         '''
         ## TO DO: make this allow a 2-D Gaussian beam!
         
         ldmodel = limb_darkening(np.copy(self.mu), a, law=law)
         ldmodel[np.isnan(ldmodel)] = 0.0
         ldmodel = tb*ldmodel
-        if fwhm > 0.0:
-            fwhm /= self.pixscale_arcsec #arcsec is assumed, so convert to pixels
-            sigma = fwhm / (2*np.sqrt(2*np.log(2))) # convert beam FWHM to 
-            model = ndimage.gaussian_filter(ldmodel, sigma) # Gaussian approximation to Airy ring has this sigma
-            return model
-        elif fwhm == 0:
+        if beamsize is None:
             return ldmodel
+        elif np.array(beamsize).size == 1:
+            fwhm = beamsize / self.pixscale_arcsec
+            return convolve_with_beam(ldmodel, fwhm)
+            
+        elif np.array(beam).size == 3:
+            beam = (beamsize[0]/self.pixscale_arcsec, beamsize[1]/self.pixscale_arcsec, beamsize[2])
+            return convolve_with_beam(data, beam)
         else:
-            raise ValueError("FWHM must be a positive float, or zero (for no beam convolution).")
+            raise ValueError("beam must be a positive float, or 3-element array-like (fwhm_x, fwhm_y, theta_deg).")
+        return ldmodel
+        
     
         
-    def colocate(self, mode = 'canny', diagnostic_plot=True, save_plot=None, **kwargs):
+    def colocate(self, mode = 'convolution', diagnostic_plot=True, save_plot=None, **kwargs):
         '''
         Co-locate the model planet with the observed planet
             using any of several different methods
+        To do: improve the Canny edge-detection according to the skimage tutorial
         
         Parameters
         ----------
@@ -369,10 +440,12 @@ class PlanetNav(ModelPlanetEllipsoid):
             'manual': shift by a user-defined number of pixels in x and y
                 kwargs: shift_x, shift_y
             'convolution': takes the shift that maximizes the convolution of model and planet
-                kwargs: {'tb':float, 'a':float, 'fwhm':float}
-                    {brightness temperature of disk at mu=1, limb darkening param, fwhm in arcsec}
-            another one from skimage tutorial? or this just improves the Canny one?
-            default 'canny'
+                kwargs: {'tb':float, 'a':float, 'beamsize':float}
+                    tb : brightness temperature of disk at mu=1, 
+                    a : limb darkening param, beam in arcsec
+                    beamsize : see ldmodel docstring
+            'disk': same as convolution
+            default 'convolution'
         diagnostic_plot: bool, optional. default True
             do you want the diagnostic plots to be shown
         save_plot: str or None, optional. 
@@ -381,21 +454,23 @@ class PlanetNav(ModelPlanetEllipsoid):
         
         Returns
         -------
-            dx, dy:
-            dxerr, dyerr:
+            dx, dy: best-fit difference in position between model and data, in pixel units
+                To shift data to center (i.e., colocated with model), apply a shift of -dx, -dy
+                To shift model to data, apply a shift of dx, dy
+            dxerr, dyerr: uncertainty in the shift based on the cross-correlation 
+                from image_registration.chi2_shift
         
         Examples
         --------
         need at least one example of each mode here
-        and one test of each mode, too, btw
         '''
         
         if (mode == 'convolution') or (mode == 'disk'):
-            model = self.ldmodel(kwargs['tb'], kwargs['a'], fwhm=kwargs['fwhm'], law='exp')
+            model = self.ldmodel(kwargs['tb'], kwargs['a'], beamsize=kwargs['beamsize'], law='exp')
             data_to_compare = self.data 
         elif mode == 'canny':
             ### COMPLETELY UNTESTED RIGHT NOW ###
-            model_planet = ~np.isnan(mu) #flat disk model
+            model_planet = ~np.isnan(self.mu) #flat disk model
             edges = feature.canny(self.data/np.max(self.data), sigma=kwargs['sigma'], low_threshold = kwargs['low_thresh'], high_threshold = kwargs['high_thresh'])
             model = feature.canny(model_planet, sigma=kwargs['sigma'], low_threshold = kwargs['low_thresh'], high_threshold = kwargs['high_thresh'])
             data_to_compare = edges
@@ -445,7 +520,8 @@ class PlanetNav(ModelPlanetEllipsoid):
 
     def xy_shift_model(self, dx, dy):
         '''
-        simple function to FFTshift data by a user-defined amount
+        simple function to FFTshift model (i.e., lat_g, lon_w, and mu) 
+            by a user-defined amount
         for example, to apply the suggested shift from colocate()
         
         Parameters
@@ -455,7 +531,7 @@ class PlanetNav(ModelPlanetEllipsoid):
         
         good = ~np.isnan(self.mu)
         good_shifted = shift2d(good,dx,dy)
-        bad_shifted = good_shifted < 0.01
+        bad_shifted = good_shifted < 0.1
         outputs = []
         for arr in [self.mu, self.lon_w, self.lat_g]:
             
@@ -466,15 +542,14 @@ class PlanetNav(ModelPlanetEllipsoid):
             
         self.mu, self.lon_w, self.lat_g = outputs 
         
-        
-    def plot_latlon_overlay(self):
-        
-        return
-        
     
-    def reproject(self, outstem = None, pixscale_arcsec = None, interp = 'cubic'):
+    def reproject(self, pixscale_arcsec = None, interp = 'cubic'):
         '''
         Projects the data onto a flat x-y grid according to self.lat_g, self.lon_w
+        This function only works properly if self.lat_g and self.lon_w 
+            are centered with respect to self.data; for instance, 
+            if ONE of xy_shift_data or xy_shift_model has been applied 
+            using the dx, dy output of colocate()
         
         Parameters
         ----------
@@ -550,22 +625,6 @@ class PlanetNav(ModelPlanetEllipsoid):
         emang[farside] = np.nan
         projected = datsort
         mu_projected = emang
-        
-        if outstem is not None:
-            raise NotImplementedError
-            ### need to rewrite this to make fits files from scratch
-            ### with some useful header information
-            #write data to fits file    
-            hdulist_out = self.im.hdulist
-            ## projected data
-            hdulist_out[0].header['OBJECT'] = self.date+'_projected'
-            hdulist_out[0].data = datsort
-            hdulist_out[0].writeto(outstem + '_proj.fits', overwrite=True)
-            ## emission angles
-            hdulist_out[0].header['OBJECT'] = self.date+'_mu_proj'
-            hdulist_out[0].data = emang
-            hdulist_out[0].writeto(outstem + '_mu_proj.fits', overwrite=True)
-            print('Writing files %s'%outstem + '_proj.fits and %s'%outstem + '_mu_proj.fits')
 
         return projected, mu_projected
         
