@@ -6,9 +6,9 @@
 from ._astropy_init import *   # noqa
 # ----------------------------------------------------------------------------
 
-__all__ = []
+__all__ = ['planetnav']
 from .example_mod import *   # noqa
 # Then you can be explicit to control what ends up in the namespace,
-__all__ += ['do_primes']   # noqa
+__all__ += []   # noqa
 # or you can keep everything from the subpackage with the following instead
 # __all__ += example_mod.__all__

@@ -5,7 +5,11 @@ import numpy as np
 
 def test_jybm_to_jysr_and_back():
     
-    assert x
+    jybm = 99.
+    beamx = 1
+    beamy = 2
+    jysr = utils.jybm_to_jysr(jybm, beamx, beamy)
+    assert np.isclose(utils.jysr_to_jybm(jysr, beamx, beamy), jybm, rtol=1e-5)
 
 
 def test_jybm_to_tb_and_back():
@@ -14,27 +18,23 @@ def test_jybm_to_tb_and_back():
     freq = 300.
     beamx = 0.5
     beamy = 0.3
-    tb = jybm_to_tb(I, freq, beamx, beamy)
-    assert np.isclose(tb_to_jybm(tb, freq, beamx, beamy), I, rtol=1e-5)
+    tb = utils.jybm_to_tb(I, freq, beamx, beamy)
+    assert np.isclose(utils.tb_to_jybm(tb, freq, beamx, beamy), I, rtol=1e-5)
     
 
 def test_planck_and_back():
     
     tb = 100
     freq = 301.
-    assert np.isclose(inverse_planck(planck(tb, freq), freq), tb, rtol=1e-5)
+    assert np.isclose(utils.inverse_planck(utils.planck(tb, freq), freq), tb, rtol=1e-5)
     
 
 def test_rj_and_back():
     
     tb = 100
     freq = 301.
-    assert np.isclose(inverse_rj(rj(tb, freq), freq), tb, rtol=1e-5)
-    
-    
-def test_convolve_with_beam():
-    
-    assert
+    B = utils.rayleigh_jeans(tb, freq)
+    assert np.isclose(utils.inverse_rayleigh_jeans(B, freq), tb, rtol=1e-5)
     
 
 

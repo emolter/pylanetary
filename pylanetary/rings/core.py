@@ -16,7 +16,7 @@ from scipy import ndimage
 import importlib
 
 # fix imports later
-from pylanetary.pylanetary.utils.core import *
+from ..utils import *
 
 '''
 To implement

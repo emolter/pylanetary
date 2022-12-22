@@ -10,7 +10,8 @@ from scipy.interpolate import griddata
 import matplotlib.pyplot as plt
 
 # fix imports later
-from pylanetary.pylanetary.utils.core import *
+#from pylanetary.pylanetary.utils.core import *
+from ..utils import *
 
 '''
 To implement
@@ -263,16 +264,6 @@ class ModelPlanetEllipsoid:
         
         
     def __str__(self):
-        '''
-        String representation
-        
-        Examples
-        --------
-        >>> from pylanetary.planetnav import ModelPlanetEllipsoid
-        >>> uranus_model = ModelPlanetEllipsoid(whatever)
-        >>> print(uranus_model)
-        ModelPlanetEllipsoid instance; req=whatever, rpol=whatever
-        '''
         return f'ModelPlanetEllipsoid instance; req={self.req}, rpol={self.rpol}'
         
         
@@ -370,20 +361,8 @@ class PlanetNav(ModelPlanetEllipsoid):
         avg_circumference = 2*np.pi*((self.req + self.rpol)/2.0)
         self.deg_per_px = self.pixscale_km * (1/avg_circumference) * 360 
         
-        # build the planet model onto the x-y array of the detector
-        
           
     def __str__(self):
-        '''
-        String representation
-        
-        Examples
-        --------
-        >>> from pylanetary.planetnav import PlanetNav
-        >>> uranus_obs = PlanetNav(whatever)
-        >>> print(uranus_obs)
-        PlanetNav instance; req=whatever, rpol=whatever, pixscale=whatever
-        '''
         return f'PlanetNav instance; req={self.req}, rpol={self.rpol}, pixscale={self.pixscale}'
     
         
@@ -466,7 +445,11 @@ class PlanetNav(ModelPlanetEllipsoid):
         '''
         
         if (mode == 'convolution') or (mode == 'disk'):
-            model = self.ldmodel(kwargs['tb'], kwargs['a'], beamsize=kwargs['beamsize'], law='exp')
+            if not 'beamsize' in kwargs:
+                beamsize=None
+            else:
+                beamsize = kwargs['beamsize']
+            model = self.ldmodel(kwargs['tb'], kwargs['a'], beamsize=beamsize, law='exp')
             data_to_compare = self.data 
         elif mode == 'canny':
             ### COMPLETELY UNTESTED RIGHT NOW ###
