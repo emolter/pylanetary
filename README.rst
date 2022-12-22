@@ -5,13 +5,17 @@ data processing and modeling tools for ring, moon, and planet observations
     :target: http://www.astropy.org
     :alt: Powered by Astropy Badge
 
+Quickstart
+----------
+We plan to make this pip installable with the first (pre-alpha) release in the next few weeks. For now, check out the capabilities we're working on in the Jupyter notebooks under "notebooks"
+
 Scope and Goal
 --------------
-The idea behind pylanetary is to bring solar system science tools into the open-source Python 3 / Astropy ecosystem. We, and many of our colleagues, rely heavily on useful code snippets passed down from other solar system scientists. But these pieces of code are untested, in multiple languages (IDL, Python 2, etc.), closed-source, and have many untracked dependencies.
+The idea behind pylanetary is to bring solar system science tools into the open-source Python 3 / Astropy ecosystem. We, and many of our colleagues, rely heavily on useful code snippets passed down from other solar system scientists. But these pieces of code are untested, in multiple languages (IDL, Python 2, etc.), closed-source, and have many untracked dependencies. We want to fix that.
 
 At present, we are working on two main packages:
-1. model planet/moon ellipsoids with latitude-longitude grids, projecting those into arbitrary observing geometries and pixel scales, comparing those models with observational data, and projecting observational data onto lat-lon grids;
-2. model ring systems, projecting those into arbitrary observing geometries and pixel scales, and comparing those models with observational data
+1. planetnav: Tools to make and use ellipsoidal models of planets/large moons. This subpackage projects planet models into arbitrary observing geometries and pixel scales, compares those models with observational data, assigns latitudes, longitudes, and emission angles to observational data, and projects images onto latitude-longitude grids.
+2. rings: Tools to model planetary ring systems.  This subpackage projects ring models into arbitrary observing geometries and pixel scales, compares those models with observational data, and makes radial and azimuthal profiles of observed rings.
 
 The eventual goal is to become Astropy-affiliated, but that is a long way off.
 At present, this repository is just a skeleton. We would love your help developing it!  See Contributing.
