@@ -16,7 +16,7 @@ from scipy import ndimage
 import importlib
 
 # fix imports later
-from pylanetary.pylanetary.utils.core import *
+from ..utils import *
 
 '''
 To implement
@@ -499,6 +499,7 @@ class Ring:
             units of fwhm are number of pixels.
             if array-like, has form (FWHM_X, FWHM_Y, POSITION_ANGLE)
             units of position angle are assumed degrees unless astropy Angle is passed
+            if float/int, this is FWHM of assumed circular beam
             if no beamsize is specified, will make infinite-resolution
 
         Returns
@@ -528,11 +529,7 @@ class Ring:
         if beamsize is None:
             return arr_sharp
         else:
-            # make the Gaussian beam. convert FWHM to sigma
-            beam = convolution.Gaussian2DKernel(beamsize[0] / 2.35482004503,
-                                                beamsize[1] / 2.35482004503,
-                                                Angle(beamsize[2], unit=u.deg))
-            return convolution.convolve_fft(arr_sharp, beam)
+            return convolve_with_beam(arr_sharp, beamsize)
 
 
 class RingSystemModelObservation:
@@ -771,12 +768,4 @@ class RingSystemModelObservation:
         if beamsize is None:
             return arr_out
         else:
-            # make the Gaussian beam. convert FWHM to sigma
-            beam = convolution.Gaussian2DKernel(
-                beamsize[0] / 2.35482004503,
-                beamsize[1] / 2.35482004503,
-                Angle(
-                    beamsize[2],
-                    unit=u.deg).to(
-                    u.radian).value)
-            return convolution.convolve(arr_out, beam)
+            return convolve_with_beam(arr_out, beamsize)
