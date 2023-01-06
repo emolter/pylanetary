@@ -110,6 +110,17 @@ def rayleigh_jeans(tb, freq):
     return I*1e26
     
     
+def rebin(arr, z):
+    '''
+    assumes z < 1
+    use this instead of ndimage.zoom for z < 1
+    '''
+    new_shape = (int(arr.shape[0]*z), int(arr.shape[1]*z))
+    shape = (new_shape[0], arr.shape[0] // new_shape[0],
+             new_shape[1], arr.shape[1] // new_shape[1])
+    return arr.reshape(shape).mean(-1).mean(1)
+    
+    
 def convolve_with_beam(data, beam):
     '''
     Parameters

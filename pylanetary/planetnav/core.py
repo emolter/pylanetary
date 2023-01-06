@@ -17,6 +17,7 @@ from ..utils import *
 To implement
 ------------
 * make lat_lon accept either east or west longitudes with a flag
+    * test on Jupiter (GRS), Io (Loki), and others
 * function to write ModelPlanetEllipsoid and PlanetNav.reproject() outputs to fits
 * test support for 2-D Gaussian beams and measured PSFs
 * test edge detector

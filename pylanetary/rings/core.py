@@ -637,6 +637,7 @@ class RingSystemModelObservation:
         obj = Horizons(id=horizons_lookup[planet.lower().capitalize()], location=horizons_loc, epochs={
                        'start': epoch.to_value('iso'), 'stop': (epoch + 1 * u.day).to_value('iso'), 'step': '1d'})
         eph = obj.ephemerides()
+        self.eph = eph
         self.np_ang = eph['NPole_ang'][0]
 
         # match the static and ephemeris data for rings using a table merge
