@@ -4,6 +4,9 @@ data processing and modeling tools for ring, moon, and planet observations
 .. image:: http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat
     :target: http://www.astropy.org
     :alt: Powered by Astropy Badge
+	
+.. image:: https://zenodo.org/badge/459414964.svg
+   :target: https://zenodo.org/badge/latestdoi/459414964
 
 Scope and Goal
 --------------
