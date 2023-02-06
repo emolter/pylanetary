@@ -3,6 +3,8 @@ import numpy as np
 from astropy import convolution
 from astropy.coordinates import Angle
 import astropy.units as u
+import importlib
+from scipy.interpolate import interp1d
 
 '''
 To do:
@@ -110,6 +112,72 @@ def rayleigh_jeans(tb, freq):
     return I*1e26
     
     
+def solar_spectrum():
+    '''
+    Load and return Gueymard solar standard spectrum
+        from 0 to 1000 um
+    Returns
+    -------
+    wl: array of astropy Quantities, wavelength in microns
+    flux: array of astropy Quantities, solar flux in erg s-1 cm-2 um-1
+    '''
+    infile = importlib.resources.open_binary('pylanetary.utils.data', 'newguey2003.txt')
+    wl, flux = np.loadtxt(infile, skiprows=8).T
+    wl=wl*1e-3*u.micron
+    flux = flux*u.Watt*u.m**(-2)*u.nm**(-1)
+    flux = flux.to(u.erg*u.second**(-1)*u.cm**(-2)*u.micron**(-1))
+    
+    return wl, flux
+    
+    
+def I_over_F(observed_flux, bp, target_sun_dist, target_omega):
+    '''
+    see Hammel et al 1989, DOI:10.1016/0019-1035(89)90149-8
+    
+    Parameters
+    ----------
+    observed_flux: float, required. flux from target. units erg s-1 cm-2 um-1
+    bp: np.array([wls, trans]). the filter transmission function. units of wls is um
+    target_sun_dist: float, required. distance between sun and target in AU
+    target_omega: float, required. solid angle of target in sr
+    
+    Returns
+    -------
+    wl_eff: effective filter wavelength in um
+    I/F: the I/F
+    
+    To do
+    -----
+    handling of astropy units
+    '''
+    wl_sun, flux_sun = solar_spectrum()
+    
+    # observe sun through the filter bandpass
+    wl_filt, trans = bp[0], bp[1]
+    trans = trans/np.nanmax(trans)
+    wl_eff = np.average(wl_filt, weights = trans)
+    interp_f = interp1d(wl_filt, trans, bounds_error = False, fill_value = 0.0)
+    trans_sun = interp_f(wl_sun)
+    sun_flux_earth = np.sum(flux_sun * trans_sun)/np.nansum(trans_sun)
+    
+    # compute I/F
+    sun_flux = (sun_flux_earth)*(1.0/target_sun_dist)**2 
+    expected_flux = sun_flux.value * target_omega
+    
+    return wl_eff, observed_flux * np.pi / expected_flux #factor of pi for pi*Fsun in I/F definition
+    
+    
+def rebin(arr, z):
+    '''
+    assumes z < 1
+    use this instead of ndimage.zoom for z < 1
+    '''
+    new_shape = (int(arr.shape[0]*z), int(arr.shape[1]*z))
+    shape = (new_shape[0], arr.shape[0] // new_shape[0],
+             new_shape[1], arr.shape[1] // new_shape[1])
+    return (1/z**2)*arr.reshape(shape).mean(-1).mean(1)
+    
+    
 def convolve_with_beam(data, beam):
     '''
     Parameters
@@ -131,3 +199,4 @@ def convolve_with_beam(data, beam):
                                         fwhm_y / 2.35482004503,
                                         Angle(theta, unit=u.deg))
     return convolution.convolve_fft(data, psf)
+    
