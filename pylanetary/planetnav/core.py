@@ -55,6 +55,7 @@ def lat_lon(x,y,ob_lon,ob_lat,pixscale_km,np_ang,req,rpol):
     for example, should figure out *actually* whether longitudes are E or W when
         passed sub-observer longitudes in each formalism.
         should have the option to choose East or West longitudes
+    probably need to write some math in this docstring
     '''
     np_ang = -np_ang
     x1 = pixscale_km*(np.cos(np.radians(np_ang))*x - np.sin(np.radians(np_ang))*y)
@@ -407,7 +408,6 @@ class PlanetNav(ModelPlanetEllipsoid):
         '''
         Co-locate the model planet with the observed planet
             using any of several different methods
-        To do: improve the Canny edge-detection according to the skimage tutorial
         
         Parameters
         ----------
@@ -424,6 +424,7 @@ class PlanetNav(ModelPlanetEllipsoid):
                     tb : brightness temperature of disk at mu=1, 
                     a : limb darkening param, beam in arcsec
                     beamsize : see ldmodel docstring
+                    err : per-pixel error in input image
             'disk': same as convolution
             default 'convolution'
         diagnostic_plot: bool, optional. default True
@@ -443,7 +444,15 @@ class PlanetNav(ModelPlanetEllipsoid):
         Examples
         --------
         need at least one example of each mode here
+        
+        To Do
+        -----
+        * improve the Canny edge-detection according to the skimage tutorial
+        * make dxerr, dyerr realistic, or remove this option
+            * play with adding per-pixel error to chi2_shift call
         '''
+        defaultKwargs={'err':None}
+        kwargs = { **defaultKwargs, **kwargs }
         
         if (mode == 'convolution') or (mode == 'disk'):
             if not 'beamsize' in kwargs:
@@ -453,12 +462,13 @@ class PlanetNav(ModelPlanetEllipsoid):
             model = self.ldmodel(kwargs['tb'], kwargs['a'], beamsize=beamsize, law='exp')
             data_to_compare = self.data 
         elif mode == 'canny':
-            ### COMPLETELY UNTESTED RIGHT NOW ###
-            model_planet = ~np.isnan(self.mu) #flat disk model
-            edges = feature.canny(self.data/np.max(self.data), sigma=kwargs['sigma'], low_threshold = kwargs['low_thresh'], high_threshold = kwargs['high_thresh'])
+            #model_planet = ~np.isnan(self.mu) #flat disk model
+            model_planet = self.ldmodel(kwargs['tb'], kwargs['a'], beamsize=kwargs['beamsize'], law='exp')
+            
+            edges = feature.canny(self.data, sigma=kwargs['sigma'], low_threshold = kwargs['low_thresh'], high_threshold = kwargs['high_thresh'])
             model = feature.canny(model_planet, sigma=kwargs['sigma'], low_threshold = kwargs['low_thresh'], high_threshold = kwargs['high_thresh'])
             data_to_compare = edges
-        [dx,dy,dxerr,dyerr] = chi2_shift(model, data_to_compare)
+        [dx,dy,dxerr,dyerr] = chi2_shift(model, data_to_compare, err=kwargs['err'])
         
         if diagnostic_plot:
             
@@ -558,18 +568,18 @@ class PlanetNav(ModelPlanetEllipsoid):
         
         To-do list
         ----------
-        Finish this! 
+        * reproject to any geometry, or at least to polar geometry
+        * why does this look awful when we shift model instead of data?
         
-        reproject to any geometry, or at least to polar geometry
         '''
         
         #determine the number of pixels in resampled image
         if pixscale_arcsec is None:
             pixscale_arcsec = self.pixscale_arcsec
-        npix_per_degree = (1/self.deg_per_px) * (pixscale_arcsec / self.pixscale_arcsec) # (old pixel / degree lat) * (new_pixscale / old_pixscale) = new pixel / degree lat
+        npix_per_degree = (1/self.deg_per_px) * (self.pixscale_arcsec / pixscale_arcsec) # (old pixel / degree lat) * (new_pixscale / old_pixscale) = new pixel / degree lat
         npix = int(npix_per_degree * 180) + 1 #(new pixel / degree lat) * (degree lat / planet) = new pixel / planet
         print('New image will be %d by %d pixels'%(2*npix + 1, npix))
-        print('Pixel scale %f km = %f pixels per degree'%(self.pixscale_km, npix_per_degree))
+        print('Pixel scale %f km = %f pixels per degree'%(self.pixscale_km * (pixscale_arcsec / self.pixscale_arcsec), npix_per_degree))
         
         #create new lon-lat grid
         extra_wrap_dist = 180
@@ -609,7 +619,9 @@ class PlanetNav(ModelPlanetEllipsoid):
         emang[farside] = np.nan
         projected = datsort
         mu_projected = emang
+        
+        self.projected_data = projected
+        self.projected_mu = mu_projected
 
         return projected, mu_projected
-        
 

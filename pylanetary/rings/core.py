@@ -491,7 +491,8 @@ class Ring:
             if not specified, center of image is assumed
         width : float/int or astropy Quantity. If float/int (i.e. no units specified), then
             kilometers is assumed
-        flux : float/int or astropy Quantity. sets brightness of the array
+        flux : float/int or astropy Quantity. technically not a flux, but a specific intensity!
+            sets specific intensity of ring
             NEED TO DECIDE: what default units make sense here? - probably a surface brightness
 
         beamsize : float/int or 3-element array-like, optional.
@@ -524,7 +525,9 @@ class Ring:
             focus = (shape[0] / 2.0, shape[1] / 2.0)
 
         ann = self.as_elliptical_annulus(focus, pixscale, width)
-        arr_sharp = ann.to_mask(method='exact').to_image(shape)
+        arr_sharp = flux*ann.to_mask(method='exact').to_image(shape)
+        # since flux is simple multiply by mask, its really a specific intensity
+        # e.g. Jy/sr
 
         if beamsize is None:
             return arr_sharp
@@ -627,7 +630,7 @@ class RingSystemModelObservation:
         self.systemtable = self.bodytable.meta
 
         ring_data_source = importlib.resources.open_binary(
-            'pylanetary.pylanetary.rings.data', f'{planet}_ring_data.hdf5')
+            'pylanetary.rings.data', f'{planet}_ring_data.hdf5')
         #ring_static_data = table.Table.read(f'data/{planet}_ring_data.hdf5', format = 'hdf5')
         ring_static_data = table.Table.read(ring_data_source, format='hdf5')
         planet_ephem = self.bodytable.loc[planet]
