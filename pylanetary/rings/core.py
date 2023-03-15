@@ -21,6 +21,7 @@ from ..utils import *
 '''
 To implement
 ------------
+* make as_azimuthal_wedges() allow non-square images!
 * class that inherits from Ring for asymmetric rings like Uranus's epsilon ring
 * make azimuthal wedges code much faster by implementing wedges as a photutils object
 * make RingSystemModelObservation account for the peculiar rotation angles of each ring
@@ -324,7 +325,6 @@ class Ring:
         a_f, b_f = np.abs(a_f), np.abs(b_f)
 
         # scale the width with the geometry
-        # test this!
         a_outer = a_f + (a_f / a) * (width / 2)
         a_inner = a_f - (a_f / a) * (width / 2)
         b_outer = b_f + (b_f / b) * (width / 2)
@@ -340,6 +340,7 @@ class Ring:
         # account for inclination, which effectively shortens b even more
         b_outer = b_outer / pixscale.value
         center = np.array(focus) - center / pixscale.value
+        center = center[::-1]
 
         # finally make the annulus object
         ann = aperture.EllipticalAnnulus(center,

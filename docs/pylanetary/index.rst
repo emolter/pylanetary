@@ -1,10 +1,10 @@
 *******************************
-planetary_toolkit Documentation
+pylanetary Documentation
 *******************************
 
-This is the documentation for planetary_toolkit.
+This is the documentation for pylanetary.
 
 Reference/API
 =============
 
-.. automodapi:: planetary_toolkit
+.. automodapi:: pylanetary
