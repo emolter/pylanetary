@@ -17,8 +17,7 @@ To implement
 * make lat_lon accept either east or west longitudes with a flag
     * test on Jupiter (GRS), Io (Loki), and others
 * function to write ModelPlanetEllipsoid and PlanetNav.reproject() outputs to fits
-* add/test support for 2-D Gaussian beams and measured PSFs
-* test edge detector
+* test support for 2-D Gaussian beams and measured PSFs
 * implement quadratic limb darkening
 * why are there two functions for surface normal and sun normal? should surface normal also account for latitude?
 '''
