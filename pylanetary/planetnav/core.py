@@ -220,6 +220,8 @@ class ModelEllipsoid:
         req, rpol : float, required. planet equatorial, polar radius in km
         center : 2-element array-like, optional. default (0,0). 
             pixel location of center of planet
+        shape: 2-element tuple, optional. shape of output arrays.
+            if None, shape is just larger than diameter / pixscale
         
         Attributes
         ----------
@@ -327,6 +329,7 @@ class ModelBody(ModelEllipsoid):
     def ldmodel(self, tb, a, beam = None, law='exp'):
         '''
         Make a limb-darkened model disk convolved with the beam
+        
         Parameters
         ----------
         tb : float. brightness temperature of disk at mu=1
@@ -371,12 +374,6 @@ class Nav(ModelBody):
     '''
     use model planet ellipsoid to navigate image data for a planetary body
     
-    questions:
-        is it possible to take req and rpol from Horizons?
-        maybe just have a dict of them
-        how should image be passed? as an Image() object?
-            do Image() objects end up in utils?
-    
     '''    
     
     def __init__(self, data, ephem, req, rpol, pixscale):
@@ -412,8 +409,7 @@ class Nav(ModelBody):
         
         Examples
         --------
-        
-        
+        see notebooks/nav-tutorial.ipynb
         '''
         
         # TO DO: fix these all to accept Astropy quantities
