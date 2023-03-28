@@ -16,7 +16,7 @@ To implement
 ------------
 * make lat_lon accept either east or west longitudes with a flag
     * test on Jupiter (GRS), Io (Loki), and others
-* function to write ModelPlanetEllipsoid and PlanetNav.reproject() outputs to fits
+* function to write ModelEllipsoid and PlanetNav.reproject() outputs to fits
 * test support for 2-D Gaussian beams and measured PSFs
 * implement quadratic limb darkening
 * why are there two functions for surface normal and sun normal? should surface normal also account for latitude?
@@ -202,9 +202,9 @@ def limb_darkening(mu, a, law='exp', mu0=None):
     ld = np.array(ld)
     ld[bad] = np.nan
     return ld
-    
 
-class ModelPlanetEllipsoid:
+
+class ModelEllipsoid:
     '''
     Projection of an ellipsoid onto a 2-D array with latitude and longitude grid
     '''
@@ -263,7 +263,7 @@ class ModelPlanetEllipsoid:
         
         
     def __str__(self):
-        return f'ModelPlanetEllipsoid instance; req={self.req}, rpol={self.rpol}'
+        return f'ModelEllipsoid instance; req={self.req}, rpol={self.rpol}'
         
         
     def write(self, outstem):
@@ -292,9 +292,79 @@ class ModelPlanetEllipsoid:
         hdulist_out[0].writeto(lead_string + '_mu.fits', overwrite=True)
         
         return
+
+
+class ModelBody:
+    
+    '''
+    docstring
+    '''
+    
+    def __init__(self, ephem, req, rpol, pixscale):
+        
+        self.pixscale_arcsec = pixscale
+        self.ephem = ephem
+        self.pixscale_km = self.ephem['delta']*u.au.to(u.km)*np.radians(self.pixscale_arcsec/3600.)
+        
+        super().__init__(self.data.T.shape,
+                    self.ephem['PDObsLon'],
+                    self.ephem['PDObsLat'],
+                    self.pixscale_km,
+                    self.ephem['NPole_ang'],
+                    req,rpol)
+        
+        avg_circumference = 2*np.pi*((self.req + self.rpol)/2.0)
+        self.deg_per_px = self.pixscale_km * (1/avg_circumference) * 360
+        
+        
+    def __str__(self):
+        return f'ModelBody instance; req={self.req}, rpol={self.rpol}, pixscale={self.pixscale}'
+    
+        
+    def ldmodel(self, tb, a, beam = None, law='exp'):
+        '''
+        Make a limb-darkened model disk convolved with the beam
+        Parameters
+        ----------
+        tb : float. brightness temperature of disk at mu=1
+        a : float, required. limb darkening parameter
+        beam : float/int, 3-element array-like, or 2-D psf array, optional.
+            FWHM of Gaussian beam with which to convolve the observation
+            units of fwhm are number of pixels.
+            - if 3-element array-like, has form (FWHM_X, FWHM_Y, POSITION_ANGLE)
+            units of position angle are assumed degrees unless astropy Angle is passed
+            - if float/int, this is FWHM of assumed circular beam
+            - if 2-D array, assumes beam is set to the full PSF
+            - if no beamsize is specified, will make infinite-resolution
+        law : str, optional. options 'exp' or 'linear'. type of limb darkening law to use
+        '''
+        ## TO DO: make this allow a 2-D Gaussian beam!
+        
+        ldmodel = limb_darkening(np.copy(self.mu), a, law=law)
+        ldmodel[np.isnan(ldmodel)] = 0.0
+        ldmodel = tb*ldmodel
+        if beam is None:
+            return ldmodel
+        elif np.array(beam).size == 1: #FWHM
+            fwhm = beam / self.pixscale_arcsec
+            return convolve_with_beam(ldmodel, fwhm)
+            
+        elif np.array(beam).size == 3: #bmaj, bmin, theta
+            beam = (beam[0]/self.pixscale_arcsec, beam[1]/self.pixscale_arcsec, beam[2])
+            return convolve_with_beam(ldmodel, beam)
+            
+        elif len(np.array(beam).shape) == 2: #full PSF
+            return convolve_with_beam(ldmodel, beam)
+        else:
+            raise ValueError("beam must be a positive float, 3-element array-like (fwhm_x, fwhm_y, theta_deg), or 2-D array representing the PSF.")    
+        
+        
+      def zonalmodel():
+          raise NotImplementedError()
+          return  
         
 
-class PlanetNav(ModelPlanetEllipsoid):
+class Nav(ModelBody):
     '''
     use model planet ellipsoid to navigate image data for a planetary body
     
@@ -304,8 +374,7 @@ class PlanetNav(ModelPlanetEllipsoid):
         how should image be passed? as an Image() object?
             do Image() objects end up in utils?
     
-    '''
-    
+    '''    
     
     def __init__(self, data, ephem, req, rpol, pixscale):
         '''
@@ -346,64 +415,13 @@ class PlanetNav(ModelPlanetEllipsoid):
         
         # TO DO: fix these all to accept Astropy quantities
         self.data = data
-        self.pixscale_arcsec = pixscale
-        self.ephem = ephem
-        self.pixscale_km = self.ephem['delta']*u.au.to(u.km)*np.radians(self.pixscale_arcsec/3600.)
-        
-        super().__init__(self.data.T.shape,
-                    self.ephem['PDObsLon'],
-                    self.ephem['PDObsLat'],
-                    self.pixscale_km,
-                    self.ephem['NPole_ang'],
-                    req,rpol)
-        
-        avg_circumference = 2*np.pi*((self.req + self.rpol)/2.0)
-        self.deg_per_px = self.pixscale_km * (1/avg_circumference) * 360 
+        super().__init__(data, ephem, req, rpol, pixscale)
         
           
     def __str__(self):
         return f'PlanetNav instance; req={self.req}, rpol={self.rpol}, pixscale={self.pixscale}'
     
-        
-    def ldmodel(self, tb, a, beam = None, law='exp'):
-        '''
-        Make a limb-darkened model disk convolved with the beam
-        Parameters
-        ----------
-        tb : float. brightness temperature of disk at mu=1
-        a : float, required. limb darkening parameter
-        beam : float/int, 3-element array-like, or 2-D psf array, optional.
-            FWHM of Gaussian beam with which to convolve the observation
-            units of fwhm are number of pixels.
-            - if 3-element array-like, has form (FWHM_X, FWHM_Y, POSITION_ANGLE)
-            units of position angle are assumed degrees unless astropy Angle is passed
-            - if float/int, this is FWHM of assumed circular beam
-            - if 2-D array, assumes beam is set to the full PSF
-            - if no beamsize is specified, will make infinite-resolution
-        law : str, optional. options 'exp' or 'linear'. type of limb darkening law to use
-        '''
-        ## TO DO: make this allow a 2-D Gaussian beam!
-        
-        ldmodel = limb_darkening(np.copy(self.mu), a, law=law)
-        ldmodel[np.isnan(ldmodel)] = 0.0
-        ldmodel = tb*ldmodel
-        if beam is None:
-            return ldmodel
-        elif np.array(beam).size == 1: #FWHM
-            fwhm = beam / self.pixscale_arcsec
-            return convolve_with_beam(ldmodel, fwhm)
             
-        elif np.array(beam).size == 3: #bmaj, bmin, theta
-            beam = (beam[0]/self.pixscale_arcsec, beam[1]/self.pixscale_arcsec, beam[2])
-            return convolve_with_beam(ldmodel, beam)
-            
-        elif np.array(beam).shape.size == 2: #full PSF
-            return convolve_with_beam(ldmodel, beam)
-        else:
-            raise ValueError("beam must be a positive float, 3-element array-like (fwhm_x, fwhm_y, theta_deg), or 2-D array representing the PSF.")
-        
-    
-        
     def colocate(self, mode = 'convolution', diagnostic_plot=True, save_plot=None, **kwargs):
         '''
         Co-locate the model planet with the observed planet
