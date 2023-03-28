@@ -209,11 +209,10 @@ class ModelEllipsoid:
     Projection of an ellipsoid onto a 2-D array with latitude and longitude grid
     '''
     
-    def __init__(self, shape, ob_lon, ob_lat, pixscale_km, np_ang, req, rpol, center=(0.0, 0.0)):
+    def __init__(self, ob_lon, ob_lat, pixscale_km, np_ang, req, rpol, center=(0.0, 0.0), shape=None):
         '''
         Parameters
         ----------
-        shape : 2-element array-like of ints, required. shape of lat_g, lon_w
         ob_lon, ob_lat, np_ang : float, required. 
             sub-observer longitude, latitude, np_ang in degrees
             see JPL Horizons ephemeris tool for detailed descriptions
@@ -228,15 +227,16 @@ class ModelEllipsoid:
         ob_lon, ob_lat : see parameters
         pixscale_km : see parameters
         deg_per_px : approximate size of pixel on planet, in degrees, at sub-observer point
-        lat_g : 2-D array, same shape as data. planetographic latitudes. NaN where off planet disk
-        lon_w : 2-D array, same shape as data. west longitudes. NaN where off planet disk
-        mu : 2-D array, same shape as data. cosines of the emission angle. NaN where off planet disk
+        lat_g : 2-D array, shape is roughly 2*max(req, rpol)/pixscale. 
+            planetographic latitudes. NaN where off planet disk
+        lon_w : 2-D array, same shape as lat_g. west longitudes. NaN where off planet disk
+        mu : 2-D array, same shape as lat_g. cosines of the emission angle. NaN where off planet disk
         surf_n : 3-D array, shape (3,x,y) CHECK THIS. Normal vector to the surface 
             of the planet at each pixel. NaN where off planet disk
         
         Examples
         --------
-        
+        see notebooks/planetnav-tutorial.ipynb
         '''
         
         # TO DO: handle Astropy units here
@@ -245,6 +245,10 @@ class ModelEllipsoid:
         self.ob_lon = ob_lon
         self.ob_lat = ob_lat
         self.np_ang = np_ang
+        
+        if shape is None:
+            sz = int(2*np.ceil(np.max([req, rpol]) / pixscale_km) + 1)
+            shape = (sz, sz)
         
         xcen, ycen = int(shape[0]/2), int(shape[1]/2) #pixels at center of planet
         xx = np.arange(shape[0]) - xcen
@@ -294,24 +298,23 @@ class ModelEllipsoid:
         return
 
 
-class ModelBody:
+class ModelBody(ModelEllipsoid):
     
     '''
     docstring
     '''
     
-    def __init__(self, ephem, req, rpol, pixscale):
+    def __init__(self, ephem, req, rpol, pixscale, shape=None):
         
         self.pixscale_arcsec = pixscale
         self.ephem = ephem
         self.pixscale_km = self.ephem['delta']*u.au.to(u.km)*np.radians(self.pixscale_arcsec/3600.)
         
-        super().__init__(self.data.T.shape,
-                    self.ephem['PDObsLon'],
+        super().__init__(self.ephem['PDObsLon'],
                     self.ephem['PDObsLat'],
                     self.pixscale_km,
                     self.ephem['NPole_ang'],
-                    req,rpol)
+                    req,rpol, shape=shape)
         
         avg_circumference = 2*np.pi*((self.req + self.rpol)/2.0)
         self.deg_per_px = self.pixscale_km * (1/avg_circumference) * 360
@@ -359,9 +362,9 @@ class ModelBody:
             raise ValueError("beam must be a positive float, 3-element array-like (fwhm_x, fwhm_y, theta_deg), or 2-D array representing the PSF.")    
         
         
-      def zonalmodel():
-          raise NotImplementedError()
-          return  
+    def zonalmodel():
+        raise NotImplementedError()
+        return  
         
 
 class Nav(ModelBody):
@@ -415,7 +418,7 @@ class Nav(ModelBody):
         
         # TO DO: fix these all to accept Astropy quantities
         self.data = data
-        super().__init__(data, ephem, req, rpol, pixscale)
+        super().__init__(ephem, req, rpol, pixscale, shape=data.shape)
         
           
     def __str__(self):
