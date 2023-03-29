@@ -1,5 +1,5 @@
 astropy==5.0.4
-astroquery==0.4.7.dev7884
+git+https://github.com/astropy/astroquery.git
 beautifulsoup4==4.11.1
 extension_helpers==1.0.0
 image_registration==0.2.6
@@ -8,9 +8,8 @@ numpy==1.23.4
 photutils==1.4.0
 pytest==6.2.4
 pytest_astropy_header==0.2.2
-scikit_image==0.18.3
+scikit-image==0.18.3
 scipy==1.9.1
 setuptools==57.0.0
 setuptools_scm==7.0.5
-skimage==0.0
 sphinx_astropy==1.7.0

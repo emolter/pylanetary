@@ -104,7 +104,7 @@ def test_model_planet_ellipsoid(datadir):
     req = 25560 #km
     rpol = 24970 #km
     
-    ell = planetnav.ModelPlanetEllipsoid(
+    ell = planetnav.ModelEllipsoid(
                 shape, 
                 ob_lon, ob_lat, 
                 pixscale_km, 
@@ -134,7 +134,7 @@ def test_planetnav(datadir):
     a=0.1
     beamsize=0.05
     keck_uranus = np.load(os.path.join(datadir, 'keck_uranus.npy'))
-    nav = planetnav.PlanetNav(keck_uranus, ephem, req, rpol, pixscale_arcsec)
+    nav = planetnav.Nav(keck_uranus, ephem, req, rpol, pixscale_arcsec)
        
     ldmodel_expected = np.load(os.path.join(datadir, 'ldmodel.npy'))
     ldmodel = nav.ldmodel(flux, a, beamsize = beamsize, law='exp')

@@ -9,8 +9,6 @@ from skimage import feature
 from scipy.interpolate import griddata
 import matplotlib.pyplot as plt
 
-# fix imports later
-#from pylanetary.pylanetary.utils.core import *
 from ..utils import *
 
 '''
@@ -18,9 +16,8 @@ To implement
 ------------
 * make lat_lon accept either east or west longitudes with a flag
     * test on Jupiter (GRS), Io (Loki), and others
-* function to write ModelPlanetEllipsoid and PlanetNav.reproject() outputs to fits
+* function to write ModelEllipsoid and PlanetNav.reproject() outputs to fits
 * test support for 2-D Gaussian beams and measured PSFs
-* test edge detector
 * implement quadratic limb darkening
 * why are there two functions for surface normal and sun normal? should surface normal also account for latitude?
 '''
@@ -205,18 +202,17 @@ def limb_darkening(mu, a, law='exp', mu0=None):
     ld = np.array(ld)
     ld[bad] = np.nan
     return ld
-    
 
-class ModelPlanetEllipsoid:
+
+class ModelEllipsoid:
     '''
     Projection of an ellipsoid onto a 2-D array with latitude and longitude grid
     '''
     
-    def __init__(self, shape, ob_lon, ob_lat, pixscale_km, np_ang, req, rpol, center=(0.0, 0.0)):
+    def __init__(self, ob_lon, ob_lat, pixscale_km, np_ang, req, rpol, center=(0.0, 0.0), shape=None):
         '''
         Parameters
         ----------
-        shape : 2-element array-like of ints, required. shape of lat_g, lon_w
         ob_lon, ob_lat, np_ang : float, required. 
             sub-observer longitude, latitude, np_ang in degrees
             see JPL Horizons ephemeris tool for detailed descriptions
@@ -224,6 +220,8 @@ class ModelPlanetEllipsoid:
         req, rpol : float, required. planet equatorial, polar radius in km
         center : 2-element array-like, optional. default (0,0). 
             pixel location of center of planet
+        shape: 2-element tuple, optional. shape of output arrays.
+            if None, shape is just larger than diameter / pixscale
         
         Attributes
         ----------
@@ -231,15 +229,16 @@ class ModelPlanetEllipsoid:
         ob_lon, ob_lat : see parameters
         pixscale_km : see parameters
         deg_per_px : approximate size of pixel on planet, in degrees, at sub-observer point
-        lat_g : 2-D array, same shape as data. planetographic latitudes. NaN where off planet disk
-        lon_w : 2-D array, same shape as data. west longitudes. NaN where off planet disk
-        mu : 2-D array, same shape as data. cosines of the emission angle. NaN where off planet disk
+        lat_g : 2-D array, shape is roughly 2*max(req, rpol)/pixscale. 
+            planetographic latitudes. NaN where off planet disk
+        lon_w : 2-D array, same shape as lat_g. west longitudes. NaN where off planet disk
+        mu : 2-D array, same shape as lat_g. cosines of the emission angle. NaN where off planet disk
         surf_n : 3-D array, shape (3,x,y) CHECK THIS. Normal vector to the surface 
             of the planet at each pixel. NaN where off planet disk
         
         Examples
         --------
-        
+        see notebooks/planetnav-tutorial.ipynb
         '''
         
         # TO DO: handle Astropy units here
@@ -248,6 +247,10 @@ class ModelPlanetEllipsoid:
         self.ob_lon = ob_lon
         self.ob_lat = ob_lat
         self.np_ang = np_ang
+        
+        if shape is None:
+            sz = int(2*np.ceil(np.max([req, rpol]) / pixscale_km) + 1)
+            shape = (sz, sz)
         
         xcen, ycen = int(shape[0]/2), int(shape[1]/2) #pixels at center of planet
         xx = np.arange(shape[0]) - xcen
@@ -266,7 +269,7 @@ class ModelPlanetEllipsoid:
         
         
     def __str__(self):
-        return f'ModelPlanetEllipsoid instance; req={self.req}, rpol={self.rpol}'
+        return f'ModelEllipsoid instance; req={self.req}, rpol={self.rpol}'
         
         
     def write(self, outstem):
@@ -295,20 +298,83 @@ class ModelPlanetEllipsoid:
         hdulist_out[0].writeto(lead_string + '_mu.fits', overwrite=True)
         
         return
+
+
+class ModelBody(ModelEllipsoid):
+    
+    '''
+    docstring
+    '''
+    
+    def __init__(self, ephem, req, rpol, pixscale, shape=None):
+        
+        self.pixscale_arcsec = pixscale
+        self.ephem = ephem
+        self.pixscale_km = self.ephem['delta']*u.au.to(u.km)*np.radians(self.pixscale_arcsec/3600.)
+        
+        super().__init__(self.ephem['PDObsLon'],
+                    self.ephem['PDObsLat'],
+                    self.pixscale_km,
+                    self.ephem['NPole_ang'],
+                    req,rpol, shape=shape)
+        
+        avg_circumference = 2*np.pi*((self.req + self.rpol)/2.0)
+        self.deg_per_px = self.pixscale_km * (1/avg_circumference) * 360
+        
+        
+    def __str__(self):
+        return f'ModelBody instance; req={self.req}, rpol={self.rpol}, pixscale={self.pixscale}'
+    
+        
+    def ldmodel(self, tb, a, beam = None, law='exp'):
+        '''
+        Make a limb-darkened model disk convolved with the beam
+        
+        Parameters
+        ----------
+        tb : float. brightness temperature of disk at mu=1
+        a : float, required. limb darkening parameter
+        beam : float/int, 3-element array-like, or 2-D psf array, optional.
+            FWHM of Gaussian beam with which to convolve the observation
+            units of fwhm are number of pixels.
+            - if 3-element array-like, has form (FWHM_X, FWHM_Y, POSITION_ANGLE)
+            units of position angle are assumed degrees unless astropy Angle is passed
+            - if float/int, this is FWHM of assumed circular beam
+            - if 2-D array, assumes beam is set to the full PSF
+            - if no beamsize is specified, will make infinite-resolution
+        law : str, optional. options 'exp' or 'linear'. type of limb darkening law to use
+        '''
+        ## TO DO: make this allow a 2-D Gaussian beam!
+        
+        ldmodel = limb_darkening(np.copy(self.mu), a, law=law)
+        ldmodel[np.isnan(ldmodel)] = 0.0
+        ldmodel = tb*ldmodel
+        if beam is None:
+            return ldmodel
+        elif np.array(beam).size == 1: #FWHM
+            fwhm = beam / self.pixscale_arcsec
+            return convolve_with_beam(ldmodel, fwhm)
+            
+        elif np.array(beam).size == 3: #bmaj, bmin, theta
+            beam = (beam[0]/self.pixscale_arcsec, beam[1]/self.pixscale_arcsec, beam[2])
+            return convolve_with_beam(ldmodel, beam)
+            
+        elif len(np.array(beam).shape) == 2: #full PSF
+            return convolve_with_beam(ldmodel, beam)
+        else:
+            raise ValueError("beam must be a positive float, 3-element array-like (fwhm_x, fwhm_y, theta_deg), or 2-D array representing the PSF.")    
+        
+        
+    def zonalmodel():
+        raise NotImplementedError()
+        return  
         
 
-class PlanetNav(ModelPlanetEllipsoid):
+class Nav(ModelBody):
     '''
     use model planet ellipsoid to navigate image data for a planetary body
     
-    questions:
-        is it possible to take req and rpol from Horizons?
-        maybe just have a dict of them
-        how should image be passed? as an Image() object?
-            do Image() objects end up in utils?
-    
-    '''
-    
+    '''    
     
     def __init__(self, data, ephem, req, rpol, pixscale):
         '''
@@ -343,67 +409,18 @@ class PlanetNav(ModelPlanetEllipsoid):
         
         Examples
         --------
-        
-        
+        see notebooks/nav-tutorial.ipynb
         '''
         
         # TO DO: fix these all to accept Astropy quantities
         self.data = data
-        self.pixscale_arcsec = pixscale
-        self.ephem = ephem
-        self.pixscale_km = self.ephem['delta']*u.au.to(u.km)*np.radians(self.pixscale_arcsec/3600.)
-        
-        super().__init__(self.data.T.shape,
-                    self.ephem['PDObsLon'],
-                    self.ephem['PDObsLat'],
-                    self.pixscale_km,
-                    self.ephem['NPole_ang'],
-                    req,rpol)
-        
-        avg_circumference = 2*np.pi*((self.req + self.rpol)/2.0)
-        self.deg_per_px = self.pixscale_km * (1/avg_circumference) * 360 
+        super().__init__(ephem, req, rpol, pixscale, shape=data.shape)
         
           
     def __str__(self):
         return f'PlanetNav instance; req={self.req}, rpol={self.rpol}, pixscale={self.pixscale}'
     
-        
-    def ldmodel(self, tb, a, beamsize = None, law='exp'):
-        '''
-        Make a limb-darkened model disk convolved with the beam
-        Parameters
-        ----------
-        tb : float. brightness temperature of disk at mu=1
-        a : float, required. limb darkening parameter
-        beamsize : float/int or 3-element array-like, optional.
-            FWHM of Gaussian beam with which to convolve the observation
-            units of fwhm are number of pixels.
-            if array-like, has form (FWHM_X, FWHM_Y, POSITION_ANGLE)
-            units of position angle are assumed degrees unless astropy Angle is passed
-            if float/int, this is FWHM of assumed circular beam
-            if no beamsize is specified, will make infinite-resolution
-        law : str, optional. options 'exp' or 'linear'. type of limb darkening law to use
-        '''
-        ## TO DO: make this allow a 2-D Gaussian beam!
-        
-        ldmodel = limb_darkening(np.copy(self.mu), a, law=law)
-        ldmodel[np.isnan(ldmodel)] = 0.0
-        ldmodel = tb*ldmodel
-        if beamsize is None:
-            return ldmodel
-        elif np.array(beamsize).size == 1:
-            fwhm = beamsize / self.pixscale_arcsec
-            return convolve_with_beam(ldmodel, fwhm)
             
-        elif np.array(beam).size == 3:
-            beam = (beamsize[0]/self.pixscale_arcsec, beamsize[1]/self.pixscale_arcsec, beamsize[2])
-            return convolve_with_beam(data, beam)
-        else:
-            raise ValueError("beam must be a positive float, or 3-element array-like (fwhm_x, fwhm_y, theta_deg).")
-        return ldmodel
-        
-    
-        
     def colocate(self, mode = 'convolution', diagnostic_plot=True, save_plot=None, **kwargs):
         '''
         Co-locate the model planet with the observed planet
@@ -414,16 +431,19 @@ class PlanetNav(ModelPlanetEllipsoid):
         mode : str, optional. Which method should be used to overlay
             planet model and data. Choices are:
             'canny': uses the Canny edge detection algorithm...
-                kwargs: low_thresh, high_thresh, sigma
-                Question: how to write docstrings for kwargs?
-                Question: how to actually do kwargs?
+                kwargs: {'low_thresh':float, ;high_thresh':float, 'sigma':float}
+                    see documentation of skimage.feature.canny for explanation
+                    To find edges of planet disk, typical "good" values are:
+                    low_thresh : RMS noise in image
+                    high_thresh : approximate flux value of background disk (i.e., cloud-free, volcano-free region)
+                    sigma : 5
             'manual': shift by a user-defined number of pixels in x and y
                 kwargs: shift_x, shift_y
             'convolution': takes the shift that maximizes the convolution of model and planet
                 kwargs: {'tb':float, 'a':float, 'beamsize':float}
                     tb : brightness temperature of disk at mu=1, 
                     a : limb darkening param, beam in arcsec
-                    beamsize : see ldmodel docstring
+                    beam : see ldmodel docstring
                     err : per-pixel error in input image
             'disk': same as convolution
             default 'convolution'
@@ -451,19 +471,15 @@ class PlanetNav(ModelPlanetEllipsoid):
         * make dxerr, dyerr realistic, or remove this option
             * play with adding per-pixel error to chi2_shift call
         '''
-        defaultKwargs={'err':None}
+        defaultKwargs={'err':None,'beam':None}
         kwargs = { **defaultKwargs, **kwargs }
-        
+
         if (mode == 'convolution') or (mode == 'disk'):
-            if not 'beamsize' in kwargs:
-                beamsize=None
-            else:
-                beamsize = kwargs['beamsize']
-            model = self.ldmodel(kwargs['tb'], kwargs['a'], beamsize=beamsize, law='exp')
+            model = self.ldmodel(kwargs['tb'], kwargs['a'], beam=kwargs['beam'], law='exp')
             data_to_compare = self.data 
         elif mode == 'canny':
             #model_planet = ~np.isnan(self.mu) #flat disk model
-            model_planet = self.ldmodel(kwargs['tb'], kwargs['a'], beamsize=kwargs['beamsize'], law='exp')
+            model_planet = self.ldmodel(kwargs['tb'], kwargs['a'], beam=kwargs['beam'], law='exp')
             
             edges = feature.canny(self.data, sigma=kwargs['sigma'], low_threshold = kwargs['low_thresh'], high_threshold = kwargs['high_thresh'])
             model = feature.canny(model_planet, sigma=kwargs['sigma'], low_threshold = kwargs['low_thresh'], high_threshold = kwargs['high_thresh'])

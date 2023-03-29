@@ -183,7 +183,7 @@ def convolve_with_beam(data, beam):
     Parameters
     ----------
     data : 2-D numpy array, required.
-    beam : float/int or 3-element array-like, required.
+    beam : float/int, 3-element array-like, or array representing psf required.
         if float/int, circular beam assumed, and this sets the fwhm in pixels
         if 3-element array-like, those are (fwhm_x, fwhm_y, theta_deg) 
         in units (pixels, pixels, degrees)
@@ -193,10 +193,15 @@ def convolve_with_beam(data, beam):
         fwhm_x = beam
         fwhm_y = beam
         theta = 0.0
-    else:
+        psf = convolution.Gaussian2DKernel(fwhm_x / 2.35482004503,
+                                            fwhm_y / 2.35482004503,
+                                            Angle(theta, unit=u.deg))
+    elif np.array(beam).size == 3:
         (fwhm_x, fwhm_y, theta) = beam
-    psf = convolution.Gaussian2DKernel(fwhm_x / 2.35482004503,
-                                        fwhm_y / 2.35482004503,
-                                        Angle(theta, unit=u.deg))
+        psf = convolution.Gaussian2DKernel(fwhm_x / 2.35482004503,
+                                            fwhm_y / 2.35482004503,
+                                            Angle(theta, unit=u.deg))
+    else:
+        psf = beam
     return convolution.convolve_fft(data, psf)
     
