@@ -11,9 +11,24 @@ data processing and modeling tools for ring, moon, and planet observations
 .. image:: https://zenodo.org/badge/459414964.svg
    :target: https://zenodo.org/badge/latestdoi/459414964
 
-Quickstart
-----------
-We plan to make this pip installable with the first (pre-alpha) release in the next few weeks. For now, check out the capabilities we're working on in the Jupyter notebooks under "notebooks"
+Installation
+------------
+Pylanetary and its dependencies are pip installable (tested in a blank Conda environment)::
+
+	conda create -n pylanetary-tester python=3.9
+	source activate py39
+	pip install pylanetary
+	
+Some of the ring modeling modules rely on a pre-release (at time of writing) version of ``astroquery``, so you may need to download that package via ``git`` as shown in ``requirements.txt``
+
+To install the development branch, run::
+
+	conda create -n pylanetary-tester python=3.9
+	source activate py39
+	git clone -b active-dev https://github.com/emolter/pylanetary.git
+	cd pylanetary
+	pip install -r requirements.txt
+	python setup.py install
 
 Scope and Goal
 --------------
@@ -41,6 +56,7 @@ Contributing
 
 We love contributions! pylanetary is open source,
 built on open source, and we'd love to have you hang out in our community.
+Please read ``CONTRIBUTING.rst`` before you start.
 
 **Imposter syndrome disclaimer**: We want your help. No, really.
 

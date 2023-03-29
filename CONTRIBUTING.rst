@@ -2,7 +2,7 @@ Contributing to Pylanetary
 ==========================
 Please see `astropy's contributing guildelines
 <http://www.astropy.org/contribute.html>`__ for a general guide to the
-workflow involving git, etc.  Everything below is astroquery-specific.
+workflow involving git, etc.  Everything below is pylanetary-specific.
 
 We strongly encourage draft pull requests to be opened early in development.
 If you are thinking of contributing a new module, please open an issue marked "enhancement"
