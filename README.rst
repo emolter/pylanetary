@@ -16,7 +16,7 @@ Installation
 Pylanetary and its dependencies are pip installable (tested in a blank Conda environment)::
 
 	conda create -n pylanetary-tester python=3.9
-	source activate py39
+	source activate pylanetary-tester
 	pip install pylanetary
 	
 Some of the ring modeling modules rely on a pre-release (at time of writing) version of ``astroquery``, so you may need to download that package via ``git`` as shown in ``requirements.txt``
@@ -24,7 +24,7 @@ Some of the ring modeling modules rely on a pre-release (at time of writing) ver
 To install the development branch, run::
 
 	conda create -n pylanetary-tester python=3.9
-	source activate py39
+	source activate pylanetary-tester
 	git clone -b active-dev https://github.com/emolter/pylanetary.git
 	cd pylanetary
 	pip install -r requirements.txt
