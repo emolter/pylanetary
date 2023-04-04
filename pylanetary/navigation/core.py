@@ -16,10 +16,12 @@ To implement
 ------------
 * make lat_lon accept either east or west longitudes with a flag
     * test on Jupiter (GRS), Io (Loki), and others
-* function to write ModelEllipsoid and PlanetNav.reproject() outputs to fits
+* function to write ModelEllipsoid and Nav.reproject() outputs to fits
 * test support for 2-D Gaussian beams and measured PSFs
 * implement quadratic limb darkening
 * why are there two functions for surface normal and sun normal? should surface normal also account for latitude?
+* make better docstrings for everything (Nav is done)
+* make the tests run
 '''
 
 def lat_lon(x,y,ob_lon,ob_lat,pixscale_km,np_ang,req,rpol):
@@ -216,11 +218,14 @@ class ModelEllipsoid:
         ob_lon, ob_lat, np_ang : float, required. 
             sub-observer longitude, latitude, np_ang in degrees
             see JPL Horizons ephemeris tool for detailed descriptions
-        pixscale_km : float, required. pixel scale in km
-        req, rpol : float, required. planet equatorial, polar radius in km
+        pixscale_km : float, required.
+            pixel scale in km
+        req, rpol : float, required.
+            planet equatorial, polar radius in km
         center : 2-element array-like, optional. default (0,0). 
             pixel location of center of planet
-        shape: 2-element tuple, optional. shape of output arrays.
+        shape: 2-element tuple, optional. 
+            shape of output arrays.
             if None, shape is just larger than diameter / pixscale
         
         Attributes
@@ -372,44 +377,65 @@ class ModelBody(ModelEllipsoid):
 
 class Nav(ModelBody):
     '''
-    use model planet ellipsoid to navigate image data for a planetary body
-    
+    functions for comparing a model ellipsoid with data for navigation and analysis
     '''    
     
     def __init__(self, data, ephem, req, rpol, pixscale):
         '''
-        Build the planet model according to the observation parameters
-        Model (i.e. self.lat_g, self.lon_w, self.mu) are same shape as data and
-             initially at center of array. 
+        Description
+        -----------
+        Build the model body according to the input ephemeris
         
         Parameters
         ----------
-        data : 2-D np array, required. 
-        ephem : Astropy QTable, required. one line from an astroquery.horizons ephemeris. needs to at least have
-            the 'PDObsLon', 'PDObsLat', 'delta', and 'NPole_ang' fields
-            it's ok to pass multiple lines, but will extract relevant fields from the 0th line
-        req : float or Quantity object, required. equatorial radius of planet
-        rpol : float or Quantity object, required. polar radius of planet
-        pixscale : float or Quantity object, required. pixel scale of the images.
-            if float, assumes units of arcsec
+        data : np.array, required.
+            [-] 2-D image data
+        ephem : QTable, required. 
+            [-] astroquery.horizons ephemeris 
+                must have 'PDObsLon', 'PDObsLat', 'delta', and 'NPole_ang' fields
+                it's ok to pass multiple lines, but relevant fields will be read 
+                from the 0th line
+        req : float or Quantity, required. 
+            [km] equatorial radius of planet
+        rpol : float or Quantity, required. 
+            [km] polar radius of planet
+        pixscale : float or Quantity, required. 
+            [arcsec] pixel scale of the input image
         
         Attributes
         ----------
-        data : see parameters
-        req, rpol : see parameters
-        pixscale_arcsec : pixel scale of image in arcsec
-        pixscale_km : pixel scale of image in km based on data in ephem
-        ephem : see parameters
-        deg_per_px : approximate size of pixel on planet, in degrees, at sub-observer point
-        lat_g : 2-D array, same shape as data. planetographic latitudes. NaN where off planet disk
-        lon_w : 2-D array, same shape as data. west longitudes. NaN where off planet disk
-        mu : 2-D array, same shape as data. cosines of the emission angle. NaN where off planet disk
-        surf_n : 3-D array, shape (3,x,y) CHECK THIS. Normal vector to the surface 
-            of the planet at each pixel. NaN where off planet disk
+        data : np.array
+            [-] see Parameters
+        req : float
+            [km] see Parameters
+        rpol : float
+            [km] see Parameters
+        pixscale_arcsec : float
+            [arcsec] pixel scale of image
+        pixscale_km : float
+            [km] pixel scale of image
+        ephem : QTable
+            [-] see parameters
+        deg_per_px : float
+            [deg] approximate size of one pixel at the sub-observer point
+        lat_g : np.array
+            [deg] planetographic latitudes. NaN where off planet disk
+        lon_w : np.array
+            [deg] west longitudes. NaN where off planet disk
+        mu : np.array
+            [-] cosines of the emission angle. NaN where off planet disk
+        surf_n : np.array,  
+            [-] Normal vector to the surface of the planet, shape (3,x,y).
+            NaN where off planet disk
         
         Examples
         --------
         see notebooks/nav-tutorial.ipynb
+        
+        To Do
+        -----
+        - Test astropy quantity handling, ensure docstring reflects what really happens
+        - Update tests
         '''
         
         # TO DO: fix these all to accept Astropy quantities
@@ -423,42 +449,56 @@ class Nav(ModelBody):
             
     def colocate(self, mode = 'convolution', diagnostic_plot=True, save_plot=None, **kwargs):
         '''
+        Description
+        -----------
         Co-locate the model planet with the observed planet
-            using any of several different methods
         
         Parameters
         ----------
-        mode : str, optional. Which method should be used to overlay
-            planet model and data. Choices are:
-            'canny': uses the Canny edge detection algorithm...
-                kwargs: {'low_thresh':float, ;high_thresh':float, 'sigma':float}
-                    see documentation of skimage.feature.canny for explanation
-                    To find edges of planet disk, typical "good" values are:
+        mode : str, optional. Default 'convolution'.
+            [-] Which method should be used to overlay planet model and data. Choices are:
+        
+            'canny': uses the Canny edge detection algorithm.
+                kwargs: 
+                    tb : float, required.
+                        [same flux unit as data] brightness temperature of disk at mu=1 
+                    a : float, required.
+                        [-] exponential limb darkening param
+                    beam : float, tuple, or np.array, optional. default None.
+                    low_thresh : float, required.
+                    high_thresh : float, required.
+                    sigma : int, required.
+                see documentation of skimage.feature.canny for explanation of kwargs
+                To find edges of planet disk, typical "good" values are:
                     low_thresh : RMS noise in image
                     high_thresh : approximate flux value of background disk (i.e., cloud-free, volcano-free region)
                     sigma : 5
-            'manual': shift by a user-defined number of pixels in x and y
-                kwargs: shift_x, shift_y
+        
             'convolution': takes the shift that maximizes the convolution of model and planet
-                kwargs: {'tb':float, 'a':float, 'beamsize':float}
-                    tb : brightness temperature of disk at mu=1, 
-                    a : limb darkening param, beam in arcsec
-                    beam : see ldmodel docstring
-                    err : per-pixel error in input image
+                kwargs:
+                    tb : float, required.
+                        [same flux unit as data] brightness temperature of disk at mu=1 
+                    a : float, required.
+                        [-] exponential limb darkening param
+                    beam : float, tuple, or np.array, optional. default None.
+                        see ldmodel docstring
+                    err : float, per-pixel error in input image
+        
             'disk': same as convolution
-            default 'convolution'
+
         diagnostic_plot: bool, optional. default True
             do you want the diagnostic plots to be shown
-        save_plot: str or None, optional. 
-            if str, file path to save the diagnostic plot. if None, does not save.
-            does nothing if diagnostic_plot == False
+        save_plot: str, optional. default None.
+            file path to save the diagnostic plot. if None, does not save.
         
         Returns
         -------
-            dx, dy: best-fit difference in position between model and data, in pixel units
+            dx, dy: float
+                [pixels] best-fit difference in position between model and data
                 To shift data to center (i.e., colocated with model), apply a shift of -dx, -dy
                 To shift model to data, apply a shift of dx, dy
-            dxerr, dyerr: uncertainty in the shift based on the cross-correlation 
+            dxerr, dyerr: float
+                [pixels] uncertainty in the shift based on the cross-correlation 
                 from image_registration.chi2_shift
         
         Examples
@@ -467,9 +507,7 @@ class Nav(ModelBody):
         
         To Do
         -----
-        * improve the Canny edge-detection according to the skimage tutorial
-        * make dxerr, dyerr realistic, or remove this option
-            * play with adding per-pixel error to chi2_shift call
+        - sometimes dxerr, dyerr give unrealistic or undefined behavior
         '''
         defaultKwargs={'err':None,'beam':None}
         kwargs = { **defaultKwargs, **kwargs }
@@ -518,25 +556,31 @@ class Nav(ModelBody):
     
     def xy_shift_data(self, dx, dy):
         '''
+        Description
+        -----------
         simple function to FFTshift data by a user-defined amount
         for example, to apply the suggested shift from colocate()
         
         Parameters
         ----------
-        dx, dy : floats, required. x,y shift in units of pixels
+        dx, dy : floats, required. 
+            [pixels] x,y shift
         '''
         self.data = shift2d(self.data,dx,dy)
 
 
     def xy_shift_model(self, dx, dy):
         '''
+        Description
+        -----------
         simple function to FFTshift model (i.e., lat_g, lon_w, and mu) 
             by a user-defined amount
         for example, to apply the suggested shift from colocate()
         
         Parameters
         ----------
-        dx, dy : floats, required. x,y shift in units of pixels
+        dx, dy : floats, required. 
+            [pixels] x,y shift
         '''
         
         good = ~np.isnan(self.mu)
@@ -555,6 +599,8 @@ class Nav(ModelBody):
     
     def reproject(self, pixscale_arcsec = None, interp = 'cubic'):
         '''
+        Description
+        -----------
         Projects the data onto a flat x-y grid according to self.lat_g, self.lon_w
         This function only works properly if self.lat_g and self.lon_w 
             are centered with respect to self.data; for instance, 
@@ -563,22 +609,25 @@ class Nav(ModelBody):
         
         Parameters
         ----------
-        outstem: str, optional. stem of output filenames. if not set, will not save
-        pixscale_arcsec: float, optional. Pixel scale of output in arcseconds. 
+        outstem: str, optional. 
+            [-] stem of output filenames. if not set, will not save
+        pixscale_arcsec: float, optional. default self.pixscale_arcsec.
+            [arcsec] Pixel scale of output
             If not set, output data will have the same pixel scale as the input data 
             at the sub-observer point. 
             Note that everywhere else will be super-sampled.
-        interp: str, optional. type of interpolation to do between pixels in the projection.
-            default "cubic"
+        interp: str, optional. default 'cubic'
+            type of interpolation to do between pixels in the projection.
         
         Returns
         -------
-        projected: 2-D numpy array. the projected data 
-        mu_projected: 2-D numpy array. the cosine of the emission angle (mu) 
-            at each pixel in the projection
+        projected: np.array
+            the projected data 
+        mu_projected: np.array
+            cosine of the emission angle (mu) at each pixel in the projection
         
-        Outputs
-        -------
+        Writes
+        ------
         outstem+"_proj.fits" : fits file containing projected data
         outstem+:_mu_proj.fits" : fits file containing mu values of projected data
         
