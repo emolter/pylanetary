@@ -157,15 +157,17 @@ def emission_angle(ob_lat, surf_n):
     return np.dot(surf_n.T, ob).T
     
     
+    
 def limb_darkening(mu, a, law='exp', mu0=None):
     '''
     Parameters
     ----------
     mu: float or array-like, required. cosine of emission angle
     a: float or array-like, required. limb-darkening parameter(s)
+        if law=="disc", flat disk a will be ignored 
         if law=="exp", "linear", or "minnaert", a must have length 1
-        if law=="quadratic", a must have length 2 such that [a0, a1] are 
-            the free parameters in the ??? and ??? terms, respectively.
+        if law=="quadratic", "square-root", a must have length 2 such that [a0, a1] are 
+            the free parameters in the first and second terms, respectively.
     law: str, optional. default "exp".
         what type of limb darkening law to use. options are:
         linear:
@@ -178,31 +180,43 @@ def limb_darkening(mu, a, law='exp', mu0=None):
     Returns
     -------
     ld: limb-darkening value at each input mu value
+
+    References
+    -------
+    Overview of published limb darkening laws: https://www.astro.keele.ac.uk/jkt/codes/jktld.html 
     
     To-do list
     ----------
-    add quadratic fits, e.g. Equation 12 of https://doi.org/10.1029/2020EA001254
-    support for nonzero solar incidence angles - see JWST Io model
-    what should be done when mu > 1 or mu < 0 is passed?
+
     '''
-    
+    # Input check 
+    if np.any(mu <0) or np.any(mu>1): 
+        raise ValueError('Cosine of emission angle range [0,1]')
+
     mu = np.array(mu) #necessary so when floats are passed in, the line mu[bad] = 0 doesnt complain about indexing a float
-    bad = np.isnan(mu)
-    mu[bad] = 0.0
+    idnan = np.isnan(mu)
+    mu[idnan] = 0.0
+
+    if law.lower() == 'disc': 
+        ld = mu[mu>0] = 1  
     if law.lower() == 'exp' or law.lower() == 'exponential':
         ld = mu**a
     elif law.lower() == 'linear':
         ld = 1 - a * (1 - mu)
     elif law.lower() == 'quadratic':
-        raise NotImplementedError()
+        ld = 1 - a[0]*(1-mu) - a[1]*(1-mu)**2  
+    elif law.lower() == 'square-root':
+        ld = 1 - a[0]*(1-mu) - a[1]*(1-np.sqrt(mu))   
     elif law.lower() == 'minnaert':
         if mu0 is None:
             raise ValueError('mu0 must be specified if law == minnaert')
         ld = mu0**a * mu**(a-1)
     else:
-        raise ValueError('limb darkening laws accepted: "linear", "exp"')
+        raise ValueError('limb darkening laws accepted: "disc", "linear", "exp", "quadratic", "square-root" ')
+    
     ld = np.array(ld)
-    ld[bad] = np.nan
+    ld[idnan] = np.nan
+
     return ld
 
 
@@ -277,6 +291,49 @@ class ModelEllipsoid:
         return f'ModelEllipsoid instance; req={self.req}, rpol={self.rpol}'
         
         
+    def ldmodel(self, tb, a, beam = None, law='exp'):
+        '''
+        Make a limb-darkened model disk convolved with the beam
+        
+        Parameters
+        ----------
+        tb : float. brightness temperature of disk at mu=1
+        a : float, required. limb darkening parameter
+        beam : float/int, 3-element array-like, or 2-D psf array, optional.
+            FWHM of Gaussian beam with which to convolve the observation
+            units of fwhm are number of pixels.
+            - if 3-element array-like, has form (FWHM_X, FWHM_Y, POSITION_ANGLE)
+            units of position angle are assumed degrees unless astropy Angle is passed
+            - if float/int, this is FWHM of assumed circular beam
+            - if 2-D array, assumes beam is set to the full PSF
+            - if no beamsize is specified, will make infinite-resolution
+        law : str, optional. options 'exp' or 'linear'. type of limb darkening law to use
+        '''
+        ## TO DO: make this allow a 2-D Gaussian beam!
+        
+        ldmodel = limb_darkening(np.copy(self.mu), a, law=law)
+        ldmodel[np.isnan(ldmodel)] = 0.0
+        ldmodel = tb*ldmodel
+        if beam is None:
+            return ldmodel
+        elif np.array(beam).size == 1: #FWHM
+            fwhm = beam / self.pixscale_arcsec
+            return convolve_with_beam(ldmodel, fwhm)
+            
+        elif np.array(beam).size == 3: #bmaj, bmin, theta
+            beam = (beam[0]/self.pixscale_arcsec, beam[1]/self.pixscale_arcsec, beam[2])
+            return convolve_with_beam(ldmodel, beam)
+            
+        elif len(np.array(beam).shape) == 2: #full PSF
+            return convolve_with_beam(ldmodel, beam)
+        else:
+            raise ValueError("beam must be a positive float, 3-element array-like (fwhm_x, fwhm_y, theta_deg), or 2-D array representing the PSF.")    
+        
+        
+    def zonalmodel():
+        raise NotImplementedError()
+        return        
+
     def write(self, outstem):
         '''
         writes latitudes, longitudes, 
@@ -330,49 +387,7 @@ class ModelBody(ModelEllipsoid):
     def __str__(self):
         return f'ModelBody instance; req={self.req}, rpol={self.rpol}, pixscale={self.pixscale}'
     
-        
-    def ldmodel(self, tb, a, beam = None, law='exp'):
-        '''
-        Make a limb-darkened model disk convolved with the beam
-        
-        Parameters
-        ----------
-        tb : float. brightness temperature of disk at mu=1
-        a : float, required. limb darkening parameter
-        beam : float/int, 3-element array-like, or 2-D psf array, optional.
-            FWHM of Gaussian beam with which to convolve the observation
-            units of fwhm are number of pixels.
-            - if 3-element array-like, has form (FWHM_X, FWHM_Y, POSITION_ANGLE)
-            units of position angle are assumed degrees unless astropy Angle is passed
-            - if float/int, this is FWHM of assumed circular beam
-            - if 2-D array, assumes beam is set to the full PSF
-            - if no beamsize is specified, will make infinite-resolution
-        law : str, optional. options 'exp' or 'linear'. type of limb darkening law to use
-        '''
-        ## TO DO: make this allow a 2-D Gaussian beam!
-        
-        ldmodel = limb_darkening(np.copy(self.mu), a, law=law)
-        ldmodel[np.isnan(ldmodel)] = 0.0
-        ldmodel = tb*ldmodel
-        if beam is None:
-            return ldmodel
-        elif np.array(beam).size == 1: #FWHM
-            fwhm = beam / self.pixscale_arcsec
-            return convolve_with_beam(ldmodel, fwhm)
-            
-        elif np.array(beam).size == 3: #bmaj, bmin, theta
-            beam = (beam[0]/self.pixscale_arcsec, beam[1]/self.pixscale_arcsec, beam[2])
-            return convolve_with_beam(ldmodel, beam)
-            
-        elif len(np.array(beam).shape) == 2: #full PSF
-            return convolve_with_beam(ldmodel, beam)
-        else:
-            raise ValueError("beam must be a positive float, 3-element array-like (fwhm_x, fwhm_y, theta_deg), or 2-D array representing the PSF.")    
-        
-        
-    def zonalmodel():
-        raise NotImplementedError()
-        return  
+
         
 
 class Nav(ModelBody):
