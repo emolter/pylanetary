@@ -8,9 +8,9 @@ from scipy.interpolate import interp1d
 
 '''
 To do:
-* write tests for convolve_with_beam (although this is somewhat tested in test_planetnav)
+* write tests for convolve_with_beam, especially for arbitrary PSF image
+* make convolve_with_beam accept Astropy PSFs and super-resolution PSFs as the kernel
 * make these accept astropy units
-* add I/F calculations... or maybe that goes somewhere else
 '''
 
 def beam_area(beamx, beamy):
@@ -180,13 +180,21 @@ def rebin(arr, z):
     
 def convolve_with_beam(data, beam):
     '''
+    Convolves input 2-D image with a Gaussian beam or an input PSF image
+    
     Parameters
     ----------
-    data : 2-D numpy array, required.
-    beam : float/int, 3-element array-like, or array representing psf required.
-        if float/int, circular beam assumed, and this sets the fwhm in pixels
-        if 3-element array-like, those are (fwhm_x, fwhm_y, theta_deg) 
-        in units (pixels, pixels, degrees)
+    data : np.array, required.
+    beam : float/int, 3-element array-like, or np.array, required.
+        if float/int, circular Gaussian beam assumed, and this sets the fwhm 
+            [pixels]
+        if 3-element array-like, those are (fwhm_x, fwhm_y, theta_deg) for a 2-D Gaussian
+            [pixels, pixels, degrees]
+        if np.array of size > 3, assumes input PSF image
+    
+    Returns
+    -------
+    np.array of same shape as data
     '''
     
     if np.array(beam).size == 1:

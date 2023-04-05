@@ -291,7 +291,7 @@ class ModelEllipsoid:
         return f'ModelEllipsoid instance; req={self.req}, rpol={self.rpol}'
         
         
-    def ldmodel(self, tb, a, beam = None, law='exp'):
+    def ldmodel(self, tb, a, law='exp'):
         '''
         Make a limb-darkened model disk convolved with the beam
         
@@ -299,14 +299,6 @@ class ModelEllipsoid:
         ----------
         tb : float. brightness temperature of disk at mu=1
         a : float, required. limb darkening parameter
-        beam : float/int, 3-element array-like, or 2-D psf array, optional.
-            FWHM of Gaussian beam with which to convolve the observation
-            units of fwhm are number of pixels.
-            - if 3-element array-like, has form (FWHM_X, FWHM_Y, POSITION_ANGLE)
-            units of position angle are assumed degrees unless astropy Angle is passed
-            - if float/int, this is FWHM of assumed circular beam
-            - if 2-D array, assumes beam is set to the full PSF
-            - if no beamsize is specified, will make infinite-resolution
         law : str, optional. options 'exp' or 'linear'. type of limb darkening law to use
         '''
         ## TO DO: make this allow a 2-D Gaussian beam!
@@ -314,20 +306,7 @@ class ModelEllipsoid:
         ldmodel = limb_darkening(np.copy(self.mu), a, law=law)
         ldmodel[np.isnan(ldmodel)] = 0.0
         ldmodel = tb*ldmodel
-        if beam is None:
-            return ldmodel
-        elif np.array(beam).size == 1: #FWHM
-            fwhm = beam / self.pixscale_arcsec
-            return convolve_with_beam(ldmodel, fwhm)
-            
-        elif np.array(beam).size == 3: #bmaj, bmin, theta
-            beam = (beam[0]/self.pixscale_arcsec, beam[1]/self.pixscale_arcsec, beam[2])
-            return convolve_with_beam(ldmodel, beam)
-            
-        elif len(np.array(beam).shape) == 2: #full PSF
-            return convolve_with_beam(ldmodel, beam)
-        else:
-            raise ValueError("beam must be a positive float, 3-element array-like (fwhm_x, fwhm_y, theta_deg), or 2-D array representing the PSF.")    
+        return ldmodel   
         
         
     def zonalmodel():
@@ -528,11 +507,13 @@ class Nav(ModelBody):
         kwargs = { **defaultKwargs, **kwargs }
 
         if (mode == 'convolution') or (mode == 'disk'):
-            model = self.ldmodel(kwargs['tb'], kwargs['a'], beam=kwargs['beam'], law='exp')
+            model = self.ldmodel(kwargs['tb'], kwargs['a'], law='exp')
+            model = convolve_with_beam(model, kwargs['beam'])
             data_to_compare = self.data 
         elif mode == 'canny':
             #model_planet = ~np.isnan(self.mu) #flat disk model
-            model_planet = self.ldmodel(kwargs['tb'], kwargs['a'], beam=kwargs['beam'], law='exp')
+            model_planet = self.ldmodel(kwargs['tb'], kwargs['a'], law='exp')
+            model_planet = convolve_with_beam(model_planet, kwargs['beam'])
             
             edges = feature.canny(self.data, sigma=kwargs['sigma'], low_threshold = kwargs['low_thresh'], high_threshold = kwargs['high_thresh'])
             model = feature.canny(model_planet, sigma=kwargs['sigma'], low_threshold = kwargs['low_thresh'], high_threshold = kwargs['high_thresh'])
