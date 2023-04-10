@@ -4,10 +4,19 @@ Please see `astropy's contributing guildelines
 <http://www.astropy.org/contribute.html>`__ for a general guide to the
 workflow involving git, etc.  Everything below is pylanetary-specific.
 
-We strongly encourage draft pull requests to be opened early in development.
-If you are thinking of contributing a new module, please open an issue marked "enhancement"
-describing your feature idea, and please open a pull request
-as soon as you start developing code and mark it as a Draft PR on github.
+
+Contribution Workflow
+---------------------
+If you are considering making a contribution, please follow these steps:
+
+ * Open an issue describing the problem you intend to solve or the new feature you intend to build
+ 
+ * Make a fork the main branch of the repository and do your development there
+ 
+ * Open a draft pull request. We strongly encourage you to do this early in development
+ 
+ * When you are ready, request a review!
+
 
 New Features
 ------------
@@ -42,17 +51,18 @@ The minimum requirements for a new feature are:
 
 Important Guidelines
 --------------------
- Pylanetary intends to provide *generic* tools for solar system data processing and modeling.
- As such, all functions and classes should remain agnostic to planet, observatory, 
- wavelength band, etc. Defaults for a given planet, observatory, wavelength band, etc.
- may be provided as .yaml (preferred) or another text file format, and should go in the ``pylanetary/feature/data`` subdirectory. See ``pylanetary/rings/data`` for an example.
- 
- Features that are primarily relevant to a single observatory, planet, wavelength band, etc.
- should be placed in separate GitHub repositories and import pylanetary. Again, if portions 
- of that functionality are generic, they can be included in pylanetary 
- 
- Docstrings should be written for every function and should adhere to the same
- format as shown in the functions in ``pylanetary/feature/planetnav/core.py``
+Pylanetary intends to provide *generic* tools for solar system data processing and modeling.
+As such, all functions and classes should remain agnostic to planet, observatory, 
+wavelength band, etc. Defaults for a given planet, observatory, wavelength band, etc.
+may be provided as .yaml (preferred) or another text file format, and should go in the ``pylanetary/feature/data`` subdirectory. See ``pylanetary/rings/data`` for an example.
+
+Features that are primarily relevant to a single observatory, planet, wavelength band, etc.
+should be placed in separate GitHub repositories and import pylanetary. Again, if portions 
+of that functionality are generic, they can be included in pylanetary 
+
+Docstrings should be written for every function and should adhere to the same
+format as shown in the functions in ``pylanetary/navigation/core.py``
+At time of writing, the navigation.Nav docstring is known to adhere to proper style.
 
 
 Dependencies
