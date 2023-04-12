@@ -1,0 +1,14 @@
+planet:
+  name: Jupiter
+  mass: 1898.13  # kg
+  Re: 71492.  # km equatorial radius at 1 bar level
+  Rp: 66854.  # km polar radius
+  Rvol: 69911.  # km volumetric mean radius
+  accel_g: 24.79  # m/s^2 Gravity at 1 bar level
+  num_moons: 92  # number of natural satellites
+orbit:
+  semi_major_axis: 778479.  # km
+  t_rot: 9.925  # length of sideral rotation period in hours in system III
+observational:
+  app_dia_max: 50.1  # arc seconds
+  app_dia_min: 30.5  # arc seconds

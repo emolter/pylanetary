@@ -3,8 +3,9 @@ import numpy as np
 from astropy import convolution
 from astropy.coordinates import Angle
 import astropy.units as u
-import importlib
+import importlib, yaml, importlib.resources
 from scipy.interpolate import interp1d
+import pylanetary.utils.data as planet_info
 
 '''
 To do:
@@ -204,4 +205,42 @@ def convolve_with_beam(data, beam):
     else:
         psf = beam
     return convolution.convolve_fft(data, psf)
-    
+
+
+class Planet:
+    """
+    Class will initiate planet object with attributes from yaml file of matching
+    string name.
+    """
+    def __init__(self, name):
+        """
+        Input string of planet name to initiaite object and find yaml file of same
+        matching string. Optional input of paameters from
+
+        Parameters
+        ----------
+        name: str
+            Planet name string, example "Jupiter' will load Jupiter.yaml
+        """
+        self.name = name
+        with importlib.resources.open_binary(planet_info, f"{self.name}.yaml") as file:
+            yaml_bytes = file.read()
+            data = yaml.safe_load(yaml_bytes)
+
+            # basic information and rewrite name
+            self.name = data['planet']['name']
+            self.mass = data['planet']['mass'] * u.kg
+            self.Re = data['planet']['Re'] * u.km
+            self.Rp = data['planet']['Rp'] * u.km
+            self.Ravg = (self.Re + self.Rp) / 2
+            self.Rvol = data['planet']['Rvol'] * u.km
+            self.accel_g = data['planet']['accel_g'] * u.m / u.s**2
+            self.num_moons = data['planet']['num_moons']
+
+            # orbital information
+            self.semi_major_axis = data['orbit']['semi_major_axis'] * u.au
+            self.t_rot_hrs = data['orbit']['t_rot'] * u.hr
+
+            # observational information
+            self.app_dia_max = data['observational']['app_dia_max'] * u.arcsec
+            self.app_dia_min = data['observational']['app_dia_min'] * u.arcsec
