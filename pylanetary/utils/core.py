@@ -4,7 +4,6 @@ from astropy import convolution
 from astropy.coordinates import Angle
 import astropy.units as u
 from astropy.units import Quantity
-from astropy.constants import G
 import importlib, yaml, importlib.resources
 from scipy.interpolate import interp1d
 import pylanetary.utils.data as body_info
