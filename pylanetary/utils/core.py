@@ -9,7 +9,7 @@ from scipy.interpolate import interp1d
 import pylanetary.utils.data as body_info
 from astropy.time import Time
 from astroquery.jplhorizons import Horizons
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 '''
 To do:
