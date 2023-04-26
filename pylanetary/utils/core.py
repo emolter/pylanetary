@@ -209,7 +209,7 @@ def convolve_with_beam(data, beam):
 
 class Planet:
     """
-    Class will initiate planet object with attributes from yaml file of matching
+    Class will instantiate planet object with attributes from yaml file of matching
     string name.
     """
     def __init__(self, name):
