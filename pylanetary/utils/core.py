@@ -3,9 +3,14 @@ import numpy as np
 from astropy import convolution
 from astropy.coordinates import Angle
 import astropy.units as u
+from astropy.units import Quantity
+from astropy.constants import G
 import importlib, yaml, importlib.resources
 from scipy.interpolate import interp1d
-import pylanetary.utils.data as planet_info
+import pylanetary.utils.data as body_info
+from astropy.time import Time
+from astroquery.jplhorizons import Horizons
+from datetime import datetime, timedelta
 
 '''
 To do:
@@ -13,6 +18,7 @@ To do:
 * make these accept astropy units
 * add I/F calculations... or maybe that goes somewhere else
 '''
+
 
 def beam_area(beamx, beamy):
     '''
@@ -207,40 +213,76 @@ def convolve_with_beam(data, beam):
     return convolution.convolve_fft(data, psf)
 
 
-class Planet:
+class Body:
     """
-    Class will initiate planet object with attributes from yaml file of matching
+    Class will instantiate object with attributes from yaml file of matching
     string name.
+
+    Example usage:
+    from pylanetary.utils import Body
+    jup = Body('Jupiter')
+
+    jup.app_dia_max, jup.app_dia_min
+    output> (<Quantity 50.1 arcsec>, <Quantity 30.5 arcsec>)
+
+    print('Jupiter is currently', jup.distance, ' AU from the Earth with apparent size ', jup.app_dia, ' today = ',
+    jup.epoch_datetime)
+    output> Jupiter is currently 5.93796102228318 AU  AU from the Earth with apparent size  33.2009 arcsec
+    today = 2023-04-26 16:32:54
     """
-    def __init__(self, name):
+    def __init__(self, name, epoch=None):
         """
-        Input string of planet name to initiaite object and find yaml file of same
-        matching string. Optional input of paameters from
+        Input string instantiates object using file name of string to
+        populate attributes. Astropy quantity objects utilized for data
+        with astropy units.
 
         Parameters
         ----------
         name: str
-            Planet name string, example "Jupiter' will load Jupiter.yaml
+            Body name string, example "Jupiter" will load Jupiter.yaml
+        epoch: astropy.time.Time or None
+            The epoch at which to retrieve the ephemeris of the body. If None,
+            the current time will be used with a delta time of 1 minute.
         """
         self.name = name
-        with importlib.resources.open_binary(planet_info, f"{self.name}.yaml") as file:
+        with importlib.resources.open_binary(body_info, f"{self.name}.yaml") as file:
             yaml_bytes = file.read()
             data = yaml.safe_load(yaml_bytes)
 
             # basic information and rewrite name
-            self.name = data['planet']['name']
-            self.mass = data['planet']['mass'] * u.kg
-            self.Re = data['planet']['Re'] * u.km
-            self.Rp = data['planet']['Rp'] * u.km
-            self.Ravg = (self.Re + self.Rp) / 2
-            self.Rvol = data['planet']['Rvol'] * u.km
-            self.accel_g = data['planet']['accel_g'] * u.m / u.s**2
-            self.num_moons = data['planet']['num_moons']
+            self.name = data['body']['name']
+            self.jpl_hor_id = data['body']['jpl_hor_id']
+            self.mass = Quantity(data['body']['mass'], unit=u.kg)
+            self.r_eq = Quantity(data['body']['r_eq'], unit=u.km)
+            self.r_pol = Quantity(data['body']['r_pol'], unit=u.km)
+            self.r_avg = (self.r_eq + self.r_pol) / 2
+            self.r_vol = Quantity(data['body']['r_vol'], unit=u.km)
+            self.accel_g = Quantity(data['body']['accel_g'], unit=u.m / u.s**2)
+            self.num_moons = data['body']['num_moons']
 
             # orbital information
-            self.semi_major_axis = data['orbit']['semi_major_axis'] * u.au
-            self.t_rot_hrs = data['orbit']['t_rot'] * u.hr
+            self.semi_major_axis = Quantity(data['orbit']['semi_major_axis'], unit=u.au)
+            self.t_rot_hrs = Quantity(data['orbit']['t_rot'], unit=u.hr)
 
-            # observational information
-            self.app_dia_max = data['observational']['app_dia_max'] * u.arcsec
-            self.app_dia_min = data['observational']['app_dia_min'] * u.arcsec
+            # static observational information
+            self.app_dia_max = Quantity(data['observational']['app_dia_max'], unit=u.arcsec)
+            self.app_dia_min = Quantity(data['observational']['app_dia_min'], unit=u.arcsec)
+
+            # use datetime Time.now() or epoch to astroquery for ephemeris
+            if epoch is None:
+                start_time = Time.now()
+            else:
+                start_time = Time(epoch)
+            end_time = start_time + timedelta(minutes=1)
+            epochs = {'start': start_time.strftime('%Y-%m-%d %H:%M:%S'),
+                      'stop': end_time.strftime('%Y-%m-%d %H:%M:%S'), 'step': '1m'}
+            self.epoch_datetime = start_time.strftime('%Y-%m-%d %H:%M:%S')
+            obj = Horizons(id=self.jpl_hor_id, location='500', epochs=epochs)
+
+            self.eph = obj.ephemerides()
+            # see self.eph.columns for all columns available in astropy table
+            # dynamic observational information
+            self.ra = self.eph['RA'][0] * u.deg
+            self.dec = self.eph['DEC'][0] * u.deg
+            self.distance = self.eph['delta'][0] * u.au
+            self.app_dia = self.eph['ang_width'][0] * u.arcsec

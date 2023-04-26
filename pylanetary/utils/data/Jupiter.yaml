@@ -1,9 +1,10 @@
-planet:
+body:
   name: Jupiter
+  jpl_hor_id: 599
   mass: 1898.13  # kg
-  Re: 71492.  # km equatorial radius at 1 bar level
-  Rp: 66854.  # km polar radius
-  Rvol: 69911.  # km volumetric mean radius
+  r_eq: 71492.  # km equatorial radius at 1 bar level
+  r_pol: 66854.  # km polar radius
+  r_vol: 69911.  # km volumetric mean radius
   accel_g: 24.79  # m/s^2 Gravity at 1 bar level
   num_moons: 92  # number of natural satellites
 orbit:
