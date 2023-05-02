@@ -490,7 +490,7 @@ class Nav(ModelBody):
         
           
     def __str__(self):
-        return f'PlanetNav instance; req={self.req}, rpol={self.rpol}, pixscale={self.pixscale}'
+        return f'Nav instance; req={self.req}, rpol={self.rpol}, pixscale={self.pixscale}'
     
             
     def colocate(self, mode = 'convolution', diagnostic_plot=True, save_plot=None, **kwargs):
