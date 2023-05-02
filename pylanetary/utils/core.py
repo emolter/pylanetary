@@ -8,14 +8,42 @@ from scipy.interpolate import interp1d
 
 '''
 To do:
+* docstrings
+* write Jupyter notebook showing off these functions
+* test I/F function against literature values for multiple observations!
 * write tests for convolve_with_beam, especially for arbitrary PSF image
 * make convolve_with_beam accept Astropy PSFs and super-resolution PSFs as the kernel
 * make these accept astropy units
 '''
 
+def solid_angle(dS, d):
+    '''
+    Approximate solid angle of small facet
+    https://en.wikipedia.org/wiki/Solid_angle
+    
+    Parameters
+    ----------
+    dS: [dist^2] flat area of facet
+    d: [dist] distance to facet
+    
+    Returns
+    -------
+    omega: [sr] solid angle of facet
+    
+    Example
+    -------
+    >>> a = 210 #km, Proteus average radius
+    >>> d = 30 * 1.496e8 #distance to Neptune in km
+    >>> solid_angle(np.pi*a**2, d)
+    '''
+    return (dS / d**2)
+
 def beam_area(beamx, beamy):
     '''
-    beamx, beamy: FWHM of Gaussian beam in arcsec
+    Parameters
+    ----------
+    beamx : [arcsec]
+    beamy : [arcsec]
     '''
     return (np.pi / (4 * np.log(2))) * beamx * beamy
     
@@ -24,8 +52,9 @@ def jybm_to_jysr(I, beamx, beamy):
     '''
     Parameters
     ----------
-    I: numpy array, int, or float in Jy/beam
-    beamx, beamy: FWHM of Gaussian beam in arcsec
+    I: [Jy/beam] flux density
+    beamx : float, [arcsec]
+    beamy : float, [arcsec]
     '''
     beamA = beam_area(beamx, beamy) #in arcsec
     return 4.25e10*I/beamA
@@ -35,8 +64,9 @@ def jysr_to_jybm(I, beamx, beamy):
     '''
     Parameters
     ----------
-    I: numpy array, int, or float in Jy/sr
-    beamx, beamy: FWHM of Gaussian beam in arcsec
+    I: float, [Jy/sr] flux density
+    beamx : float, [arcsec]
+    beamy : float, [arcsec]
     '''
     beamA = beam_area(beamx, beamy) #in arcsec
     return I*beamA/4.25e10
@@ -44,14 +74,20 @@ def jysr_to_jybm(I, beamx, beamy):
 
 def jybm_to_tb(I, freq, beamx, beamy):
     '''
-    from science.nrao.edu/facilities/vla/proposing/TBconv
-        I in Jy/bm, freq in GHz, returns tb in Kelvin
-    
     Parameters
     ----------
-    I: numpy array, int, or float in Jy/beam
-    freq: float or int, units GHz
-    beamx, beamy: FWHM of Gaussian beam in arcsec
+    I: float, [Jy/beam] flux density
+    freq: float, [GHz] frequency
+    beamx : float, [arcsec]
+    beamy : float, [arcsec]
+    
+    References
+    ----------
+    science.nrao.edu/facilities/vla/proposing/TBconv
+    
+    Notes
+    -----
+    uses the Rayleigh-Jeans approximation
     '''
     return (1e3 * 1.22e3) * I / (freq**2 * beamx * beamy)
     
@@ -112,14 +148,32 @@ def rayleigh_jeans(tb, freq):
     return I*1e26
     
     
-def solar_spectrum():
+def rayleigh_criterion(wl, d):
     '''
-    Load and return Gueymard solar standard spectrum
-        from 0 to 1000 um
+    Parameters
+    ----------
+    wl : [m] wavelength
+    d : [m] diameter of telescope
+
     Returns
     -------
-    wl: array of astropy Quantities, wavelength in microns
-    flux: array of astropy Quantities, solar flux in erg s-1 cm-2 um-1
+    [arcsec] Diffraction limit of a circular aperture
+    '''
+    return np.rad2deg(1.22 * wl / d) * 3600
+    
+    
+def solar_spectrum():
+    '''
+    Load and return Gueymard solar standard spectrum from 0 to 1000 um
+        https://doi.org/10.1016/j.solener.2003.08.039
+    accessed at https://www.nrel.gov/grid/solar-resource/spectra.html
+    
+    Returns
+    -------
+    wl: array of astropy Quantities
+        [um] wavelength
+    flux: array of astropy Quantities, solar flux
+        [erg s-1 cm-2 um-1]
     '''
     infile = importlib.resources.open_binary('pylanetary.utils.data', 'newguey2003.txt')
     wl, flux = np.loadtxt(infile, skiprows=8).T
@@ -132,19 +186,30 @@ def solar_spectrum():
     
 def I_over_F(observed_flux, bp, target_sun_dist, target_omega):
     '''
-    see Hammel et al 1989, DOI:10.1016/0019-1035(89)90149-8
+    definition from Hammel et al 1989, DOI:10.1016/0019-1035(89)90149-8
     
     Parameters
     ----------
-    observed_flux: float, required. flux from target. units erg s-1 cm-2 um-1
-    bp: np.array([wls, trans]). the filter transmission function. units of wls is um
-    target_sun_dist: float, required. distance between sun and target in AU
-    target_omega: float, required. solid angle of target in sr
+    observed_flux: float, required. 
+        [erg s-1 cm-2 um-1] flux of target
+    bp: np.array([wls, trans]). 
+        [[um], [-]] the filter transmission function
+    target_sun_dist: float, required. 
+        [AU] distance between sun and target
+    target_omega: float, required. 
+        [sr] for unresolved object, solid angle of that object
+        for resolved object, solid angle of one pixel
     
     Returns
     -------
-    wl_eff: effective filter wavelength in um
-    I/F: the I/F
+    wl_eff: float
+        [um] effective filter wavelength
+    I/F: float
+        [-] the I/F
+    
+    Notes
+    -----
+    sun_flux_earth agrees with Arvesen 1969 in H band, doi:10.1364/AO.8.002215
     
     To do
     -----
@@ -160,11 +225,11 @@ def I_over_F(observed_flux, bp, target_sun_dist, target_omega):
     trans_sun = interp_f(wl_sun)
     sun_flux_earth = np.sum(flux_sun * trans_sun)/np.nansum(trans_sun)
     
-    # compute I/F
-    sun_flux = (sun_flux_earth)*(1.0/target_sun_dist)**2 
+    # compute I/F. add factor of 1/pi from definition of I/F
+    sun_flux = (1/np.pi) * (sun_flux_earth)*(1.0/target_sun_dist)**2 
     expected_flux = sun_flux.value * target_omega
     
-    return wl_eff, observed_flux * np.pi / expected_flux #factor of pi for pi*Fsun in I/F definition
+    return wl_eff, observed_flux / expected_flux
     
     
 def rebin(arr, z):

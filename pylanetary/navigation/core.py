@@ -148,13 +148,18 @@ def emission_angle(ob_lat, surf_n):
     
     Parameters
     ----------
+    ob_lat : float or np.array, required. 
+        [deg] sub-observer latitude
+    surf_n : np.array, required.
+        [x,y,z] surface normal vector at each ob_lat. must have vector length 1
     
     Returns
     -------
-    
+    mu : [-] cosine of emission angle
     '''
     ob = np.asarray([np.cos(np.radians(ob_lat)),0,np.sin(np.radians(ob_lat))])
-    return np.dot(surf_n.T, ob).T
+    mu = np.dot(surf_n.T, ob).T
+    return mu
     
     
     
@@ -162,19 +167,24 @@ def limb_darkening(mu, a, law='exp', mu0=None):
     '''
     Parameters
     ----------
-    mu: float or array-like, required. cosine of emission angle
-    a: float or array-like, required. limb-darkening parameter(s)
-        if law=="disc", flat disk a will be ignored 
+    mu: float or array-like, required. 
+        [-] cosine of emission angle
+    a: float or array-like, required. 
+        [-] limb-darkening parameter(s)
+        if law=="disc", a is ignored 
         if law=="exp", "linear", or "minnaert", a must have length 1
         if law=="quadratic", "square-root", a must have length 2 such that [a0, a1] are 
             the free parameters in the first and second terms, respectively.
     law: str, optional. default "exp".
         what type of limb darkening law to use. options are:
-        linear:
-        quadratic:
-        exp:
-        minnaert:
-    mu0: float or array-like, optional. default None. cosine of solar incidence angle.
+        disc : no limb darkening applied
+        linear : ld = 1 - a * (1 - mu)
+        exp : ld = mu**a
+        minnaert : ld = mu0**a * mu**(a-1)
+        quadratic : ld = 1 - a[0]*(1-mu) - a[1]*(1-mu)**2 
+        square-root : ld = 1 - a[0]*(1-mu) - a[1]*(1-np.sqrt(mu))
+    mu0: float or array-like, optional. default None. 
+        [-] cosine of solar incidence angle.
         has no effect unless law=="minnaert", in which case it is required.
     
     Returns
@@ -197,22 +207,23 @@ def limb_darkening(mu, a, law='exp', mu0=None):
     idnan = np.isnan(mu)
     mu[idnan] = 0.0
 
-    if law.lower() == 'disc': 
+    law = law.lower()
+    if law == 'disc' or law == 'disk': 
         ld = mu[mu>0] = 1  
-    if law.lower() == 'exp' or law.lower() == 'exponential':
+    if law == 'exp' or law == 'exponential':
         ld = mu**a
-    elif law.lower() == 'linear':
+    elif law == 'linear':
         ld = 1 - a * (1 - mu)
-    elif law.lower() == 'quadratic':
+    elif law == 'quadratic':
         ld = 1 - a[0]*(1-mu) - a[1]*(1-mu)**2  
-    elif law.lower() == 'square-root':
+    elif law == 'square-root':
         ld = 1 - a[0]*(1-mu) - a[1]*(1-np.sqrt(mu))   
-    elif law.lower() == 'minnaert':
+    elif law == 'minnaert':
         if mu0 is None:
             raise ValueError('mu0 must be specified if law == minnaert')
         ld = mu0**a * mu**(a-1)
     else:
-        raise ValueError('limb darkening laws accepted: "disc", "linear", "exp", "quadratic", "square-root" ')
+        raise ValueError('limb darkening laws accepted: "disc", "linear", "exp", "minnaert", "quadratic", "square-root" ')
     
     ld = np.array(ld)
     ld[idnan] = np.nan
@@ -294,12 +305,16 @@ class ModelEllipsoid:
     def ldmodel(self, tb, a, law='exp'):
         '''
         Make a limb-darkened model disk convolved with the beam
+        See docstring of limb_darkening() for options
         
         Parameters
         ----------
-        tb : float. brightness temperature of disk at mu=1
-        a : float, required. limb darkening parameter
-        law : str, optional. options 'exp' or 'linear'. type of limb darkening law to use
+        tb : float, required. 
+            [flux] brightness temperature of disk at mu=1
+        a : float or tuple, required. 
+            [-] limb darkening parameter(s) 
+        law : str, optional. default "exp"
+            limb darkening law to use
         '''
         ## TO DO: make this allow a 2-D Gaussian beam!
         
@@ -315,11 +330,18 @@ class ModelEllipsoid:
 
     def write(self, outstem):
         '''
-        writes latitudes, longitudes, 
-        
         Parameters
         ----------
         outstem : stem of filenames to write
+        
+        Writes
+        ------
+        
+        To do
+        -----
+        * Rewrite this to make a single multi-hdu fits file from scratch
+        * Alternatively, decide to remove this and have write functionality only
+            in Nav
         '''
         raise NotImplementedError
         ### need to rewrite this to make fits files from scratch
@@ -344,10 +366,40 @@ class ModelEllipsoid:
 class ModelBody(ModelEllipsoid):
     
     '''
-    docstring
+    Wrapper to ModelEllipsoid that permits passing an ephemeris
     '''
     
     def __init__(self, ephem, req, rpol, pixscale, shape=None):
+        
+        '''
+        Parameters
+        ----------
+        ephem : QTable, required. 
+            [-] astroquery.horizons ephemeris 
+                must have 'PDObsLon', 'PDObsLat', 'delta', and 'NPole_ang' fields
+                it's ok to pass multiple lines, but relevant fields will be read 
+                from the 0th line
+        req : float or Quantity, required. 
+            [km] equatorial radius of planet
+        rpol : float or Quantity, required. 
+            [km] polar radius of planet
+        pixscale : float or Quantity, required. 
+            [arcsec] pixel scale of the input image
+        shape: 2-element tuple, optional. 
+            shape of output arrays.
+            if None, shape is just larger than diameter / pixscale
+        
+        Attributes
+        ----------
+        see docstring of ModelEllipsoid, plus the following:
+        pixscale_arcsec : float
+            [arcsec] pixel scale of image
+        ephem : QTable
+            [-] see parameters
+        deg_per_px : float
+            [deg] approximate size of one pixel at the sub-observer point
+        '''
+        
         
         self.pixscale_arcsec = pixscale
         self.ephem = ephem
@@ -473,7 +525,9 @@ class Nav(ModelBody):
                     tb : float, required.
                         [same flux unit as data] brightness temperature of disk at mu=1 
                     a : float, required.
-                        [-] exponential limb darkening param
+                        [-] limb darkening parameter
+                    law : str, optional. default 'exp'
+                        type of limb darkening model to use
                     beam : float, tuple, or np.array, optional. default None.
                         see ldmodel docstring
                     err : float, per-pixel error in input image
@@ -503,16 +557,16 @@ class Nav(ModelBody):
         -----
         - sometimes dxerr, dyerr give unrealistic or undefined behavior
         '''
-        defaultKwargs={'err':None,'beam':None}
+        defaultKwargs={'err':None,'beam':None,'law':'exp'}
         kwargs = { **defaultKwargs, **kwargs }
 
         if (mode == 'convolution') or (mode == 'disk'):
-            model = self.ldmodel(kwargs['tb'], kwargs['a'], law='exp')
+            model = self.ldmodel(kwargs['tb'], kwargs['a'], law=kwargs['law'])
             model = convolve_with_beam(model, kwargs['beam'])
             data_to_compare = self.data 
         elif mode == 'canny':
             #model_planet = ~np.isnan(self.mu) #flat disk model
-            model_planet = self.ldmodel(kwargs['tb'], kwargs['a'], law='exp')
+            model_planet = self.ldmodel(kwargs['tb'], kwargs['a'], law=kwargs['law'])
             model_planet = convolve_with_beam(model_planet, kwargs['beam'])
             
             edges = feature.canny(self.data, sigma=kwargs['sigma'], low_threshold = kwargs['low_thresh'], high_threshold = kwargs['high_thresh'])
