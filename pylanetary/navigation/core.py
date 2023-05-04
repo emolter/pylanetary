@@ -324,9 +324,15 @@ class ModelEllipsoid:
         return ldmodel   
         
         
-    def zonalmodel():
+    def zonalmodel(lats, lons, tbs, a=0.0):
+        
         raise NotImplementedError()
-        return        
+        # chris code here
+        zm = whatever #does not include limb darkening
+        # interpolates  onto self.lat_g, self.lon_w
+        ldm = ldmodel(1, a)
+        
+        return ldm * zm    
 
     def write(self, outstem):
         '''
@@ -369,20 +375,12 @@ class ModelBody(ModelEllipsoid):
     Wrapper to ModelEllipsoid that permits passing an ephemeris
     '''
     
-    def __init__(self, ephem, req, rpol, pixscale, shape=None):
+    def __init__(self, body, pixscale, shape=None):
         
         '''
         Parameters
         ----------
-        ephem : QTable, required. 
-            [-] astroquery.horizons ephemeris 
-                must have 'PDObsLon', 'PDObsLat', 'delta', and 'NPole_ang' fields
-                it's ok to pass multiple lines, but relevant fields will be read 
-                from the 0th line
-        req : float or Quantity, required. 
-            [km] equatorial radius of planet
-        rpol : float or Quantity, required. 
-            [km] polar radius of planet
+        body : 
         pixscale : float or Quantity, required. 
             [arcsec] pixel scale of the input image
         shape: 2-element tuple, optional. 
@@ -392,6 +390,13 @@ class ModelBody(ModelEllipsoid):
         Attributes
         ----------
         see docstring of ModelEllipsoid, plus the following:
+        name : str
+            [-] Name of input body as read from input Body object
+        ephem : Astropy QTable. 
+            [-] single line of astroquery.horizons ephemeris 
+                as read from utils.Body object.
+                must have 'PDObsLon', 'PDObsLat', 'delta', and 'NPole_ang' fields.
+                If you want to modify the ephemeris, modify body.ephem
         pixscale_arcsec : float
             [arcsec] pixel scale of image
         ephem : QTable
@@ -400,16 +405,19 @@ class ModelBody(ModelEllipsoid):
             [deg] approximate size of one pixel at the sub-observer point
         '''
         
-        
+        self.body = body
+        self.name = body.name
+        self.ephem = body.ephem
+        self.req = body.req.value
+        self.rpol = body.rpol.value
         self.pixscale_arcsec = pixscale
-        self.ephem = ephem
         self.pixscale_km = self.ephem['delta']*u.au.to(u.km)*np.radians(self.pixscale_arcsec/3600.)
         
         super().__init__(self.ephem['PDObsLon'],
                     self.ephem['PDObsLat'],
                     self.pixscale_km,
                     self.ephem['NPole_ang'],
-                    req,rpol, shape=shape)
+                    self.req,self.rpol, shape=shape)
         
         avg_circumference = 2*np.pi*((self.req + self.rpol)/2.0)
         self.deg_per_px = self.pixscale_km * (1/avg_circumference) * 360
@@ -419,14 +427,12 @@ class ModelBody(ModelEllipsoid):
         return f'ModelBody instance; req={self.req}, rpol={self.rpol}, pixscale={self.pixscale}'
     
 
-        
-
 class Nav(ModelBody):
     '''
     functions for comparing a model ellipsoid with data for navigation and analysis
     '''    
     
-    def __init__(self, data, ephem, req, rpol, pixscale):
+    def __init__(self, data, body, pixscale):
         '''
         Description
         -----------
@@ -436,15 +442,8 @@ class Nav(ModelBody):
         ----------
         data : np.array, required.
             [-] 2-D image data
-        ephem : QTable, required. 
-            [-] astroquery.horizons ephemeris 
-                must have 'PDObsLon', 'PDObsLat', 'delta', and 'NPole_ang' fields
-                it's ok to pass multiple lines, but relevant fields will be read 
-                from the 0th line
-        req : float or Quantity, required. 
-            [km] equatorial radius of planet
-        rpol : float or Quantity, required. 
-            [km] polar radius of planet
+        body : pylanetary.utils.Body object, required.
+            [-] see docstring of utils.Body
         pixscale : float or Quantity, required. 
             [arcsec] pixel scale of the input image
         
@@ -486,7 +485,7 @@ class Nav(ModelBody):
         
         # TO DO: fix these all to accept Astropy quantities
         self.data = data
-        super().__init__(ephem, req, rpol, pixscale, shape=data.shape)
+        super().__init__(body, pixscale, shape=data.shape)
         
           
     def __str__(self):

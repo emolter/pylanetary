@@ -1,14 +1,14 @@
 body:
   name: Jupiter
   jpl_hor_id: 599
-  mass: 1898.13  # kg
+  mass: 1.89813e27  # kg
   req: 71492.  # km equatorial radius at 1 bar level
   rpol: 66854.  # km polar radius
   rvol: 69911.  # km volumetric mean radius
   accel_g: 24.79  # m/s^2 Gravity at 1 bar level
   num_moons: 92  # number of natural satellites
 orbit:
-  semi_major_axis: 778479.  # km
+  semi_major_axis: 7.78479e8  # km
   t_rot: 9.925  # length of sideral rotation period in hours in system III
 observational:
   app_dia_max: 50.1  # arc seconds
