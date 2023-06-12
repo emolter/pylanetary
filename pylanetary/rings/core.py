@@ -689,6 +689,8 @@ class RingSystemModelObservation:
                 ## and this omega. 
                 ## for now, just force omega to be the system omega
                 
+                ## I think this must be done in the opposite sense; do the peculiar rotations first, then the full system rotation. This cannot (?) be described by a single rotation
+                
                 #omega = self.np_ang * u.deg + \
                 #    self.ringtable.loc['ring', ringname]['ascending node'].filled(0.0)
                 omega = self.np_ang * u.deg
