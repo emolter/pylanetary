@@ -151,12 +151,13 @@ def emission_angle(ob_lat, surf_n):
     ob_lat : float or np.array, required. 
         [deg] sub-observer latitude
     surf_n : np.array, required.
-        [x,y,z] surface normal vector at each ob_lat. must have vector length 1
+        [x,y,z] surface normal vector at each ob_lat
     
     Returns
     -------
     mu : [-] cosine of emission angle
     '''
+    surf_n /= np.linalg.norm(surf_n) # normalize to magnitude 1
     ob = np.asarray([np.cos(np.radians(ob_lat)),0,np.sin(np.radians(ob_lat))])
     mu = np.dot(surf_n.T, ob).T
     return mu
@@ -241,7 +242,7 @@ class ModelEllipsoid:
         Parameters
         ----------
         ob_lon, ob_lat, np_ang : float, required. 
-            sub-observer longitude, latitude, np_ang in degrees
+            sub-observer planetographic longitude, latitude, np_ang in degrees
             see JPL Horizons ephemeris tool for detailed descriptions
         pixscale_km : float, required.
             pixel scale in km
