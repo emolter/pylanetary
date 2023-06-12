@@ -13,15 +13,43 @@ from datetime import timedelta
 
 '''
 To do:
+* docstrings
+* write Jupyter notebook showing off these functions
+* test I/F function against literature values for multiple observations!
 * write tests for convolve_with_beam, especially for arbitrary PSF image
 * make convolve_with_beam accept Astropy PSFs and super-resolution PSFs as the kernel
 * make these accept astropy units
 '''
 
+def solid_angle(dS, d):
+    '''
+    Approximate solid angle of small facet
+    https://en.wikipedia.org/wiki/Solid_angle
+    
+    Parameters
+    ----------
+    dS: [dist^2] flat area of facet
+    d: [dist] distance to facet
+    
+    Returns
+    -------
+    omega: [sr] solid angle of facet
+    
+    Example
+    -------
+    >>> a = 210 #km, Proteus average radius
+    >>> d = 30 * 1.496e8 #distance to Neptune in km
+    >>> solid_angle(np.pi*a**2, d)
+    '''
+    return (dS / d**2)
+
 
 def beam_area(beamx, beamy):
     '''
-    beamx, beamy: FWHM of Gaussian beam in arcsec
+    Parameters
+    ----------
+    beamx : [arcsec]
+    beamy : [arcsec]
     '''
     return (np.pi / (4 * np.log(2))) * beamx * beamy
     
@@ -30,8 +58,9 @@ def jybm_to_jysr(I, beamx, beamy):
     '''
     Parameters
     ----------
-    I: numpy array, int, or float in Jy/beam
-    beamx, beamy: FWHM of Gaussian beam in arcsec
+    I: [Jy/beam] flux density
+    beamx : float, [arcsec]
+    beamy : float, [arcsec]
     '''
     beamA = beam_area(beamx, beamy) #in arcsec
     return 4.25e10*I/beamA
@@ -41,8 +70,9 @@ def jysr_to_jybm(I, beamx, beamy):
     '''
     Parameters
     ----------
-    I: numpy array, int, or float in Jy/sr
-    beamx, beamy: FWHM of Gaussian beam in arcsec
+    I: float, [Jy/sr] flux density
+    beamx : float, [arcsec]
+    beamy : float, [arcsec]
     '''
     beamA = beam_area(beamx, beamy) #in arcsec
     return I*beamA/4.25e10
@@ -50,14 +80,20 @@ def jysr_to_jybm(I, beamx, beamy):
 
 def jybm_to_tb(I, freq, beamx, beamy):
     '''
-    from science.nrao.edu/facilities/vla/proposing/TBconv
-        I in Jy/bm, freq in GHz, returns tb in Kelvin
-    
     Parameters
     ----------
-    I: numpy array, int, or float in Jy/beam
-    freq: float or int, units GHz
-    beamx, beamy: FWHM of Gaussian beam in arcsec
+    I: float, [Jy/beam] flux density
+    freq: float, [GHz] frequency
+    beamx : float, [arcsec]
+    beamy : float, [arcsec]
+    
+    References
+    ----------
+    science.nrao.edu/facilities/vla/proposing/TBconv
+    
+    Notes
+    -----
+    uses the Rayleigh-Jeans approximation
     '''
     return (1e3 * 1.22e3) * I / (freq**2 * beamx * beamy)
     
@@ -118,14 +154,32 @@ def rayleigh_jeans(tb, freq):
     return I*1e26
     
     
-def solar_spectrum():
+def rayleigh_criterion(wl, d):
     '''
-    Load and return Gueymard solar standard spectrum
-        from 0 to 1000 um
+    Parameters
+    ----------
+    wl : [m] wavelength
+    d : [m] diameter of telescope
+
     Returns
     -------
-    wl: array of astropy Quantities, wavelength in microns
-    flux: array of astropy Quantities, solar flux in erg s-1 cm-2 um-1
+    [arcsec] Diffraction limit of a circular aperture
+    '''
+    return np.rad2deg(1.22 * wl / d) * 3600
+    
+    
+def solar_spectrum():
+    '''
+    Load and return Gueymard solar standard spectrum from 0 to 1000 um
+        https://doi.org/10.1016/j.solener.2003.08.039
+    accessed at https://www.nrel.gov/grid/solar-resource/spectra.html
+    
+    Returns
+    -------
+    wl: array of astropy Quantities
+        [um] wavelength
+    flux: array of astropy Quantities, solar flux
+        [erg s-1 cm-2 um-1]
     '''
     infile = importlib.resources.open_binary('pylanetary.utils.data', 'newguey2003.txt')
     wl, flux = np.loadtxt(infile, skiprows=8).T
@@ -138,19 +192,30 @@ def solar_spectrum():
     
 def I_over_F(observed_flux, bp, target_sun_dist, target_omega):
     '''
-    see Hammel et al 1989, DOI:10.1016/0019-1035(89)90149-8
+    definition from Hammel et al 1989, DOI:10.1016/0019-1035(89)90149-8
     
     Parameters
     ----------
-    observed_flux: float, required. flux from target. units erg s-1 cm-2 um-1
-    bp: np.array([wls, trans]). the filter transmission function. units of wls is um
-    target_sun_dist: float, required. distance between sun and target in AU
-    target_omega: float, required. solid angle of target in sr
+    observed_flux: float, required. 
+        [erg s-1 cm-2 um-1] flux of target
+    bp: np.array([wls, trans]). 
+        [[um], [-]] the filter transmission function
+    target_sun_dist: float, required. 
+        [AU] distance between sun and target
+    target_omega: float, required. 
+        [sr] for unresolved object, solid angle of that object
+        for resolved object, solid angle of one pixel
     
     Returns
     -------
-    wl_eff: effective filter wavelength in um
-    I/F: the I/F
+    wl_eff: float
+        [um] effective filter wavelength
+    I/F: float
+        [-] the I/F
+    
+    Notes
+    -----
+    sun_flux_earth agrees with Arvesen 1969 in H band, doi:10.1364/AO.8.002215
     
     To do
     -----
@@ -166,11 +231,11 @@ def I_over_F(observed_flux, bp, target_sun_dist, target_omega):
     trans_sun = interp_f(wl_sun)
     sun_flux_earth = np.sum(flux_sun * trans_sun)/np.nansum(trans_sun)
     
-    # compute I/F
-    sun_flux = (sun_flux_earth)*(1.0/target_sun_dist)**2 
+    # compute I/F. add factor of 1/pi from definition of I/F
+    sun_flux = (1/np.pi) * (sun_flux_earth)*(1.0/target_sun_dist)**2 
     expected_flux = sun_flux.value * target_omega
     
-    return wl_eff, observed_flux * np.pi / expected_flux #factor of pi for pi*Fsun in I/F definition
+    return wl_eff, observed_flux / expected_flux
     
     
 def rebin(arr, z):
@@ -237,7 +302,8 @@ class Body:
     output> Jupiter is currently 5.93796102228318 AU  AU from the Earth with apparent size  33.2009 arcsec
     today = 2023-04-26 16:32:54
     """
-    def __init__(self, name, epoch=None):
+    
+    def __init__(self, name, epoch=None, location=None):
         """
         Input string instantiates object using file name of string to
         populate attributes. Astropy quantity objects utilized for data
@@ -245,51 +311,60 @@ class Body:
 
         Parameters
         ----------
-        name: str
+        name: str, required.
             Body name string, example "Jupiter" will load Jupiter.yaml
-        epoch: astropy.time.Time or None
-            The epoch at which to retrieve the ephemeris of the body. If None,
-            the current time will be used with a delta time of 1 minute.
+        epoch: astropy.time.Time, optional.
+            The epoch at which to retrieve the ephemeris of the body. 
+            If not set, the current time will be used.
+        location: str, optional.
+            JPL Horizons observatory code. 
+            If not set, center of Earth will be used.
         """
-        self.name = name
+        self.name = name.lower().capitalize()
         with importlib.resources.open_binary(body_info, f"{self.name}.yaml") as file:
             yaml_bytes = file.read()
             data = yaml.safe_load(yaml_bytes)
 
-            # basic information and rewrite name
-            self.name = data['body']['name']
-            self.jpl_hor_id = data['body']['jpl_hor_id']
-            self.mass = Quantity(data['body']['mass'], unit=u.kg)
-            self.r_eq = Quantity(data['body']['r_eq'], unit=u.km)
-            self.r_pol = Quantity(data['body']['r_pol'], unit=u.km)
-            self.r_avg = (self.r_eq + self.r_pol) / 2
-            self.r_vol = Quantity(data['body']['r_vol'], unit=u.km)
-            self.accel_g = Quantity(data['body']['accel_g'], unit=u.m / u.s**2)
-            self.num_moons = data['body']['num_moons']
+        # basic information and rewrite name
+        self.name = data['body']['name']
+        self.jpl_hor_id = data['body']['jpl_hor_id']
+        self.mass = Quantity(data['body']['mass'], unit=u.kg)
+        self.req = Quantity(data['body']['req'], unit=u.km)
+        self.rpol = Quantity(data['body']['rpol'], unit=u.km)
+        self.ravg = (self.req + self.rpol) / 2
+        self.rvol = Quantity(data['body']['rvol'], unit=u.km)
+        self.accel_g = Quantity(data['body']['accel_g'], unit=u.m / u.s**2)
+        self.num_moons = data['body']['num_moons']
 
-            # orbital information
-            self.semi_major_axis = Quantity(data['orbit']['semi_major_axis'], unit=u.au)
-            self.t_rot_hrs = Quantity(data['orbit']['t_rot'], unit=u.hr)
+        # orbital information
+        self.semi_major_axis = Quantity(data['orbit']['semi_major_axis'], unit=u.au)
+        self.t_rot_hrs = Quantity(data['orbit']['t_rot'], unit=u.hr)
 
-            # static observational information
-            self.app_dia_max = Quantity(data['observational']['app_dia_max'], unit=u.arcsec)
-            self.app_dia_min = Quantity(data['observational']['app_dia_min'], unit=u.arcsec)
+        # static observational information
+        self.app_dia_max = Quantity(data['observational']['app_dia_max'], unit=u.arcsec)
+        self.app_dia_min = Quantity(data['observational']['app_dia_min'], unit=u.arcsec)
 
-            # use datetime Time.now() or epoch to astroquery for ephemeris
-            if epoch is None:
-                start_time = Time.now()
-            else:
-                start_time = Time(epoch)
-            end_time = start_time + timedelta(minutes=1)
-            epochs = {'start': start_time.strftime('%Y-%m-%d %H:%M:%S'),
-                      'stop': end_time.strftime('%Y-%m-%d %H:%M:%S'), 'step': '1m'}
-            self.epoch_datetime = start_time.strftime('%Y-%m-%d %H:%M:%S')
-            obj = Horizons(id=self.jpl_hor_id, location='500', epochs=epochs)
+        # astroquery Horizons ephemeris
+        if location is None:
+            location = '500'
+        if epoch is None:
+            start_time = Time.now()
+        else:
+            start_time = Time(epoch)
+        end_time = start_time + timedelta(minutes=1)
+        epochs = {'start': start_time.strftime('%Y-%m-%d %H:%M:%S'),
+                  'stop': end_time.strftime('%Y-%m-%d %H:%M:%S'), 'step': '1m'}
+        self.epoch_datetime = start_time.strftime('%Y-%m-%d %H:%M:%S')
+        
+        obj = Horizons(id=self.jpl_hor_id, location=location, epochs=epochs)
 
-            self.eph = obj.ephemerides()
-            # see self.eph.columns for all columns available in astropy table
-            # dynamic observational information
-            self.ra = self.eph['RA'][0] * u.deg
-            self.dec = self.eph['DEC'][0] * u.deg
-            self.distance = self.eph['delta'][0] * u.au
-            self.app_dia = self.eph['ang_width'][0] * u.arcsec
+        self.ephem = obj.ephemerides()[0]
+        # see self.ephem.columns for all columns available in astropy table
+        # dynamic observational information
+        self.ra = self.ephem['RA'] * u.deg
+        self.dec = self.ephem['DEC'] * u.deg
+        self.distance = self.ephem['delta'] * u.au
+        self.app_dia = self.ephem['ang_width'] * u.arcsec
+        
+    def __str__(self):
+        return f'pylantary.utils.Body instance; {self.name}, Horizons ID {self.jpl_hor_id}'

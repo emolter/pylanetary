@@ -2,7 +2,7 @@ astropy==5.0.4
 git+https://github.com/astropy/astroquery.git
 beautifulsoup4==4.11.1
 extension_helpers==1.0.0
-image_registration==0.2.6
+git+https://github.com/keflavich/image_registration.git
 matplotlib==3.4.3
 numpy==1.23.4
 photutils==1.4.0
