@@ -44,6 +44,7 @@ def parse_ring_data(planet):
     '''
 
     URL = f"https://pds-rings.seti.org/{planet.lower()}/{planet.lower()}_rings_table.html"
+    print(URL)
 
     with urllib.request.urlopen(URL) as response:
         src = response.read()

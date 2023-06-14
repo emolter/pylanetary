@@ -21,6 +21,7 @@ from ..utils import *
 '''
 To implement
 ------------
+* Ring() uses omega, i, w; params_sys uses i, omega, w. NEed to re-think params_sys
 * make as_azimuthal_wedges() allow non-square images!
 * class that inherits from Ring for asymmetric rings like Uranus's epsilon ring
 * make azimuthal wedges code much faster by implementing wedges as a photutils object
@@ -63,6 +64,26 @@ def plane_project(x, z):
 def make_rot(i, omega, w):
     '''use i, omega, and w as Euler rotation angles and return a rotation object'''
     return Rotation.from_euler('zxz', [w, i, omega], degrees=True)
+    
+    
+def double_rot(params_ring, params_sys=[0.0, 0.0, 0.0]):
+    '''
+    Compute the total rotation matrix needed to account for ring relative to ringplane,
+        and ringplane relative to observer
+    
+    Parameters
+    ----------
+    params_ring: [i, omega, w] for the ring relative to the ring plane
+    params_sys: [i, omega, w] for the ring plane relative to the observer
+        i_sys = 90 + B
+        omega_sys = np_ang
+        w_sys = 0
+    '''
+    
+    rot_ring = make_rot(params_ring[0], params_ring[1], params_ring[2])
+    rot_sys = make_rot(params_sys[0], params_sys[1], params_sys[2])
+    
+    return rot_sys * rot_ring #order matters!
 
 
 def rotate_and_project(vec, rot, proj_plane=[0, 0, 1]):
@@ -91,12 +112,16 @@ def vector_ellipse(u, v, t, origin=np.array([0, 0, 0])):
     return origin + u * np.cos(t) + v * np.sin(t)
     
     
-def project_ellipse(a,e,i,omega,w,n=100, origin = np.array([0,0,0]), proj_plane = [0,0,1]):
+def project_ellipse(a,e,i,omega,w, params_sys, n=100, origin = np.array([0,0,0]), proj_plane = [0,0,1]):
     '''
     make a projection of an ellipse with the given params using i,omega,w as Euler rotation angles
+    
+    Parameters
+    ----------
     a: any distance unit
     e: unitless
     i, omega, w: assume degrees
+    params_sys: [i, omega, w] of ring plane relative to observer
     n: number of points in ellipse circumference
     origin: units of a, expects array
     '''
@@ -110,7 +135,7 @@ def project_ellipse(a,e,i,omega,w,n=100, origin = np.array([0,0,0]), proj_plane 
     b_vec = np.array([0,b,0])
     
     # apply projections to a, b, f0, f1
-    rot = make_rot(i,omega,w)
+    rot = double_rot([i,omega,w], params_sys)
     f0p = rotate_and_project(f0, rot, proj_plane=proj_plane)
     f1p = rotate_and_project(f1, rot, proj_plane=proj_plane)
     a_vec_p = rotate_and_project(a_vec, rot, proj_plane=proj_plane)
@@ -195,20 +220,21 @@ def ring_area(a, e, width, delta_width=0.0, B=90.0):
 
 class Ring:
 
-    def __init__(self, a, e, omega, i, w, width=1.0, flux=1.0):
+    def __init__(self, a, e, omega, i, w, width=1.0, flux=1.0, params_sys=[0.0, 0.0, 0.0]):
         '''
         model of a planetary ring
 
         Parameters
         ----------
-        a : semimajor axis. assumes km if not an astropy Quantity
-        e : eccentricity
-        Omega : longitude of ascending node. assumes degrees if not an astropy Quantity
-        i : inclination. assumes degrees if not an astropy Quantity
-        w : argument of periapsis. assumes degrees if not an astropy Quantity
-        width : float or Quantity, optional. default 1 km (i.e., very thin).
+        a: semimajor axis. assumes km if not an astropy Quantity
+        e: eccentricity
+        omega: longitude of ascending node. assumes degrees if not an astropy Quantity
+        i: inclination. assumes degrees if not an astropy Quantity
+        w: argument of periapsis. assumes degrees if not an astropy Quantity
+        width: float or Quantity, optional. default 1 km (i.e., very thin).
             assumes km if not an astropy Quantity
-        flux : float or Quantity, optional. default 1.0.
+        flux: float or Quantity, optional. default 1.0.
+        params_sys: [i, omega, w] of ring plane relative to observer
 
         Attributes
         ----------
@@ -237,6 +263,7 @@ class Ring:
         self.w = Angle(w, u.deg)
         self.width = u.Quantity(width, unit=u.km)
         self.flux = flux
+        self.params_sys = params_sys
 
     def __str__(self):
         '''
@@ -283,6 +310,7 @@ class Ring:
         #from PyAstronomy import pyasl
         #ke = pyasl.KeplerEllipse(self.a, T, tau = self.tau, e = self.e, Omega = self.omega, i = self.i, w = self.w)
         # return ke
+        raise NotImplementedError
         return
 
     def as_elliptical_annulus(
@@ -320,7 +348,7 @@ class Ring:
         pixscale = u.Quantity(pixscale, unit=u.km)
 
         # rotate and project the ellipse
-        true_params = project_ellipse(a, self.e, i, omega, w, n=int(n), origin=np.array([0, 0, 0]), proj_plane=[0, 0, 1])
+        true_params = project_ellipse(a, self.e, i, omega, w, n=int(n), origin=np.array([0, 0, 0]), proj_plane=[0, 0, 1], params_sys=self.params_sys)
         a_f, b_f, theta_f = calc_abtheta(true_params['ell'])
         a_f, b_f = np.abs(a_f), np.abs(b_f)
 
@@ -337,10 +365,9 @@ class Ring:
         # convert to pixel values
         a_inner = a_inner / pixscale.value
         a_outer = a_outer / pixscale.value
-        # account for inclination, which effectively shortens b even more
         b_outer = b_outer / pixscale.value
         center = np.array(focus) - center / pixscale.value
-        center = center[::-1]
+        #center = center[::-1]
 
         # finally make the annulus object
         ann = aperture.EllipticalAnnulus(center,
@@ -357,8 +384,8 @@ class Ring:
     def as_azimuthal_wedges(
             self,
             shape,
-            focus,
             pixscale,
+            focus=None,
             nwedges=60,
             width=None,
             n=1e4,
@@ -397,6 +424,8 @@ class Ring:
         # handle input params
         if width is None:
             width = self.width
+        if focus is None:
+            focus = (shape[0] / 2.0, shape[1] / 2.0)
         pixscale = u.Quantity(pixscale, unit=u.km)
 
         zshape = (shape[0] * z, shape[1] * z)
@@ -525,7 +554,7 @@ class Ring:
         if focus is None:
             focus = (shape[0] / 2.0, shape[1] / 2.0)
 
-        ann = self.as_elliptical_annulus(focus, pixscale, width)
+        ann, params_out = self.as_elliptical_annulus(focus, pixscale, width, return_params=True)
         arr_sharp = flux*ann.to_mask(method='exact').to_image(shape)
         # since flux is simple multiply by mask, its really a specific intensity
         # e.g. Jy/sr
@@ -624,15 +653,15 @@ class RingSystemModelObservation:
             raise NotImplementedError(
                 "not done yet; please provide location for now")
 
-        # send query to Planetary Ring Node, and query static data table
+        # query the Planetary Ring Node
         node = RingNode()
         self.bodytable, self.ringtable = node.ephemeris(
             planet=planet, epoch=epoch, location=location, cache=False)
         self.systemtable = self.bodytable.meta
-
+        
+        # query static data table
         ring_data_source = importlib.resources.open_binary(
             'pylanetary.rings.data', f'{planet}_ring_data.hdf5')
-        #ring_static_data = table.Table.read(f'data/{planet}_ring_data.hdf5', format = 'hdf5')
         ring_static_data = table.Table.read(ring_data_source, format='hdf5')
         planet_ephem = self.bodytable.loc[planet]
         #self.ob_lat, self.ob_lon = planet_ephem['sub_obs_lat'], planet_ephem['sub_obs_lon']
@@ -661,11 +690,19 @@ class RingSystemModelObservation:
 
         # make self.ringtable and fluxes contain only the rings in ringnames
         self.ringtable = self.ringtable.loc[ringnames]
+        
+        # compute fluxes from optical depth (very approximate)
         if fluxes == 'default':
-            fluxes = list(self.ringtable['Optical Depth'])
+            taus = np.array(self.ringtable['Optical Depth'])
             # optical depth to 1 - transmittance
-            fluxes = [1 - np.exp(-val) for val in fluxes]
+            taus[np.isnan(taus)] = 1.0 # lazy fix of bad table data, re-think this later
+            fluxes = 1 - np.exp(-taus)
+            
 
+        # instantiate ring objects for all the rings
+        params_sys = [(-90*u.deg + self.systemtable['opening_angle']).value, 
+                        self.np_ang, 
+                        -90.0] # i, omega, w
         self.rings = {}
         for i in range(len(ringnames)):
             ringname = ringnames[i]
@@ -676,40 +713,27 @@ class RingSystemModelObservation:
                 raise ValueError(
                     f"Ring name {ringname} not found in the data table of known rings")
 
-            # make a Ring object for each one
-            if 'ascending node' in self.ringtable.loc['ring', ringname].keys():
-                # + self.systemtable['sub_obs_lon']
-                
-                ## TO DO: FIX HERE ###
-                ## the omega values in the Planetary Ring node correspond to the additional
-                ## inclination values given in the static table.
-                ## so we need to do a second rotation after the first one, 
-                ## with the small inclinations
-                ## given in the static table
-                ## and this omega. 
-                ## for now, just force omega to be the system omega
-                
-                ## I think this must be done in the opposite sense; do the peculiar rotations first, then the full system rotation. This cannot (?) be described by a single rotation
-                
-                #omega = self.np_ang * u.deg + \
-                #    self.ringtable.loc['ring', ringname]['ascending node'].filled(0.0)
-                omega = self.np_ang * u.deg
-            else:
-                omega = self.np_ang * u.deg
-            if 'pericenter' in self.ringtable.loc['ring', ringname].keys():
-                # filled() just turns from a masked array, which doesn't pass,
-                # to an unmasked array. the fill value is not used
-                w = self.ringtable.loc['ring',
-                                       ringname]['pericenter'].filled(0.0)
-            else:
-                w = 0.0 * u.deg
-            i = 90 * u.deg + self.systemtable['opening_angle']
-
+            e = 0.0
+            i = 0.0
+            omega = 0.0
+            w = 0.0
+            if 'Eccentricity' in ringparams.keys():
+                e = ringparams['Eccentricity']
+            if 'inclination' in ringparams.keys():
+                i = ringparams['inclination'].filled(0.0)
+            if 'ascending node' in ringparams.keys():
+                omega = ringparams['ascending node'].filled(0.0)
+            if 'pericenter' in ringparams.keys():
+                w = ringparams['pericenter'].filled(0.0)
+            # filled() just turns from a masked array, which doesn't pass,
+            # to an unmasked array. the fill value is not used
             # many of the less-well-observed rings have masked values
-            # for many of these quantities, particularly omega, i, w, or even e. these go to
-            # zero when made into floats, so it is ok
+            # for many of these quantities, particularly omega, i, w
+            # these go to zero when made into floats, 
+            # so the filled() hack is ok   
 
-            # handle the fact that half of the static ring tables have middle boundary and width,
+            # find semimajor axis
+            # handling the fact that half the static ring tables have middle boundary and width,
             # while the other half have inner and outer boundary
             if 'Middle Boundary (km)' in ringparams.keys():
                 a = ringparams['Middle Boundary (km)'] * u.km
@@ -723,18 +747,14 @@ class RingSystemModelObservation:
                 raise ValueError(
                     'Neither "Middle Boundary (km)" nor "Inner Boundary (km)" found in static ring data')
 
-            # handle eccentricity
-            if 'Eccentricity' in ringparams.keys():
-                e = ringparams['Eccentricity']
-            else:
-                e = 0.0
             thisring = Ring(a,
                             e,
                             omega,
                             i,
                             w,
                             width=width,
-                            flux=flux)
+                            flux=flux,
+                            params_sys=params_sys)
             self.rings[ringname] = thisring
 
     def as_2d_array(self, shape, pixscale, focus=None, beamsize=None):
