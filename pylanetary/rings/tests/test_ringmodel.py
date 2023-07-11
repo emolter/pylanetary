@@ -1,7 +1,7 @@
 import pytest
 from astroquery.solarsystem import pds
 
-from ... import rings
+from ...rings import *
 
 
 # files in data/ for different planets
@@ -37,19 +37,6 @@ def patch_request(request):
 
 
 # --------------------------------- actual test functions
-
-def test_project_ellipse():
-
-    ell = project_ellipse(a, e, i, omega, w, n=1000,
-                          origin=np.array([0, 0, 0]), proj_plane=[0, 0, 1])
-
-    assert ell['a'] == whatever
-    assert ell['b'] == whatever
-    assert ell['f0'] == whatever
-    assert ell['f1'] == whatever
-    assert ell['ell'] == whatever
-    # look in ellipse projection play Jupyter notebook
-
 
 def test_ring_as_annulus():
 
@@ -92,6 +79,11 @@ def test_ring_as_array():
     assert whatever
 
 
+def test_model_system_Uranus(patch_request):
+
+    assert whatever
+    
+    
 def test_model_system_Uranus(patch_request):
 
     assert whatever
