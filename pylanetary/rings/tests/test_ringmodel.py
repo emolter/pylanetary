@@ -1,7 +1,9 @@
 import pytest
+import os
+import numpy as np
 from astroquery.solarsystem import pds
-
-from ... import rings
+import astropy.units as u
+from ...rings import *
 
 
 # files in data/ for different planets
@@ -38,65 +40,70 @@ def patch_request(request):
 
 # --------------------------------- actual test functions
 
-def test_project_ellipse():
-
-    ell = project_ellipse(a, e, i, omega, w, n=1000,
-                          origin=np.array([0, 0, 0]), proj_plane=[0, 0, 1])
-
-    assert ell['a'] == whatever
-    assert ell['b'] == whatever
-    assert ell['f0'] == whatever
-    assert ell['f1'] == whatever
-    assert ell['ell'] == whatever
-    # look in ellipse projection play Jupyter notebook
-
-
-def test_ring_as_annulus():
-
-    model_ring = rings.Ring(a, e, omega, i, w)
-    ann, params = model_ring.as_elliptical_annulus(focus,
-                                                   pixscale,
-                                                   width=None,
-                                                   n=1e3,
-                                                   return_params=True)
-
-    assert whatever
+def test_ring_as_array():
+    '''
+    this also implicitly tests as_elliptical_annulus()
+    but should probably write an explicit test eventually
+    '''
+    
+    a = 51149 #km
+    e = 0.4
+    i = 80.0
+    omega = 60.0
+    w = 30.
+    imsize = 300 #px
+    pixscale = 500 #km/px
+    ringmodel2 = Ring(a, 0.4, w, i, omega, flux = 0.001, width = 10000*u.km)
+    arr = ringmodel2.as_2d_array((imsize, imsize), pixscale, beam = (10,6,30))
+    arr_expected = np.load(data_path('as_2d_array_testarr.npy'))
+    assert np.allclose(arr, arr_expected, rtol=1e-3)
+    
+    
+def test_change_params_preserve_flux():
+    '''
+    discovered a bug in testing that if e is changed dynamically like this,
+    then b will not be re-computed, and this ruins the elliptical annulus
+    solved by removing self.b and self.c inside __init__
+    '''
+    a = 51149 #km
+    e = 0.4
+    i = 80.0
+    omega = 60.0
+    w = 30.
+    imsize = 300 #px
+    pixscale = 500 #km/px    
+    ringmodel = Ring(a, 0.4, w, i, omega, flux = 0.001, width = 10000*u.km)
+    arr = ringmodel.as_2d_array((imsize, imsize), pixscale, beam = (10,6,30))
+    
+    ringmodel2 = Ring(a, 0.01, w, i, omega, flux = 0.001, width = 10000*u.km)
+    ringmodel2.e = 0.4
+    arr2 = ringmodel2.as_2d_array((imsize, imsize), pixscale, beam = (10,6,30))
+    
+    assert np.allclose(arr, arr2, rtol = 1e-3)
 
 
 def test_ring_as_wedges():
+    
+    a = 51149 #km
+    e = 0.4
+    i = 80.0
+    omega = 60.0
+    w = 30.
+    imsize = 300 #px
+    pixscale = 500 #km/px
+    width = 10000*u.km
+    nwedges = 12
+    ringmodel = Ring(a, e, omega, i, w)
+    
+    thetas, wedges = ringmodel.as_azimuthal_wedges(
+                        [imsize,imsize], 
+                        pixscale,  
+                        nwedges=nwedges, 
+                        z=1, 
+                        width = width)
+    wedges = np.array(wedges)
+    wedges_expected = np.load(data_path('wedges_testarr.npy'))
 
-    model_ring = rings.Ring(a, e, omega, i, w)
-    ann_list = model_ring.as_keplers3rd_wedges(width, n)
-
-    assert whatever
-
-
-def test_ring_as_orbit():
-
-    model_ring = rings.Ring(a, e, omega, i, w)
-    ke = model_ring.as_orbit(T, tau)
-
-    assert whatever
-
-
-def test_ring_as_array():
-
-    model_ring = rings.Ring(a, e, omega, i, w)
-    arr = model_ring.as_2d_array(
-        shape,
-        pixscale,
-        width=None,
-        flux=None,
-        beamsize=None)
-
-    assert whatever
-
-
-def test_model_system_Uranus(patch_request):
-
-    assert whatever
-
-
-def test_model_system_Saturn(patch_request):
-
-    assert whatever
+    assert np.allclose(thetas, np.linspace(0, 2*np.pi, nwedges+1)[:-1], rtol = 1e-3)
+    assert np.round(np.max(np.sum(wedges, axis = 0)), 6) == 1.0 #rounding to deal with machine precision
+    assert np.allclose(wedges, wedges_expected, rtol = 1e-3)
