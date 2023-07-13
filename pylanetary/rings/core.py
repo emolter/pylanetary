@@ -394,8 +394,6 @@ class Ring:
 
         self.a = u.Quantity(a, unit=u.km)
         self.e = e
-        self.b = b_from_ae(self.a, self.e)
-        self.c = self.e * self.a
         self.omega = Angle(omega, u.deg)
         self.i = Angle(i, u.deg)
         self.w = Angle(w, u.deg)
@@ -484,7 +482,8 @@ class Ring:
         '''
 
         # convert to simple floats instead of astropy unit quantities
-        a, b = self.a.to(u.km).value, self.b.to(u.km).value
+        b = b_from_ae(self.a, self.e)
+        a, b = self.a.to(u.km).value, b.to(u.km).value
         omega, i, w = self.omega.to(u.deg).value, self.i.to(u.deg).value, self.w.to(u.deg).value
         if width is None:
             width = self.width
@@ -507,7 +506,6 @@ class Ring:
         a_outer = a_f + (a_f / a) * (width / 2)
         a_inner = a_f - (a_f / a) * (width / 2)
         b_outer = b_f + (b_f / b) * (width / 2)
-        #b_inner = b_f - (b_f/self.b)*(width/2)
 
         # put center of image at one focus
         # remove extraneous zero in z dimension
@@ -720,13 +718,13 @@ class Ring:
         # since flux is simple multiply by mask, its really a specific intensity
         # e.g. Jy/sr
 
-        if beamsize is None:
+        if beam is None:
             return arr_sharp
         else:
-            return convolve_with_beam(arr_sharp, beamsize)
+            return convolve_with_beam(arr_sharp, beam)
 
 
-class RingSystemModelObservation:
+class RingSystemModelObservation():
     '''
     model ring system combining static data from
     https://pds-rings.seti.org/uranus/uranus_rings_table.html
@@ -735,20 +733,15 @@ class RingSystemModelObservation:
     '''
 
     def __init__(self,
-            planet,
-            location=None,
-            horizons_loc=None,
-            epoch=None,
+            body,
+            location,
             ringnames=None,
             fluxes='default'):
         '''
         Parameters
         ----------
-        :planet: str, required. 
+        :body: pylanetary.utils.Body object, required.
             one of Jupiter, Saturn, Uranus, Neptune
-        :epoch: `~astropy.time.Time` object or str, optional. default None.
-            if str, should be given in format YYYY-MM-DD hh:mm (assumes UTC)
-            if None, the current time is used.
         :location: str, array-like, or `~astropy.coordinates.EarthLocation`, optional.
             If str, named observeratory supported by the ring node, e.g. JWST.
             If array-like, observer's location as a
@@ -759,12 +752,12 @@ class RingSystemModelObservation:
             initialize an `~astropy.units.Quantity` object (with units
             of length).  
             If ``None``, then the geofocus is used.
-        :horizons_loc: str, required.
-            JPL Horizons observer location code.
-            Should match the other location parameter.
-            TO DO LATER: lookup table to
-            make only one location specification required
-            e.g., '500@-170' for JWST
+            Unfortunately, it is not presently possible to get location information
+            directly from the Body object, because the JPL Horizons query tool
+            that Body uses requires a Horizons obs code, whereas the Planetary
+            Ring Node query tool requires the format specified here.
+            To prevent weird results, you should ensure that Body.jpl_hor_id
+            matches the location you are inputting here!
         :ringnames: list, optional. 
             names of rings to include in the model
             if no ringnames provided then all rings are assumed.
@@ -810,37 +803,25 @@ class RingSystemModelObservation:
         * implement default epoch and location
         * lookup table to avoid needing to specify both location and horizons_loc
         '''
-
-        planet = planet.lower().capitalize()
-        self.planetname = planet
-
-        # fix inputs
-        if epoch is None:
-            raise NotImplementedError(
-                "not done yet; please provide epoch for now")
-        if location is None:
-            raise NotImplementedError(
-                "not done yet; please provide location for now")
+        self.body = body
+        self.planetname = body.name
 
         # query the Planetary Ring Node
         node = RingNode()
         self.bodytable, self.ringtable = node.ephemeris(
-            planet=planet, epoch=epoch, location=location, cache=False)
+            planet=self.planetname, epoch=self.body.epoch, location=location, cache=False)
         self.systemtable = self.bodytable.meta
         
         # query static data table
         ring_data_source = importlib.resources.open_binary(
-            'pylanetary.rings.data', f'{planet}_ring_data.hdf5')
+            'pylanetary.rings.data', f'{self.planetname}_ring_data.hdf5')
         ring_static_data = table.Table.read(ring_data_source, format='hdf5')
-        planet_ephem = self.bodytable.loc[planet]
+        planet_ephem = self.bodytable.loc[self.planetname]
         #self.ob_lat, self.ob_lon = planet_ephem['sub_obs_lat'], planet_ephem['sub_obs_lon']
 
-        # query Horizons for the north polar angle
-        obj = Horizons(id=horizons_lookup[planet.lower().capitalize()], location=horizons_loc, epochs={
-                       'start': epoch.to_value('iso'), 'stop': (epoch + 1 * u.day).to_value('iso'), 'step': '1d'})
-        ephem = obj.ephemerides()
-        self.ephem = ephem
-        self.np_ang = ephem['NPole_ang'][0]
+        # get ephemeris data from body object
+        self.ephem = self.body.ephem
+        self.np_ang = self.ephem['NPole_ang']
 
         # match the static and ephemeris data for rings using a table merge
         ring_static_data.rename_column('Feature', 'ring')
@@ -942,7 +923,7 @@ class RingSystemModelObservation:
         :beam: float, 3-element array-like, or 2-d np.array, optional.
             Gaussian beam with which to convolve the observation
             see docstring of utils.convolve_with_beam()
-            if no beamsize is specified, will make infinite-resolution
+            if no beam is specified, will make infinite-resolution
 
         Returns
         -------
@@ -953,10 +934,10 @@ class RingSystemModelObservation:
         for ringname in self.rings.keys():
 
             arr_out += self.rings[ringname].as_2d_array(
-                shape, pixscale, focus=focus, beamsize=None)
+                shape, pixscale, focus=focus, beam=None)
 
         # run convolution with beam outside loop so it is only done once
-        if beamsize is None:
+        if beam is None:
             return arr_out
         else:
-            return convolve_with_beam(arr_out, beamsize)
+            return convolve_with_beam(arr_out, beam)

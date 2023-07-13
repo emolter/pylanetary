@@ -351,6 +351,9 @@ class Body:
             start_time = Time.now()
         else:
             start_time = Time(epoch)
+        self.location = location
+        self.epoch = epoch
+        
         end_time = start_time + timedelta(minutes=1)
         epochs = {'start': start_time.strftime('%Y-%m-%d %H:%M:%S'),
                   'stop': end_time.strftime('%Y-%m-%d %H:%M:%S'), 'step': '1m'}
