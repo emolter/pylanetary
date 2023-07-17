@@ -37,9 +37,9 @@ def solid_angle(dS, d):
     
     Example
     -------
-    >>> a = 210 #km, Proteus average radius
-    >>> d = 30 * 1.496e8 #distance to Neptune in km
-    >>> solid_angle(np.pi*a**2, d)
+    a = 210 #km, Proteus average radius
+    d = 30 * 1.496e8 #distance to Neptune in km
+    solid_angle(np.pi*a**2, d)
     '''
     return (dS / d**2)
 

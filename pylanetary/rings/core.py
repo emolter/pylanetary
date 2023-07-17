@@ -404,13 +404,6 @@ class Ring:
     def __str__(self):
         '''
         String representation
-
-        Examples
-        --------
-        >>> from pylanetary.rings import Ring
-        >>> epsilon_ring = Ring(whatever)
-        >>> print(epsilon_ring)
-        Ring instance; a=whatever, e=whatever, i=whatever, width=whatever
         '''
         return f'Ring instance; a={self.a}, e={self.e}, i={self.i}, omega={self.omega}, w={self.w}, width={self.width}'
 
@@ -427,15 +420,6 @@ class Ring:
         returns
         -------
         PyAstronomy Keplerian Ellipse object
-
-        examples
-        --------
-        >>> epsilon_ring = Ring(a, e, omega, i, w)
-        >>> orbit = epsilon_ring.as_orbit(T, tau=0)
-        >>> print(orbit.pos)
-        >>> print(orbit.radius)
-        >>> print(orbit.vel)
-        >>> print(orbit.peri)
         '''
 
         # decide: is it this code's job to calculate the orbital period
