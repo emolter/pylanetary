@@ -157,7 +157,7 @@ def emission_angle(ob_lat, surf_n):
     -------
     mu : [-] cosine of emission angle
     '''
-    surf_n /= np.linalg.norm(surf_n) # normalize to magnitude 1
+    surf_n /= np.linalg.norm(surf_n, axis=0) # normalize to magnitude 1
     ob = np.asarray([np.cos(np.radians(ob_lat)),0,np.sin(np.radians(ob_lat))])
     mu = np.dot(surf_n.T, ob).T
     return mu
@@ -303,26 +303,30 @@ class ModelEllipsoid:
         return f'ModelEllipsoid instance; req={self.req}, rpol={self.rpol}'
         
         
-    def ldmodel(self, tb, a, law='exp'):
+    def ldmodel(self, tb, a, law='exp', beam=None):
         '''
         Make a limb-darkened model disk convolved with the beam
         See docstring of limb_darkening() for options
         
         Parameters
         ----------
-        tb : float, required. 
+        :tb: float, required. 
             [flux] brightness temperature of disk at mu=1
-        a : float or tuple, required. 
+        :a: float or tuple, required. 
             [-] limb darkening parameter(s) 
-        law : str, optional. default "exp"
+        :law: str, optional. default "exp"
             limb darkening law to use
+        :beam: see docstring of utils.convolve_with_beam
         '''
         ## TO DO: make this allow a 2-D Gaussian beam!
         
         ldmodel = limb_darkening(np.copy(self.mu), a, law=law)
         ldmodel[np.isnan(ldmodel)] = 0.0
         ldmodel = tb*ldmodel
-        return ldmodel   
+        if beam is None:
+            return ldmodel
+        else:
+            return convolve_with_beam(ldmodel, beam)   
         
         
     def zonalmodel(lats, lons, tbs, a=0.0):
@@ -567,7 +571,8 @@ class Nav(ModelBody):
         elif mode == 'canny':
             #model_planet = ~np.isnan(self.mu) #flat disk model
             model_planet = self.ldmodel(kwargs['tb'], kwargs['a'], law=kwargs['law'])
-            model_planet = convolve_with_beam(model_planet, kwargs['beam'])
+            if kwargs['beam'] is not None:
+                model_planet = convolve_with_beam(model_planet, kwargs['beam'])
             
             edges = feature.canny(self.data, sigma=kwargs['sigma'], low_threshold = kwargs['low_thresh'], high_threshold = kwargs['high_thresh'])
             model = feature.canny(model_planet, sigma=kwargs['sigma'], low_threshold = kwargs['low_thresh'], high_threshold = kwargs['high_thresh'])
