@@ -7,7 +7,6 @@ from ._astropy_init import *   # noqa
 # ----------------------------------------------------------------------------
 
 __all__ = []
-from .example_mod import *   # noqa
 # Then you can be explicit to control what ends up in the namespace,
 __all__ += []   # noqa
 # or you can keep everything from the subpackage with the following instead
