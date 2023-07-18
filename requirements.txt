@@ -4,7 +4,6 @@ beautifulsoup4==4.11.1
 extension_helpers==1.0.0
 git+https://github.com/keflavich/image_registration.git
 h5py>=3.0.0
-libopenblas-dev
 matplotlib==3.4.3
 numpy>=1.21.0
 photutils==1.4.0
