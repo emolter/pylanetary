@@ -1,14 +1,25 @@
-Documentation
-=============
+.. pylanetary documentation master file, created by
+   sphinx-quickstart on Tue Jul 18 12:13:23 2023.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
 
-This is the documentation for planetary_toolkit.
+Welcome to pylanetary's documentation!
+======================================
 
 .. toctree::
-  :maxdepth: 2
+   :maxdepth: 2
+   :caption: Contents:
 
-  planetary_toolkit/index.rst
+   installation
+   description
+   citing
+   navigation_api
+   rings_api
+   utils_api
 
-.. note:: The layout of this directory is simply a suggestion.  To follow
-          traditional practice, do *not* edit this page, but instead place
-          all documentation for the package inside ``planetary_toolkit/``.
-          You can follow this practice or choose your own layout.
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`

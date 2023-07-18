@@ -14,14 +14,13 @@ from ..utils import *
 '''
 To implement
 ------------
-* make lat_lon accept either east or west longitudes with a flag
+* change to rely on Cartopy
+* make lat_lon accept either east or west longitudes with a flag?
     * test on Jupiter (GRS), Io (Loki), and others
 * function to write ModelEllipsoid and Nav.reproject() outputs to fits
 * test support for 2-D Gaussian beams and measured PSFs
-* implement quadratic limb darkening
-* why are there two functions for surface normal and sun normal? should surface normal also account for latitude?
+* should surface normal also account for latitude?
 * make better docstrings for everything (Nav is done)
-* make the tests run
 '''
 
 def lat_lon(x,y,ob_lon,ob_lat,pixscale_km,np_ang,req,rpol):
@@ -30,7 +29,8 @@ def lat_lon(x,y,ob_lon,ob_lat,pixscale_km,np_ang,req,rpol):
     
     Parameters
     ----------
-    x, y : 
+    :x:
+    :y: 
     ob_lon, ob_lat : 
     pixscale_km : 
     np_ang : 
@@ -125,9 +125,10 @@ def surface_normal(lat_g, lon_w, ob_lon):
     
 
 def sun_normal(lat_g, lon_w, sun_lon, sun_lat):
-    '''Computes the normal vector to the surface of the planet.
+    '''
+    Computes the normal vector to the surface of the planet.
     Taking the dot product of output with sub-obs or sub-sun vector
-         gives the cosine of emission angle
+    gives the cosine of emission angle
     
     Parameters
     ----------
@@ -135,6 +136,9 @@ def sun_normal(lat_g, lon_w, sun_lon, sun_lat):
     Returns
     -------
     
+    To do
+    -----
+    * This has not been tested at all
     '''
     nx = np.cos(np.radians(lat_g-sun_lat))*np.cos(np.radians(lon_w-sun_lon))
     ny = np.cos(np.radians(lat_g-sun_lat))*np.sin(np.radians(lon_w-sun_lon))
@@ -148,16 +152,16 @@ def emission_angle(ob_lat, surf_n):
     
     Parameters
     ----------
-    ob_lat : float or np.array, required. 
+    :ob_lat: float or np.array, required. 
         [deg] sub-observer latitude
-    surf_n : np.array, required.
+    :surf_n: np.array, required.
         [x,y,z] surface normal vector at each ob_lat
     
     Returns
     -------
-    mu : [-] cosine of emission angle
+    :mu: [-] cosine of emission angle
     '''
-    surf_n /= np.linalg.norm(surf_n) # normalize to magnitude 1
+    surf_n /= np.linalg.norm(surf_n, axis=0) # normalize to magnitude 1
     ob = np.asarray([np.cos(np.radians(ob_lat)),0,np.sin(np.radians(ob_lat))])
     mu = np.dot(surf_n.T, ob).T
     return mu
@@ -168,15 +172,15 @@ def limb_darkening(mu, a, law='exp', mu0=None):
     '''
     Parameters
     ----------
-    mu: float or array-like, required. 
+    :mu: float or array-like, required. 
         [-] cosine of emission angle
-    a: float or array-like, required. 
+    :a: float or array-like, required. 
         [-] limb-darkening parameter(s)
         if law=="disc", a is ignored 
         if law=="exp", "linear", or "minnaert", a must have length 1
         if law=="quadratic", "square-root", a must have length 2 such that [a0, a1] are 
             the free parameters in the first and second terms, respectively.
-    law: str, optional. default "exp".
+    :law: str, optional. default "exp".
         what type of limb darkening law to use. options are:
         disc : no limb darkening applied
         linear : ld = 1 - a * (1 - mu)
@@ -184,7 +188,7 @@ def limb_darkening(mu, a, law='exp', mu0=None):
         minnaert : ld = mu0**a * mu**(a-1)
         quadratic : ld = 1 - a[0]*(1-mu) - a[1]*(1-mu)**2 
         square-root : ld = 1 - a[0]*(1-mu) - a[1]*(1-np.sqrt(mu))
-    mu0: float or array-like, optional. default None. 
+    :mu0: float or array-like, optional. default None. 
         [-] cosine of solar incidence angle.
         has no effect unless law=="minnaert", in which case it is required.
     
@@ -194,11 +198,8 @@ def limb_darkening(mu, a, law='exp', mu0=None):
 
     References
     -------
-    Overview of published limb darkening laws: https://www.astro.keele.ac.uk/jkt/codes/jktld.html 
-    
-    To-do list
-    ----------
-
+    Overview of published limb darkening laws
+    https://www.astro.keele.ac.uk/jkt/codes/jktld.html 
     '''
     # Input check 
     if np.any(mu <0) or np.any(mu>1): 
@@ -241,16 +242,17 @@ class ModelEllipsoid:
         '''
         Parameters
         ----------
-        ob_lon, ob_lat, np_ang : float, required. 
-            sub-observer planetographic longitude, latitude, np_ang in degrees
-            see JPL Horizons ephemeris tool for detailed descriptions
-        pixscale_km : float, required.
-            pixel scale in km
-        req, rpol : float, required.
-            planet equatorial, polar radius in km
-        center : 2-element array-like, optional. default (0,0). 
+        :ob_lon: float, required. [deg] sub-observer planetographic longitude
+        :ob_lat: float, required. [deg] sub-observer planetographic latitude
+        :np_ang: float, required. [deg] north polar angle
+            see JPL Horizons ephemeris tool for detailed descriptions 
+            of ob_lon, ob_lat, np_ang
+        :pixscale_km: float, required. [km] pixel scale
+        :req: float, required. [km] equatorial radius
+        :rpol: float, required. [km] polar radius
+        :center: 2-element array-like, optional. default (0,0). 
             pixel location of center of planet
-        shape: 2-element tuple, optional. 
+        :shape: 2-element tuple, optional. 
             shape of output arrays.
             if None, shape is just larger than diameter / pixscale
         
@@ -303,26 +305,30 @@ class ModelEllipsoid:
         return f'ModelEllipsoid instance; req={self.req}, rpol={self.rpol}'
         
         
-    def ldmodel(self, tb, a, law='exp'):
+    def ldmodel(self, tb, a, law='exp', beam=None):
         '''
         Make a limb-darkened model disk convolved with the beam
         See docstring of limb_darkening() for options
         
         Parameters
         ----------
-        tb : float, required. 
+        :tb: float, required. 
             [flux] brightness temperature of disk at mu=1
-        a : float or tuple, required. 
+        :a: float or tuple, required. 
             [-] limb darkening parameter(s) 
-        law : str, optional. default "exp"
+        :law: str, optional. default "exp"
             limb darkening law to use
+        :beam: see docstring of utils.convolve_with_beam
         '''
         ## TO DO: make this allow a 2-D Gaussian beam!
         
         ldmodel = limb_darkening(np.copy(self.mu), a, law=law)
         ldmodel[np.isnan(ldmodel)] = 0.0
         ldmodel = tb*ldmodel
-        return ldmodel   
+        if beam is None:
+            return ldmodel
+        else:
+            return convolve_with_beam(ldmodel, beam)   
         
         
     def zonalmodel(lats, lons, tbs, a=0.0):
@@ -339,7 +345,7 @@ class ModelEllipsoid:
         '''
         Parameters
         ----------
-        outstem : stem of filenames to write
+        :outstem: stem of filenames to write
         
         Writes
         ------
@@ -381,10 +387,10 @@ class ModelBody(ModelEllipsoid):
         '''
         Parameters
         ----------
-        body : 
-        pixscale : float or Quantity, required. 
+        :body: 
+        :pixscale: float or Quantity, required. 
             [arcsec] pixel scale of the input image
-        shape: 2-element tuple, optional. 
+        :shape: 2-element tuple, optional. 
             shape of output arrays.
             if None, shape is just larger than diameter / pixscale
         
@@ -441,11 +447,11 @@ class Nav(ModelBody):
         
         Parameters
         ----------
-        data : np.array, required.
+        :data: np.array, required.
             [-] 2-D image data
-        body : pylanetary.utils.Body object, required.
+        :body: pylanetary.utils.Body object, required.
             [-] see docstring of utils.Body
-        pixscale : float or Quantity, required. 
+        :pixscale: float or Quantity, required. 
             [arcsec] pixel scale of the input image
         
         Attributes
@@ -501,19 +507,19 @@ class Nav(ModelBody):
         
         Parameters
         ----------
-        mode : str, optional. Default 'convolution'.
+        :mode: str, optional. Default 'convolution'.
             [-] Which method should be used to overlay planet model and data. Choices are:
         
             'canny': uses the Canny edge detection algorithm.
                 kwargs: 
-                    tb : float, required.
+                    :tb: float, required.
                         [same flux unit as data] brightness temperature of disk at mu=1 
-                    a : float, required.
+                    :a: float, required.
                         [-] exponential limb darkening param
-                    beam : float, tuple, or np.array, optional. default None.
-                    low_thresh : float, required.
-                    high_thresh : float, required.
-                    sigma : int, required.
+                    :beam: float, tuple, or np.array, optional. default None.
+                    :low_thresh: float, required.
+                    :high_thresh: float, required.
+                    :sigma: int, required.
                 see documentation of skimage.feature.canny for explanation of kwargs
                 To find edges of planet disk, typical "good" values are:
                     low_thresh : RMS noise in image
@@ -522,32 +528,32 @@ class Nav(ModelBody):
         
             'convolution': takes the shift that maximizes the convolution of model and planet
                 kwargs:
-                    tb : float, required.
+                    :tb: float, required.
                         [same flux unit as data] brightness temperature of disk at mu=1 
-                    a : float, required.
+                    :a: float, required.
                         [-] limb darkening parameter
-                    law : str, optional. default 'exp'
+                    :law: str, optional. default 'exp'
                         type of limb darkening model to use
-                    beam : float, tuple, or np.array, optional. default None.
+                    :beam: float, tuple, or np.array, optional. default None.
                         see ldmodel docstring
-                    err : float, per-pixel error in input image
+                    :err: float, per-pixel error in input image
         
             'disk': same as convolution
 
-        diagnostic_plot: bool, optional. default True
+        :diagnostic_plot: bool, optional. default True
             do you want the diagnostic plots to be shown
-        save_plot: str, optional. default None.
+        :save_plot: str, optional. default None.
             file path to save the diagnostic plot. if None, does not save.
         
         Returns
         -------
-            dx, dy: float
-                [pixels] best-fit difference in position between model and data
-                To shift data to center (i.e., colocated with model), apply a shift of -dx, -dy
-                To shift model to data, apply a shift of dx, dy
-            dxerr, dyerr: float
-                [pixels] uncertainty in the shift based on the cross-correlation 
-                from image_registration.chi2_shift
+        dx, dy: float
+            [pixels] best-fit difference in position between model and data
+            To shift data to center (i.e., colocated with model), apply a shift of -dx, -dy
+            To shift model to data, apply a shift of dx, dy
+        dxerr, dyerr: float
+            [pixels] uncertainty in the shift based on the cross-correlation 
+            from image_registration.chi2_shift
         
         Examples
         --------
@@ -555,7 +561,7 @@ class Nav(ModelBody):
         
         To Do
         -----
-        - sometimes dxerr, dyerr give unrealistic or undefined behavior
+        * sometimes dxerr, dyerr give unrealistic or undefined behavior
         '''
         defaultKwargs={'err':None,'beam':None,'law':'exp'}
         kwargs = { **defaultKwargs, **kwargs }
@@ -565,9 +571,9 @@ class Nav(ModelBody):
             model = convolve_with_beam(model, kwargs['beam'])
             data_to_compare = self.data 
         elif mode == 'canny':
-            #model_planet = ~np.isnan(self.mu) #flat disk model
             model_planet = self.ldmodel(kwargs['tb'], kwargs['a'], law=kwargs['law'])
-            model_planet = convolve_with_beam(model_planet, kwargs['beam'])
+            if kwargs['beam'] is not None:
+                model_planet = convolve_with_beam(model_planet, kwargs['beam'])
             
             edges = feature.canny(self.data, sigma=kwargs['sigma'], low_threshold = kwargs['low_thresh'], high_threshold = kwargs['high_thresh'])
             model = feature.canny(model_planet, sigma=kwargs['sigma'], low_threshold = kwargs['low_thresh'], high_threshold = kwargs['high_thresh'])
@@ -608,13 +614,13 @@ class Nav(ModelBody):
         '''
         Description
         -----------
-        simple function to FFTshift data by a user-defined amount
+        FFTshift data by a user-defined amount
         for example, to apply the suggested shift from colocate()
         
         Parameters
         ----------
-        dx, dy : floats, required. 
-            [pixels] x,y shift
+        :dx: float, required. [pixels] shift in x
+        :dy: float, required. [pixels] shift in y
         '''
         self.data = shift2d(self.data,dx,dy)
 
@@ -623,14 +629,14 @@ class Nav(ModelBody):
         '''
         Description
         -----------
-        simple function to FFTshift model (i.e., lat_g, lon_w, and mu) 
+        FFTshift model (i.e., lat_g, lon_w, and mu) 
             by a user-defined amount
         for example, to apply the suggested shift from colocate()
         
         Parameters
         ----------
-        dx, dy : floats, required. 
-            [pixels] x,y shift
+        :dx: float, required. [pixels] shift in x
+        :dy: float, required. [pixels] shift in y
         '''
         
         good = ~np.isnan(self.mu)
@@ -659,33 +665,23 @@ class Nav(ModelBody):
         
         Parameters
         ----------
-        outstem: str, optional. 
-            [-] stem of output filenames. if not set, will not save
-        pixscale_arcsec: float, optional. default self.pixscale_arcsec.
+        :pixscale_arcsec: float, optional. default self.pixscale_arcsec.
             [arcsec] Pixel scale of output
             If not set, output data will have the same pixel scale as the input data 
             at the sub-observer point. 
             Note that everywhere else will be super-sampled.
-        interp: str, optional. default 'cubic'
+        :interp: str, optional. default 'cubic'
             type of interpolation to do between pixels in the projection.
         
         Returns
         -------
-        projected: np.array
-            the projected data 
-        mu_projected: np.array
-            cosine of the emission angle (mu) at each pixel in the projection
-        
-        Writes
-        ------
-        outstem+"_proj.fits" : fits file containing projected data
-        outstem+:_mu_proj.fits" : fits file containing mu values of projected data
+        projected: np.array, the projected data 
+        mu_projected: np.array, cosine of the emission angle (mu) 
+            at each pixel in the projection
         
         To-do list
         ----------
-        * reproject to any geometry, or at least to polar geometry
-        * why does this look awful when we shift model instead of data?
-        
+        * rewrite to rely on cartopy, which enables arbitrary projections
         '''
         
         #determine the number of pixels in resampled image

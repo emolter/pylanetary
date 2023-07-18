@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Utils API &#8212; pylanetary 0.0.5 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Rings API" href="rings_api.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="module-pylanetary.utils.core">
+<span id="utils-api"></span><h1>Utils API<a class="headerlink" href="#module-pylanetary.utils.core" title="Permalink to this heading">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="pylanetary.utils.core.Body">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pylanetary.utils.core.</span></span><span class="sig-name descname"><span class="pre">Body</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epoch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">location</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.utils.core.Body" title="Permalink to this definition">¶</a></dt>
+<dd><p>instantiate object with attributes from yaml file of matching
+string name.</p>
+<p>Example usage:
+from pylanetary.utils import Body
+jup = Body(‘Jupiter’)</p>
+<p>jup.app_dia_max, jup.app_dia_min
+output&gt; (&lt;Quantity 50.1 arcsec&gt;, &lt;Quantity 30.5 arcsec&gt;)</p>
+<p>print(‘Jupiter is currently’, jup.distance, ‘ AU from the Earth with apparent size ‘, jup.app_dia, ‘ today = ‘,
+jup.epoch_datetime)
+output&gt; Jupiter is currently 5.93796102228318 AU  AU from the Earth with apparent size  33.2009 arcsec
+today = 2023-04-26 16:32:54</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pylanetary.utils.core.I_over_F">
+<span class="sig-prename descclassname"><span class="pre">pylanetary.utils.core.</span></span><span class="sig-name descname"><span class="pre">I_over_F</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">observed_flux</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_sun_dist</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_omega</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.utils.core.I_over_F" title="Permalink to this definition">¶</a></dt>
+<dd><p>definition from Hammel et al 1989, DOI:10.1016/0019-1035(89)90149-8</p>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Permalink to this heading">¶</a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">observed_flux<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float, required. 
+[erg s-1 cm-2 um-1] flux of target</p>
+</dd>
+<dt class="field-even">bp<span class="colon">:</span></dt>
+<dd class="field-even"><p>np.array([wls, trans]). 
+[[um], [-]] the filter transmission function</p>
+</dd>
+<dt class="field-odd">target_sun_dist<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float, required. 
+[AU] distance between sun and target</p>
+</dd>
+<dt class="field-even">target_omega<span class="colon">:</span></dt>
+<dd class="field-even"><p>float, required. 
+[sr] for unresolved object, solid angle of that object
+for resolved object, solid angle of one pixel</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Permalink to this heading">¶</a></h2>
+<dl class="simple">
+<dt>wl_eff: float</dt><dd><p>[um] effective filter wavelength</p>
+</dd>
+<dt>I/F: float</dt><dd><p>[-] the I/F</p>
+</dd>
+</dl>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Permalink to this heading">¶</a></h2>
+<p>sun_flux_earth agrees with Arvesen 1969 in H band, doi:10.1364/AO.8.002215</p>
+</section>
+<section id="to-do">
+<h2>To do<a class="headerlink" href="#to-do" title="Permalink to this heading">¶</a></h2>
+<p>handling of astropy units</p>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pylanetary.utils.core.beam_area">
+<span class="sig-prename descclassname"><span class="pre">pylanetary.utils.core.</span></span><span class="sig-name descname"><span class="pre">beam_area</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beamx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beamy</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.utils.core.beam_area" title="Permalink to this definition">¶</a></dt>
+<dd><section id="id1">
+<h2>Parameters<a class="headerlink" href="#id1" title="Permalink to this heading">¶</a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">beamx<span class="colon">:</span></dt>
+<dd class="field-odd"><p>[arcsec]</p>
+</dd>
+<dt class="field-even">beamy<span class="colon">:</span></dt>
+<dd class="field-even"><p>[arcsec]</p>
+</dd>
+</dl>
+</section>
+<section id="id2">
+<h2>Returns<a class="headerlink" href="#id2" title="Permalink to this heading">¶</a></h2>
+<p>area of a Gaussian beam</p>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pylanetary.utils.core.convolve_with_beam">
+<span class="sig-prename descclassname"><span class="pre">pylanetary.utils.core.</span></span><span class="sig-name descname"><span class="pre">convolve_with_beam</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beam</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.utils.core.convolve_with_beam" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convolves input 2-D image with a Gaussian beam or an input PSF image</p>
+<section id="id3">
+<h2>Parameters<a class="headerlink" href="#id3" title="Permalink to this heading">¶</a></h2>
+<dl class="field-list">
+<dt class="field-odd">data<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.array, required.</p>
+</dd>
+<dt class="field-even">beam<span class="colon">:</span></dt>
+<dd class="field-even"><p>float/int, 3-element array-like, or np.array, required.
+if float/int, circular Gaussian beam assumed, and this sets the fwhm</p>
+<blockquote>
+<div><p>[pixels]</p>
+</div></blockquote>
+<dl class="simple">
+<dt>if 3-element array-like, those are (fwhm_x, fwhm_y, theta_deg) for a 2-D Gaussian</dt><dd><p>[pixels, pixels, degrees]</p>
+</dd>
+</dl>
+<p>if np.array of size &gt; 3, assumes input PSF image</p>
+</dd>
+</dl>
+</section>
+<section id="id4">
+<h2>Returns<a class="headerlink" href="#id4" title="Permalink to this heading">¶</a></h2>
+<p>np.array of same shape as data</p>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pylanetary.utils.core.inverse_planck">
+<span class="sig-prename descclassname"><span class="pre">pylanetary.utils.core.</span></span><span class="sig-name descname"><span class="pre">inverse_planck</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">B</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.utils.core.inverse_planck" title="Permalink to this definition">¶</a></dt>
+<dd><section id="id5">
+<h2>Parameters<a class="headerlink" href="#id5" title="Permalink to this heading">¶</a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">B<span class="colon">:</span></dt>
+<dd class="field-odd"><p>[Jy/sr] flux density</p>
+</dd>
+<dt class="field-even">freq<span class="colon">:</span></dt>
+<dd class="field-even"><p>[GHz] frequency</p>
+</dd>
+</dl>
+</section>
+<section id="id6">
+<h2>Returns<a class="headerlink" href="#id6" title="Permalink to this heading">¶</a></h2>
+<p>[K] brightness temperature</p>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pylanetary.utils.core.inverse_rayleigh_jeans">
+<span class="sig-prename descclassname"><span class="pre">pylanetary.utils.core.</span></span><span class="sig-name descname"><span class="pre">inverse_rayleigh_jeans</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">B</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.utils.core.inverse_rayleigh_jeans" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rayleigh-Jeans approximation to inverse_planck()</p>
+<section id="id7">
+<h2>Parameters<a class="headerlink" href="#id7" title="Permalink to this heading">¶</a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">B<span class="colon">:</span></dt>
+<dd class="field-odd"><p>[Jy/sr] flux density</p>
+</dd>
+<dt class="field-even">freq<span class="colon">:</span></dt>
+<dd class="field-even"><p>[GHz] frequency</p>
+</dd>
+</dl>
+</section>
+<section id="id8">
+<h2>Returns<a class="headerlink" href="#id8" title="Permalink to this heading">¶</a></h2>
+<p>[K] brightness temperature</p>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pylanetary.utils.core.jybm_to_jysr">
+<span class="sig-prename descclassname"><span class="pre">pylanetary.utils.core.</span></span><span class="sig-name descname"><span class="pre">jybm_to_jysr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">I</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beamx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beamy</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.utils.core.jybm_to_jysr" title="Permalink to this definition">¶</a></dt>
+<dd><section id="id9">
+<h2>Parameters<a class="headerlink" href="#id9" title="Permalink to this heading">¶</a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">I<span class="colon">:</span></dt>
+<dd class="field-odd"><p>[Jy/beam] flux density</p>
+</dd>
+</dl>
+<p>:beamx : float, [arcsec]
+:beamy : float, [arcsec]</p>
+</section>
+<section id="id10">
+<h2>Returns<a class="headerlink" href="#id10" title="Permalink to this heading">¶</a></h2>
+<p>[Jy/sr] flux density</p>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pylanetary.utils.core.jybm_to_tb">
+<span class="sig-prename descclassname"><span class="pre">pylanetary.utils.core.</span></span><span class="sig-name descname"><span class="pre">jybm_to_tb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">I</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beamx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beamy</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.utils.core.jybm_to_tb" title="Permalink to this definition">¶</a></dt>
+<dd><section id="id11">
+<h2>Parameters<a class="headerlink" href="#id11" title="Permalink to this heading">¶</a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">I<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float, [Jy/beam] flux density</p>
+</dd>
+<dt class="field-even">freq<span class="colon">:</span></dt>
+<dd class="field-even"><p>float, [GHz] frequency</p>
+</dd>
+<dt class="field-odd">beamx<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float, [arcsec]</p>
+</dd>
+<dt class="field-even">beamy<span class="colon">:</span></dt>
+<dd class="field-even"><p>float, [arcsec]</p>
+</dd>
+</dl>
+</section>
+<section id="id12">
+<h2>Returns<a class="headerlink" href="#id12" title="Permalink to this heading">¶</a></h2>
+<p>[K] brightness temperature</p>
+</section>
+<section id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this heading">¶</a></h2>
+<p>science.nrao.edu/facilities/vla/proposing/TBconv</p>
+</section>
+<section id="id13">
+<h2>Notes<a class="headerlink" href="#id13" title="Permalink to this heading">¶</a></h2>
+<p>uses the Rayleigh-Jeans approximation</p>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pylanetary.utils.core.jysr_to_jybm">
+<span class="sig-prename descclassname"><span class="pre">pylanetary.utils.core.</span></span><span class="sig-name descname"><span class="pre">jysr_to_jybm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">I</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beamx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beamy</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.utils.core.jysr_to_jybm" title="Permalink to this definition">¶</a></dt>
+<dd><section id="id14">
+<h2>Parameters<a class="headerlink" href="#id14" title="Permalink to this heading">¶</a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">I<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float, [Jy/sr] flux density</p>
+</dd>
+<dt class="field-even">beamx<span class="colon">:</span></dt>
+<dd class="field-even"><p>float, [arcsec]</p>
+</dd>
+<dt class="field-odd">beamy<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float, [arcsec]</p>
+</dd>
+</dl>
+</section>
+<section id="id15">
+<h2>Returns<a class="headerlink" href="#id15" title="Permalink to this heading">¶</a></h2>
+<p>[Jy/beam] flux density</p>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pylanetary.utils.core.planck">
+<span class="sig-prename descclassname"><span class="pre">pylanetary.utils.core.</span></span><span class="sig-name descname"><span class="pre">planck</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tb</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.utils.core.planck" title="Permalink to this definition">¶</a></dt>
+<dd><section id="id16">
+<h2>Parameters<a class="headerlink" href="#id16" title="Permalink to this heading">¶</a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">tb<span class="colon">:</span></dt>
+<dd class="field-odd"><p>[K] brightness temperature</p>
+</dd>
+<dt class="field-even">freq<span class="colon">:</span></dt>
+<dd class="field-even"><p>[GHz] frequency</p>
+</dd>
+</dl>
+</section>
+<section id="id17">
+<h2>Returns<a class="headerlink" href="#id17" title="Permalink to this heading">¶</a></h2>
+<p>[Jy/sr] flux density</p>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pylanetary.utils.core.rayleigh_criterion">
+<span class="sig-prename descclassname"><span class="pre">pylanetary.utils.core.</span></span><span class="sig-name descname"><span class="pre">rayleigh_criterion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wl</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.utils.core.rayleigh_criterion" title="Permalink to this definition">¶</a></dt>
+<dd><section id="id18">
+<h2>Parameters<a class="headerlink" href="#id18" title="Permalink to this heading">¶</a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">wl<span class="colon">:</span></dt>
+<dd class="field-odd"><p>[m] wavelength</p>
+</dd>
+<dt class="field-even">d<span class="colon">:</span></dt>
+<dd class="field-even"><p>[m] diameter of telescope</p>
+</dd>
+</dl>
+</section>
+<section id="id19">
+<h2>Returns<a class="headerlink" href="#id19" title="Permalink to this heading">¶</a></h2>
+<p>[arcsec] Diffraction limit of a circular aperture</p>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pylanetary.utils.core.rayleigh_jeans">
+<span class="sig-prename descclassname"><span class="pre">pylanetary.utils.core.</span></span><span class="sig-name descname"><span class="pre">rayleigh_jeans</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tb</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.utils.core.rayleigh_jeans" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div><p>Rayleigh-Jeans approximation to planck()</p>
+</div></blockquote>
+<section id="id20">
+<h2>Parameters<a class="headerlink" href="#id20" title="Permalink to this heading">¶</a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">tb<span class="colon">:</span></dt>
+<dd class="field-odd"><p>[K] brightness temperature</p>
+</dd>
+<dt class="field-even">freq<span class="colon">:</span></dt>
+<dd class="field-even"><p>[GHz] frequency</p>
+</dd>
+</dl>
+</section>
+<section id="id21">
+<h2>Returns<a class="headerlink" href="#id21" title="Permalink to this heading">¶</a></h2>
+<p>[Jy/sr] flux density</p>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pylanetary.utils.core.rebin">
+<span class="sig-prename descclassname"><span class="pre">pylanetary.utils.core.</span></span><span class="sig-name descname"><span class="pre">rebin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.utils.core.rebin" title="Permalink to this definition">¶</a></dt>
+<dd><p>simple integer binning of numpy array in two dimensions</p>
+<section id="id22">
+<h2>Parameters<a class="headerlink" href="#id22" title="Permalink to this heading">¶</a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">arr<span class="colon">:</span></dt>
+<dd class="field-odd"><p>2-D numpy array</p>
+</dd>
+<dt class="field-even">z<span class="colon">:</span></dt>
+<dd class="field-even"><p>factor to multiply array size by. typically z&lt;1
+i.e., this is ndimage.zoom() for z&lt;1</p>
+</dd>
+</dl>
+</section>
+<section id="id23">
+<h2>Returns<a class="headerlink" href="#id23" title="Permalink to this heading">¶</a></h2>
+<p>2-D numpy array of shape arr.shape * z</p>
+</section>
+<section id="id24">
+<h2>Notes<a class="headerlink" href="#id24" title="Permalink to this heading">¶</a></h2>
+<p>use this instead of ndimage.zoom for z &lt; 1</p>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pylanetary.utils.core.solar_spectrum">
+<span class="sig-prename descclassname"><span class="pre">pylanetary.utils.core.</span></span><span class="sig-name descname"><span class="pre">solar_spectrum</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.utils.core.solar_spectrum" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Load and return Gueymard solar standard spectrum from 0 to 1000 um</dt><dd><p><a class="reference external" href="https://doi.org/10.1016/j.solener.2003.08.039">https://doi.org/10.1016/j.solener.2003.08.039</a></p>
+</dd>
+</dl>
+<p>accessed at <a class="reference external" href="https://www.nrel.gov/grid/solar-resource/spectra.html">https://www.nrel.gov/grid/solar-resource/spectra.html</a></p>
+<section id="id25">
+<h2>Returns<a class="headerlink" href="#id25" title="Permalink to this heading">¶</a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">wl<span class="colon">:</span></dt>
+<dd class="field-odd"><p>array of astropy Quantities
+[um] wavelength</p>
+</dd>
+<dt class="field-even">flux<span class="colon">:</span></dt>
+<dd class="field-even"><p>array of astropy Quantities, solar flux
+[erg s-1 cm-2 um-1]</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pylanetary.utils.core.solid_angle">
+<span class="sig-prename descclassname"><span class="pre">pylanetary.utils.core.</span></span><span class="sig-name descname"><span class="pre">solid_angle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dS</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.utils.core.solid_angle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Approximate solid angle of small facet
+<a class="reference external" href="https://en.wikipedia.org/wiki/Solid_angle">https://en.wikipedia.org/wiki/Solid_angle</a></p>
+<section id="id26">
+<h2>Parameters<a class="headerlink" href="#id26" title="Permalink to this heading">¶</a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">dS<span class="colon">:</span></dt>
+<dd class="field-odd"><p>[dist^2] flat area of facet</p>
+</dd>
+<dt class="field-even">d<span class="colon">:</span></dt>
+<dd class="field-even"><p>[dist] distance to facet</p>
+</dd>
+</dl>
+</section>
+<section id="id27">
+<h2>Returns<a class="headerlink" href="#id27" title="Permalink to this heading">¶</a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">omega<span class="colon">:</span></dt>
+<dd class="field-odd"><p>[sr] solid angle of facet</p>
+</dd>
+</dl>
+</section>
+<section id="example">
+<h2>Example<a class="headerlink" href="#example" title="Permalink to this heading">¶</a></h2>
+<p>a = 210 #km, Proteus average radius
+d = 30 * 1.496e8 #distance to Neptune in km
+solid_angle(np.pi*a**2, d)</p>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pylanetary.utils.core.tb_to_jybm">
+<span class="sig-prename descclassname"><span class="pre">pylanetary.utils.core.</span></span><span class="sig-name descname"><span class="pre">tb_to_jybm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Tb</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beamx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beamy</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.utils.core.tb_to_jybm" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>from science.nrao.edu/facilities/vla/proposing/TBconv</dt><dd><p>I in Jy/bm, freq in GHz, returns tb in Kelvin</p>
+</dd>
+</dl>
+<section id="id28">
+<h2>Parameters<a class="headerlink" href="#id28" title="Permalink to this heading">¶</a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">Tb<span class="colon">:</span></dt>
+<dd class="field-odd"><p>[K] float or array-like, brightness temperature</p>
+</dd>
+<dt class="field-even">freq<span class="colon">:</span></dt>
+<dd class="field-even"><p>[GHz] float or array-like, frequency</p>
+</dd>
+<dt class="field-odd">beamx<span class="colon">:</span></dt>
+<dd class="field-odd"><p>[arcsec] float, FWHM of Gaussian beam in x direction</p>
+</dd>
+<dt class="field-even">beamy<span class="colon">:</span></dt>
+<dd class="field-even"><p>[arcsec] float, FWHM of Gaussian beam in y direction</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">pylanetary</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="description.html">Description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citing.html">Citing this Software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="navigation_api.html">Navigation API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rings_api.html">Rings API</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Utils API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#pylanetary.utils.core.Body"><code class="docutils literal notranslate"><span class="pre">Body</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pylanetary.utils.core.I_over_F"><code class="docutils literal notranslate"><span class="pre">I_over_F()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pylanetary.utils.core.beam_area"><code class="docutils literal notranslate"><span class="pre">beam_area()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pylanetary.utils.core.convolve_with_beam"><code class="docutils literal notranslate"><span class="pre">convolve_with_beam()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pylanetary.utils.core.inverse_planck"><code class="docutils literal notranslate"><span class="pre">inverse_planck()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pylanetary.utils.core.inverse_rayleigh_jeans"><code class="docutils literal notranslate"><span class="pre">inverse_rayleigh_jeans()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pylanetary.utils.core.jybm_to_jysr"><code class="docutils literal notranslate"><span class="pre">jybm_to_jysr()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pylanetary.utils.core.jybm_to_tb"><code class="docutils literal notranslate"><span class="pre">jybm_to_tb()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pylanetary.utils.core.jysr_to_jybm"><code class="docutils literal notranslate"><span class="pre">jysr_to_jybm()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pylanetary.utils.core.planck"><code class="docutils literal notranslate"><span class="pre">planck()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pylanetary.utils.core.rayleigh_criterion"><code class="docutils literal notranslate"><span class="pre">rayleigh_criterion()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pylanetary.utils.core.rayleigh_jeans"><code class="docutils literal notranslate"><span class="pre">rayleigh_jeans()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pylanetary.utils.core.rebin"><code class="docutils literal notranslate"><span class="pre">rebin()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pylanetary.utils.core.solar_spectrum"><code class="docutils literal notranslate"><span class="pre">solar_spectrum()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pylanetary.utils.core.solid_angle"><code class="docutils literal notranslate"><span class="pre">solid_angle()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pylanetary.utils.core.tb_to_jybm"><code class="docutils literal notranslate"><span class="pre">tb_to_jybm()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="rings_api.html" title="previous chapter">Rings API</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2023, Edward M. Molter.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="_sources/utils_api.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

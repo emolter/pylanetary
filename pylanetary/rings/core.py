@@ -404,50 +404,9 @@ class Ring:
     def __str__(self):
         '''
         String representation
-
-        Examples
-        --------
-        >>> from pylanetary.rings import Ring
-        >>> epsilon_ring = Ring(whatever)
-        >>> print(epsilon_ring)
-        Ring instance; a=whatever, e=whatever, i=whatever, width=whatever
         '''
         return f'Ring instance; a={self.a}, e={self.e}, i={self.i}, omega={self.omega}, w={self.w}, width={self.width}'
 
-    def as_orbit(self, T=1, tau=0):
-        '''
-        Is this a good idea to have velocities and stuff?
-        Might want to re-think what functionality we really want here
-
-        Parameters
-        ----------
-        T : orbital period
-        tau : time of periapsis passage
-
-        returns
-        -------
-        PyAstronomy Keplerian Ellipse object
-
-        examples
-        --------
-        >>> epsilon_ring = Ring(a, e, omega, i, w)
-        >>> orbit = epsilon_ring.as_orbit(T, tau=0)
-        >>> print(orbit.pos)
-        >>> print(orbit.radius)
-        >>> print(orbit.vel)
-        >>> print(orbit.peri)
-        '''
-
-        # decide: is it this code's job to calculate the orbital period
-        # from semimajor axis based on planet mass?
-        # would require planet masses in a data table
-        # if so, can do later
-
-        #from PyAstronomy import pyasl
-        #ke = pyasl.KeplerEllipse(self.a, T, tau = self.tau, e = self.e, Omega = self.omega, i = self.i, w = self.w)
-        # return ke
-        raise NotImplementedError
-        return
 
     def as_elliptical_annulus(
             self,
@@ -472,13 +431,18 @@ class Ring:
             number of data points to rotate and project
             higher n means more accurate estimation
             of aperture.EllipticalAnnulus projected a, b, theta values
-        return_params: bool, optional. default False. 
+        :return_params: bool, optional. default False. 
             If True, return model ellipse dict
             see docstring of project_ellipse_double()
+            
+        Returns
+        -------
+        photutils.EllipticalAnnulus object. if return_params == True,
+            also returns the dictionary from project_ellipse_double
 
-        To do:
-            experiment with using manually-defined b_in to make epsilon-like ring
-            make this return the periapsis and apoapsis angle
+        To do
+        -----
+        * experiment with using manually-defined b_in to make epsilon-like ring
         '''
 
         # convert to simple floats instead of astropy unit quantities
@@ -646,16 +610,14 @@ class Ring:
 
             wedge_ann = wedge * ann  # this is only an approximation; zooming image recommended
 
-            '''
-            # diagnostic plot
-            if theta <0.5:
-
-                fig, (ax0, ax1, ax2) = plt.subplots(1,3,figsize = (15,6))
-                ax0.imshow(ann, origin = 'lower')
-                ax1.imshow(wedge, origin = 'lower')
-                ax2.imshow(wedge_ann, origin = 'lower')
-                plt.show()
-            '''
+            ## diagnostic plot
+            #if theta <0.5:
+            #
+            #    fig, (ax0, ax1, ax2) = plt.subplots(1,3,figsize = (15,6))
+            #    ax0.imshow(ann, origin = 'lower')
+            #    ax1.imshow(wedge, origin = 'lower')
+            #    ax2.imshow(wedge_ann, origin = 'lower')
+            #    plt.show()
 
             wedge_out = rebin(wedge_ann, 1.0 / z)
             ann_list.append(wedge_out)

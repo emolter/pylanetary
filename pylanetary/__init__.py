@@ -6,8 +6,7 @@
 from ._astropy_init import *   # noqa
 # ----------------------------------------------------------------------------
 
-__all__ = ['planetnav']
-from .example_mod import *   # noqa
+__all__ = []
 # Then you can be explicit to control what ends up in the namespace,
 __all__ += []   # noqa
 # or you can keep everything from the subpackage with the following instead
