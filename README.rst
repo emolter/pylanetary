@@ -1,8 +1,13 @@
 data processing and modeling tools for ring, moon, and planet observations
 --------------------------------------------------------------------------
 
-.. image:: https://zenodo.org/badge/459414964.svg
-   :target: https://zenodo.org/badge/latestdoi/459414964
+.. image:: https://readthedocs.org/projects/pylanetary/badge/?version=latest
+    :target: https://pylanetary.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
+   
+.. image:: https://codecov.io/gh/emolter/pylanetary/branch/main/graph/badge.svg
+   :target: https://codecov.io/gh/emolter/pylanetary
+   :alt: Code Coverage Badge
 
 .. image:: http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat
     :target: http://www.astropy.org
@@ -10,6 +15,8 @@ data processing and modeling tools for ring, moon, and planet observations
 	
 .. image:: https://zenodo.org/badge/459414964.svg
    :target: https://zenodo.org/badge/latestdoi/459414964
+   :alt: Zenodo DOI Badge
+   
 
 Installation
 ------------
