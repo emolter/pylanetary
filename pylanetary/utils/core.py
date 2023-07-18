@@ -28,12 +28,12 @@ def solid_angle(dS, d):
     
     Parameters
     ----------
-    dS: [dist^2] flat area of facet
-    d: [dist] distance to facet
+    :dS: [dist^2] flat area of facet
+    :d: [dist] distance to facet
     
     Returns
     -------
-    omega: [sr] solid angle of facet
+    :omega: [sr] solid angle of facet
     
     Example
     -------
@@ -48,8 +48,12 @@ def beam_area(beamx, beamy):
     '''
     Parameters
     ----------
-    beamx : [arcsec]
-    beamy : [arcsec]
+    :beamx: [arcsec]
+    :beamy: [arcsec]
+    
+    Returns
+    -------
+    area of a Gaussian beam
     '''
     return (np.pi / (4 * np.log(2))) * beamx * beamy
     
@@ -58,9 +62,13 @@ def jybm_to_jysr(I, beamx, beamy):
     '''
     Parameters
     ----------
-    I: [Jy/beam] flux density
-    beamx : float, [arcsec]
-    beamy : float, [arcsec]
+    :I: [Jy/beam] flux density
+    :beamx : float, [arcsec]
+    :beamy : float, [arcsec]
+    
+    Returns
+    -------
+    [Jy/sr] flux density
     '''
     beamA = beam_area(beamx, beamy) #in arcsec
     return 4.25e10*I/beamA
@@ -70,9 +78,13 @@ def jysr_to_jybm(I, beamx, beamy):
     '''
     Parameters
     ----------
-    I: float, [Jy/sr] flux density
-    beamx : float, [arcsec]
-    beamy : float, [arcsec]
+    :I: float, [Jy/sr] flux density
+    :beamx: float, [arcsec]
+    :beamy: float, [arcsec]
+    
+    Returns
+    -------
+    [Jy/beam] flux density
     '''
     beamA = beam_area(beamx, beamy) #in arcsec
     return I*beamA/4.25e10
@@ -82,10 +94,14 @@ def jybm_to_tb(I, freq, beamx, beamy):
     '''
     Parameters
     ----------
-    I: float, [Jy/beam] flux density
-    freq: float, [GHz] frequency
-    beamx : float, [arcsec]
-    beamy : float, [arcsec]
+    :I: float, [Jy/beam] flux density
+    :freq: float, [GHz] frequency
+    :beamx: float, [arcsec]
+    :beamy: float, [arcsec]
+    
+    Returns
+    -------
+    [K] brightness temperature
     
     References
     ----------
@@ -105,15 +121,25 @@ def tb_to_jybm(Tb, freq, beamx, beamy):
     
     Parameters
     ----------
-    Tb: numpy array, int, or float in K
-    freq: float or int, units GHz
-    beamx, beamy: FWHM of Gaussian beam in arcsec
+    :Tb: [K] float or array-like, brightness temperature
+    :freq: [GHz] float or array-like, frequency
+    :beamx: [arcsec] float, FWHM of Gaussian beam in x direction
+    :beamy: [arcsec] float, FWHM of Gaussian beam in y direction
     '''
     return Tb * (freq**2 * beamx * beamy) / (1e3 * 1.22e3)
 
 
 def planck(tb, freq):
-    '''given temp in K and freq in GHz, returns flux density in Jy sr-1'''
+    '''
+    Parameters
+    ----------
+    :tb: [K] brightness temperature
+    :freq: [GHz] frequency
+    
+    Returns
+    -------
+    [Jy/sr] flux density
+    '''
     f = freq*1.0e9 #GHz to Hz
     h = 6.626e-34 #SI
     c = 2.9979e8 #SI
@@ -123,7 +149,16 @@ def planck(tb, freq):
 
 
 def inverse_planck(B, freq):
-    '''given flux density in Jy sr-1 and freq in GHz, returns temp in K'''
+    '''
+    Parameters
+    ----------
+    :B: [Jy/sr] flux density
+    :freq: [GHz] frequency
+    
+    Returns
+    -------
+    [K] brightness temperature
+    '''
     f = freq*1.0e9
     I = B/1e26
     h = 6.626e-34 #SI
@@ -134,7 +169,18 @@ def inverse_planck(B, freq):
 
     
 def inverse_rayleigh_jeans(B, freq):
-    '''given flux density in Jy sr-1 and freq in GHz, returns temp in K by Rayleigh-Jeans approx'''
+    '''
+    Rayleigh-Jeans approximation to inverse_planck()
+    
+    Parameters
+    ----------
+    :B: [Jy/sr] flux density
+    :freq: [GHz] frequency
+    
+    Returns
+    -------
+    [K] brightness temperature
+    '''
     f = freq*1.0e9
     I = B/1e26
     h = 6.626e-34 #SI
@@ -145,7 +191,18 @@ def inverse_rayleigh_jeans(B, freq):
 
     
 def rayleigh_jeans(tb, freq):
-    '''given temp in K and freq in GHz, returns flux density in Jy sr-1 by Rayleigh-Jeans approx'''
+    '''
+     Rayleigh-Jeans approximation to planck()
+    
+    Parameters
+    ----------
+    :tb: [K] brightness temperature
+    :freq: [GHz] frequency
+    
+    Returns
+    -------
+    [Jy/sr] flux density
+    '''
     f = freq*1.0e9
     h = 6.626e-34 #SI
     c = 2.9979e8 #SI
@@ -158,8 +215,8 @@ def rayleigh_criterion(wl, d):
     '''
     Parameters
     ----------
-    wl : [m] wavelength
-    d : [m] diameter of telescope
+    :wl: [m] wavelength
+    :d: [m] diameter of telescope
 
     Returns
     -------
@@ -176,9 +233,9 @@ def solar_spectrum():
     
     Returns
     -------
-    wl: array of astropy Quantities
+    :wl: array of astropy Quantities
         [um] wavelength
-    flux: array of astropy Quantities, solar flux
+    :flux: array of astropy Quantities, solar flux
         [erg s-1 cm-2 um-1]
     '''
     infile = importlib.resources.open_binary('pylanetary.utils.data', 'newguey2003.txt')
@@ -196,13 +253,13 @@ def I_over_F(observed_flux, bp, target_sun_dist, target_omega):
     
     Parameters
     ----------
-    observed_flux: float, required. 
+    :observed_flux: float, required. 
         [erg s-1 cm-2 um-1] flux of target
-    bp: np.array([wls, trans]). 
+    :bp: np.array([wls, trans]). 
         [[um], [-]] the filter transmission function
-    target_sun_dist: float, required. 
+    :target_sun_dist: float, required. 
         [AU] distance between sun and target
-    target_omega: float, required. 
+    :target_omega: float, required. 
         [sr] for unresolved object, solid angle of that object
         for resolved object, solid angle of one pixel
     
@@ -240,7 +297,20 @@ def I_over_F(observed_flux, bp, target_sun_dist, target_omega):
     
 def rebin(arr, z):
     '''
-    assumes z < 1
+    simple integer binning of numpy array in two dimensions
+    
+    Parameters
+    ----------
+    :arr: 2-D numpy array
+    :z: factor to multiply array size by. typically z<1
+        i.e., this is ndimage.zoom() for z<1
+    
+    Returns
+    -------
+    2-D numpy array of shape arr.shape * z
+    
+    Notes
+    -----
     use this instead of ndimage.zoom for z < 1
     '''
     new_shape = (int(arr.shape[0]*z), int(arr.shape[1]*z))
@@ -255,8 +325,8 @@ def convolve_with_beam(data, beam):
     
     Parameters
     ----------
-    data : np.array, required.
-    beam : float/int, 3-element array-like, or np.array, required.
+    :data: np.array, required.
+    :beam: float/int, 3-element array-like, or np.array, required.
         if float/int, circular Gaussian beam assumed, and this sets the fwhm 
             [pixels]
         if 3-element array-like, those are (fwhm_x, fwhm_y, theta_deg) for a 2-D Gaussian
@@ -287,7 +357,7 @@ def convolve_with_beam(data, beam):
 
 class Body:
     """
-    Class will instantiate object with attributes from yaml file of matching
+    instantiate object with attributes from yaml file of matching
     string name.
 
     Example usage:
@@ -311,12 +381,12 @@ class Body:
 
         Parameters
         ----------
-        name: str, required.
+        :name: str, required.
             Body name string, example "Jupiter" will load Jupiter.yaml
-        epoch: astropy.time.Time, optional.
+        :epoch: astropy.time.Time, optional.
             The epoch at which to retrieve the ephemeris of the body. 
             If not set, the current time will be used.
-        location: str, optional.
+        :location: str, optional.
             JPL Horizons observatory code. 
             If not set, center of Earth will be used.
         """
