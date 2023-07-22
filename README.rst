@@ -23,7 +23,7 @@ Installation
 To install, download the requirements.txt file and then run (tested in a blank Conda environment)::
 
 	conda create -n pylanetary-tester python=3.9
-	source activate pylanetary-tester
+	conda activate pylanetary-tester
 	pip install -r requirements.txt
 	pip install git+https://github.com/emolter/pylanetary.git@main
 	
