@@ -20,18 +20,18 @@ def test_navigation(datadir):
     # load data, ephem, lat_g, lon_w, mu
     obs_time = '2019-10-28 08:50:50'
     obs_code=568 #Keck Horizons observatory code
-    pixscale_arcsec = 0.009942 #arcsec, keck
+    pixscale_arcsec = 0.009971 #arcsec, keck
     flux=2000
     a=0.1
-    beam=0.05
+    beam=0.5
     keck_uranus = np.load(os.path.join(datadir, 'keck_uranus.npy'))
     
-
     ura = Body('Uranus', epoch=obs_time, location=obs_code)
     nav = navigation.Nav(keck_uranus, ura, pixscale_arcsec)
        
     ldmodel_expected = np.load(os.path.join(datadir, 'ldmodel.npy'))
     ldmodel = nav.ldmodel(flux, a, beam = beam, law='exp')
+    
     assert np.allclose(ldmodel, ldmodel_expected, rtol=1e-5, equal_nan=True)
     
     # test co-location algorithms
