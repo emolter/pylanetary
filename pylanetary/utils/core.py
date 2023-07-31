@@ -353,6 +353,56 @@ def convolve_with_beam(data, beam):
     else:
         psf = beam
     return convolution.convolve_fft(data, psf)
+    
+    
+def fourier_deconvolve(data, psf, psf_desired, gamma=3e-4):
+    '''
+    Reproducing Pat Fry's Fourier deconvolution method
+    from https://doi.org/10.1016/j.icarus.2022.115224
+    see also Cunningham and Anthony https://doi.org/10.1006/icar.1993.
+    
+    I == FFT of input image (complex)
+    P == FFT of point spread function (PSF)
+    G == FFT of a function that is the desired PSF of the restored image 
+        (a gaussian near the diffraction limit, or the FWHM of the core of the PSF)
+    gamma == the regularization parameter that prevents zeros in the denominator
+ 
+    if O is the FFT of the restored image, then it is computed by...
+ 
+                 P* x I x G
+    O = ------------------------
+             (|P|)^2 + gamma
+ 
+    Where * is complex conjugate, and || is the magnitude of the complex PSF transform.
+    
+    Parameters
+    ----------
+    data: 2-D numpy array, required. must be square. needs odd shape
+    psf: 2-D numpy array, required. must be square. needs odd shape
+    psf_desired: 2-D numy array, required. must have same shape as psf
+    gamma: float, optional. Tikhonov regularization parameter
+    
+    Returns
+    -------
+    psf_deconvolved
+    
+    To do
+    -----
+    make accept non-square data and psfs
+    '''
+    # pad psf to equal data
+    w = int((data.shape[0] - psf.shape[0])/2)
+    psf = np.pad(psf, w)
+    psf_desired = np.pad(psf_desired, w)
+    
+    I = fftpack.fftshift(fftpack.fftn(data))
+    P = fftpack.fftshift(fftpack.fftn(psf))
+    G = fftpack.fftshift(fftpack.fftn(psf_desired))
+    O = (np.conjugate(P) * I * G) / ( np.absolute(P)**2 + gamma)
+    
+    #psf_deconvolved = fftpack.fftshift(fftpack.ifftn(fftpack.ifftshift(O)))
+    psf_deconvolved = fftpack.ifftn(fftpack.ifftshift(O))
+    return np.real(psf_deconvolved)
 
 
 class Body:
