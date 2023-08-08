@@ -12,7 +12,7 @@ import numpy as np
 from collections import OrderedDict
 from scipy.spatial.transform import Rotation
 from scipy import ndimage
-import importlib
+import importlib.resources
 
 from ..utils import *
 

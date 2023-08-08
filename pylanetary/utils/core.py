@@ -6,6 +6,7 @@ import astropy.units as u
 from astropy.units import Quantity
 import importlib, yaml, importlib.resources
 from scipy.interpolate import interp1d
+from scipy import fftpack
 import pylanetary.utils.data as body_info
 from astropy.time import Time
 from astroquery.jplhorizons import Horizons

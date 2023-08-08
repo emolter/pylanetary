@@ -1,0 +1,15 @@
+body:
+  name: Neptune
+  jpl_hor_id: 899
+  mass: 1  # kg
+  req: 24764.  # km equatorial radius at 1 bar level
+  rpol: 24341.  # km polar radius
+  rvol: 24341.  # km volumetric mean radius
+  accel_g: 11.27  # m/s^2 Gravity at 1 bar level
+  num_moons: 1.0e8  # number of natural satellites
+orbit:
+  semi_major_axis: 2.867e9  # km
+  t_rot: 17.24  # length of sideral rotation period in hours in system III
+observational:
+  app_dia_max: 4.1  # arc seconds
+  app_dia_min: 3.3  # arc seconds
