@@ -12,6 +12,7 @@ Welcome to pylanetary's documentation!
 
    installation
    description
+   usage
    contributing
    citing
    navigation_api

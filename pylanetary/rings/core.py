@@ -36,16 +36,19 @@ horizons_lookup = {
 
 def vector_magnitude(a):
     '''
+    magnitude of a vector
     this is a bit faster than using np.linalg.norm
     
     Parameters
     ----------
-    :a: np.array, required, shape (n, 3) or (n, 2)
+    a : np.array, required
+        shape (n, 3) or (n, 2)
         corresponding to n vectors
     
     Returns
     -------
-    np.array, same shape as input, magnitude of input vector a
+    np.array
+        same shape as input, magnitude of input vector a
     '''
     a = np.array(a)
     if len(a.shape) == 1:
@@ -59,12 +62,14 @@ def vector_normalize(v):
     
     Parameters
     ----------
-    :v: np.array, required, shape (n, 3) or (n, 2)
+    v : np.array, required 
+        shape (n, 3) or (n, 2)
         corresponding to n vectors
     
     Returns
     -------
-    np.array, same shape as input. the normalized vectors
+    np.array
+        same shape as input. the normalized vectors
     '''
     norm = vector_magnitude(v)
     if norm.size > 1:
@@ -83,12 +88,15 @@ def plane_project(X, Z):
     
     Parameters
     ----------
-    :X: np.array, required, shape (n,3). vectorss to project
-    :Z: np.array, required, shape (3,). direction to project in.
+    X : np.array, required
+        shape (n,3). vectors to project
+    Z : np.array, required
+        shape (3,). direction to project in.
     
     Returns
     -------
-    np.array, shape (3,). the projected vector.
+    np.array
+        shape (3,). the projected vector.
     '''
     zhat = vector_normalize(Z)
     return np.cross(zhat, np.cross(X, zhat))
@@ -96,24 +104,26 @@ def plane_project(X, Z):
 
 def double_rotate(vec, params_ring, params_sys):
     '''
-    rotate system * rotate ring
+    rotate system x rotate ring
     same convention as planetary ring node
     to agree with planetary ring node, params_sys = [90, B - 90, np_ang]
     and params_ring = [w, i, 0]
     
     Parameters
     ----------
-    :vec: np.array, required, shape (n, 3). 
+    vec : np.array, required
+        shape (n, 3). 
         3-element [x, y, 0] vectors on the perimeter of the ring 
         i.e. semimajor axis is [a, 0, 0] and semiminor axis is [0, b, 0]
-    :params_ring: np.array, required.
+    params_ring : np.array, required
         params_ring = [w, i, omega] all in degrees w.r.t the ring plane
-    :params_sys: np.array, required. 
+    params_sys : np.array, required
         params_sys = [w, i, omega] in degrees for the ring plane w.r.t. observer
     
     Returns
     -------
-    np.array, shape (n, 3), the rotated vectors
+    np.array
+        shape (n, 3), the rotated vectors
     '''
     rot_ring = Rotation.from_euler('zxz', params_ring, degrees=True)
     rot_sys = Rotation.from_euler('zxz', params_sys, degrees=True)
@@ -126,14 +136,15 @@ def b_from_ae(a, e):
     '''
     Parameters
     ----------
-    :a: float, required.
+    a : float, required.
         semimajor axis of ellipse
-    :e: float, required.
+    e : float, required.
         eccentricity of ellipse
     
     Returns
     -------
-    float, semiminor axis of ellipse
+    float
+        semiminor axis of ellipse
     '''
     return a * np.sqrt(1 - e**2)
 
@@ -144,19 +155,23 @@ def vector_ellipse(u, v, n, origin=np.array([0, 0, 0])):
     
     Parameters
     ----------
-    :u: np.array, required, shape (3,).
+    u : np.array, required
+        shape (3,).
         vectorized semimajor axis, e.g. [a,0,0]
-    :v: np.array, required, shape (3,)
+    v : np.array, required
+        shape (3,)
         vectorized semiminor axis, e.g. [0,b,0]
         should be perpendicular to u
-    :n: int, required.
+    n : int, required
         number of vectors to compute
-    :origin: np.array, required, shape (3,)
+    origin : np.array, required
+        shape (3,)
         vector pointing to the center of the ellipse
     
     Returns
     -------
-    np.array, required, shape (n, 3)
+    np.array
+        shape (n, 3)
         vectors pointing to the circumference of the ellipse
         
     
@@ -174,18 +189,14 @@ def vector_ellipse(u, v, n, origin=np.array([0, 0, 0])):
 
 def project_ellipse_double(a, e, params_ring, params_sys, origin = np.array([0,0,0]), n=50, proj_plane = [0,0,1]):
     '''
-    Description
-    -----------
     make a projection of an ellipse representing a ring
     with ring system parameters as Euler angles [w, i, omega]
     and individual ring parameters relative to the system 
-        also as Euler angles [w, i, omega]
-    
+    also as Euler angles [w, i, omega].
     The angles params=[w, i, omega] and params_sys=[w_sys, i_sys, omega_sys] 
     represent two sets of Euler angles [gamma, beta, alpha]
     such that the total rotation is given by
-    (params_sys rotation matrix) * (params rotation matrix)
-    
+    (params_sys rotation matrix) x (params rotation matrix)
     This code builds an ellipse in the x,y plane represented by vectors, 
     applies the double rotation to those vectors, then re-projects the
     ellipse into the x,y plane. This simulates an observation of a ring. 
@@ -197,25 +208,30 @@ def project_ellipse_double(a, e, params_ring, params_sys, origin = np.array([0,0
     
     Parameters
     ----------
-    :a: float, required.
+    a : float, required.
         semimajor axis in any distance unit.
-    :e: float, required.
+    e : float, required.
         eccentricity, unitless.
-    :params_ring: np.array, required, shape (3,).
+    params_ring : np.array, required
+        shape (3,).
         [w, i, omega] of ring relative to ring system.
-    :params_sys: np.array, required, shape (3,).
+    params_sys : np.array, required
+        shape (3,).
         [w, i, omega] of ring plane relative to observer.  
-    :n: int, required.
+    n : int, required.
         number of equally-spaced points in ellipse circumference to compute
-    :origin: np.array, required, shape (3,).
+    origin : np.array, required
+        shape (3,).
         vector pointing to center of the ellipse
-    :proj_plane: np.array, required, shape (3,).
+    proj_plane : np.array, required
+        shape (3,).
         normal vector to plane that you want to re-project back to after rotation
         typically this will be [0, 0, 1], i.e., re-project to x,y plane
     
     Returns
     -------
-    dictionary of projected ellipse parameters with the following keys:
+    dict
+        dictionary of projected ellipse parameters with the following keys:
         a: np.array, shape (3,), projected semimajor axis of ring
         b: np.array, shape (3,), projected semiminor axis of ring
         f0: np.array, shape (3,), vector to one focus
@@ -264,13 +280,17 @@ def calc_abtheta(ell):
     
     Parameters
     ----------
-    :ell: np.array, required, shape (n, 3), vectors along circumference of ring
+    ell : np.array, required
+        shape (n, 3), vectors along circumference of ring
         
     Returns
     -------
-    :a: float, semimajor axis of ellipse
-    :b: float, semiminor axis of ellipse
-    :theta: float, rotation angle of ellipse in degrees
+    float
+        semimajor axis of ellipse
+    float
+        semiminor axis of ellipse
+    float
+        rotation angle of ellipse in degrees
     '''
     mag = vector_magnitude(ell)
     a, b = np.max(mag), np.min(mag)
@@ -289,21 +309,22 @@ def foreshortening(theta, i):
     
     Parameters
     ----------
-    :theta: float, required.
+    theta : float, required.
         units radians. azimuth angle along the ring from 0 to 2*pi
-    :i: float, required.
+    i : float, required.
         units degrees. inclination of ring
 
     Returns
     -------
-    Float, fraction by which to multiply ring brightness at azimuth
+    float
+        fraction by which to multiply ring brightness at azimuth
         angle theta to correct foreshortening.
     
     References
     ----------
     de Pater et al 2006, doi:10.1016/j.icarus.2005.08.011
     
-    To Do
+    Notes
     -----
     needs to accept Astropy angles
     '''
@@ -318,21 +339,22 @@ def ring_area(a, e, width, delta_width=0.0, B=90.0):
     
     Parameters
     ----------
-    :a: float, required. 
+    a : float, required. 
         [distance] semimajor axis 
-    :e: float, required. 
+    e : float, required. 
         eccentricity
-    :width: float, required.
+    width : float, required.
         [distance] average width of ring 
         for an asymmetric ring, use (apoapsis_width + periapsis_width)/2
-    :delta_width: float, optional. default 0.0
+    delta_width : float, optional. default 0.0
         [distance] apoapsis width minus periapsis width
-    :B: float, optional. default 90 (i.e., open)
+    B : float, optional. default 90 (i.e., open)
         [degrees] ring opening angle
     
     Returns
     -------
-    projected area in [distance unit]^2
+    float
+        projected area in [distance unit]^2
     
     References
     ----------
@@ -361,21 +383,22 @@ class Ring:
         '''
         Parameters
         ----------
-        :a: float or Quantity, required.
+        a : float or Quantity, required.
             semimajor axis. assumes km if not an astropy Quantity
-        :e: float, required.
+        e : float, required.
             eccentricity
-        w: float or Quantity, required.
+        w : float or Quantity, required.
             argument of periapsis. assumes degrees if not an astropy Quantity
-        i: float or Quantity, required.
+        i : float or Quantity, required.
             inclination. assumes degrees if not an astropy Quantity
-        :omega: float or Quantity, required.
+        omega : float or Quantity, required.
             longitude of ascending node. assumes degrees if not an astropy Quantity
-        :width: float or Quantity, optional. default 1 km (i.e., very thin).
+        width : float or Quantity, optional. default 1 km (i.e., very thin).
             full width of ring. assumes km if not an astropy Quantity
-        :flux: float or Quantity, optional. default 1.0.
+        flux : float or Quantity, optional. default 1.0.
             ring flux density
-        :params_sys: np.array, optional, shape (3,)
+        params_sys : np.array, optional
+            shape (3,).
             [w, i, omega] of ring system plane relative to observer
 
         Attributes
@@ -421,23 +444,24 @@ class Ring:
 
         Parameters
         ----------
-        :focus: tuple, required. 
+        focus : tuple, required. 
             location of planet (one of the foci of the ellipse) in pixels
-        :pixscale: float or Quantity, required. 
+        pixscale : float or Quantity, required. 
             pixel scale of observations. assumes km/px if not Quantity
-        :width: float or Quantity, required.
+        width : float or Quantity, required.
             true (non-projected) full width of ring. assumes km if not Quantity
-        :n: int, optional. default 1000.
+        n : int, optional. default 1000.
             number of data points to rotate and project
             higher n means more accurate estimation
             of aperture.EllipticalAnnulus projected a, b, theta values
-        :return_params: bool, optional. default False. 
+        return_params : bool, optional. default False. 
             If True, return model ellipse dict
             see docstring of project_ellipse_double()
             
         Returns
         -------
-        photutils.EllipticalAnnulus object. if return_params == True,
+        photutils.EllipticalAnnulus object. 
+            if return_params == True,
             also returns the dictionary from project_ellipse_double
 
         To do
@@ -510,35 +534,37 @@ class Ring:
 
         Parameters
         ----------
-        :shape: tuple, required. 
+        shape : tuple, required. 
             shape of image in pixels
-        :focus: tuple, required. 
+        focus : tuple, required. 
             location of planet (one ellipse focus) in pixels
-        :pixscale: astropy Quantity or float, required
+        pixscale : astropy Quantity or float, required
             pixel scale of image. assumes km/px if not Quantity
-        :nwedges: int, optional. default 60.
+        nwedges : int, optional. default 60.
             number of wedges to compute
-        :width: astropy quantity required
-        :n: int, optional. default 1000.
+        width : astropy quantity required
+        n : int, optional. default 1000.
             number of points for as_elliptical_annulus to compute. 
             see that docstring for details.
             should be much larger than nwedges
-        z: int, optional. default 5
+        z : int, optional. default 5
             factor for ndimage.zoom
             larger makes more accurate wedge areas
 
         Returns
         -------
-        np.array, shape (nwedges,)
+        np.array
+            shape (nwedges,). 
             angles in radians from 0 to 2*pi corresponding to lower corner of wedge
-        list, len nwedges. list of wedge masks
+        list
+            len nwedges. list of wedge masks
 
         Notes
         -----
-        * current implementation removes foreshortening correction "magically"
-            by making the angular width of the wedges in the image plane
-            see ring-system-modeling-tutorial.ipynb for a more detailed
-            explanation and example
+        current implementation removes foreshortening correction "magically"
+        by making the angular width of the wedges in the image plane
+        see ring-system-modeling-tutorial.ipynb for a more detailed
+        explanation and example
 
         To-do
         -----
@@ -565,19 +591,17 @@ class Ring:
         ann = ann.to_mask().to_image(zshape)
         width = z * width.to(u.km).value
 
-        '''
-        # use ellipse params to find ring-plane azimuth angles
-        x = ringplane_params['ell'].T[0]
-        y = ringplane_params['ell'].T[1]
-        theta_list = np.arctan2(y,x)
-        theta_list[theta_list < 0.0] += 2*np.pi
-        theta_list = np.sort(theta_list)
-
-        dtheta_list = theta_list[1:] - theta_list[:-1]
-        last_element = 2*np.pi - (theta_list[-1] - theta_list[0]) # handle circle wrapping
-        dtheta_list = np.concatenate([dtheta_list, np.array([last_element])])
-        '''
-
+        
+        # # use ellipse params to find ring-plane azimuth angles
+        # x = ringplane_params['ell'].T[0]
+        # y = ringplane_params['ell'].T[1]
+        # theta_list = np.arctan2(y,x)
+        # theta_list[theta_list < 0.0] += 2*np.pi
+        # theta_list = np.sort(theta_list)
+        # dtheta_list = theta_list[1:] - theta_list[:-1]
+        # last_element = 2*np.pi - (theta_list[-1] - theta_list[0]) # handle circle wrapping
+        # dtheta_list = np.concatenate([dtheta_list, np.array([last_element])])
+        
         # image plane azimuth angles
         theta_list = np.linspace(0, 2 * np.pi - 2 * np.pi / nwedges, nwedges)
         dtheta_list = 2 * np.pi / nwedges * np.ones(theta_list.shape)
@@ -639,27 +663,28 @@ class Ring:
 
         Parameters
         ----------
-        :shape: tuple, required. 
+        shape : tuple, required. 
             output image shape
-        pixscale: float or astropy Quantity, required. 
+        pixscale : float or astropy Quantity, required. 
             pixel scale of the output image. assumes km/px if not Quantity
-        :focus: tuple, optional, default None.
+        focus : tuple, optional, default None.
             pixel location of planet around which ring orbits.
             if not specified, center of image is assumed
-        :width: float or Quantity, optional. default None.
+        width : float or Quantity, optional. default None.
             non-projected (face-on) full width of ring.
             if not specified, assumes width of 1 km.
-        :flux: float or Quantity, optional, default None.
+        flux : float or Quantity, optional, default None.
             technically not a flux, but a specific intensity!
             sets specific intensity of ring
             if not specified, assumes 1 [unit??].
-        :beam: float, 3-element array-like, or 2-d array, optional, default None.
+        beam : float, 3-element array-like, or 2-d array, optional, default None.
             Gaussian beam with which to convolve the observation
             see docstring of utils.convolve_with_beam()
 
         Returns
         -------
-        np.array, beam-convolved ring image
+        np.array
+            beam-convolved ring image
 
         Examples
         --------
@@ -702,9 +727,9 @@ class RingSystemModelObservation():
         '''
         Parameters
         ----------
-        :body: pylanetary.utils.Body object, required.
+        body : pylanetary.utils.Body object, required.
             one of Jupiter, Saturn, Uranus, Neptune
-        :location: str, array-like, or `~astropy.coordinates.EarthLocation`, optional.
+        location : str, array-like, or `~astropy.coordinates.EarthLocation`, optional.
             If str, named observeratory supported by the ring node, e.g. JWST.
             If array-like, observer's location as a
             3-element array of Earth longitude, latitude, altitude
@@ -720,11 +745,11 @@ class RingSystemModelObservation():
             Ring Node query tool requires the format specified here.
             To prevent weird results, you should ensure that Body.jpl_hor_id
             matches the location you are inputting here!
-        :ringnames: list, optional. 
+        ringnames : list, optional. 
             names of rings to include in the model
             if no ringnames provided then all rings are assumed.
             Case-sensitive! Typically capitalized, e.g. "Alpha"
-        :fluxes: list, np.array, or "default", optional. default "default".
+        fluxes : list, np.array, or "default", optional. default "default".
             brightnesses associated with rings specified in ringnames.
             surface brightness units are expected, e.g. brightness temperature
             if fluxes == 'default', optical depths are read in from the static table
@@ -734,33 +759,39 @@ class RingSystemModelObservation():
 
         Attributes
         ----------
-        :planetname: str
+        planetname : str
             name of planet
-        :rings: dict of ringmodel.Ring objects, with ring names as keys
+        rings : dict 
+            dictionary of ringmodel.Ring objects, with ring names as keys
             note ring names are case-sensitive! Typically capitalized, e.g. "Alpha"
-        :ringtable: Astropy table of ephemeris data from ring node query tool
+        ringtable : Astropy table 
+            ephemeris data from ring node query tool
             as well as time-invariant parameters for each ring from static table
-        :systemtable: Astropy table of ephemeris data for ring system from ring node query tool
-        :bodytable: Astropy table of ephemeris data for satellites from ring node query tool
-        :ephem: JPL Horizons ephemeris
-        :np_ang: north polar angle
+        systemtable : Astropy table 
+            ephemeris data for ring system from ring node query tool
+        bodytable : Astropy table
+            ephemeris data for satellites from ring node query tool
+        ephem : Astropy table
+            JPL Horizons ephemeris
+        np_ang : float
+            north polar angle
 
 
         Examples
         --------
         Need an example of how to add a custom ring
         should be possible by just adding a ringmodel.Ring() object
-            into the dict self.ring
+        into the dict self.ring
 
         Need an example of how to modify ring data
         should be possible by just changing the ringmodel.Ring() object
-            in the dict self.ring
+        in the dict self.ring
 
         To Do
         -----
         * Not yet understood why omega must equal 0 for individual rings
-            relative to ring system in order to make argument of periapsis agree
-            with the Planetary Ring Node.
+        relative to ring system in order to make argument of periapsis agree
+        with the Planetary Ring Node.
         * Make this work nicely with utils.Body object
         * implement default epoch and location
         * lookup table to avoid needing to specify both location and horizons_loc
@@ -875,21 +906,22 @@ class RingSystemModelObservation():
 
         Parameters
         ----------
-        :shape: tuple, required. 
+        shape : tuple, required. 
             output image shape in number of pixels
-        :pixscale: float or Quantity, required. 
+        pixscale : float or Quantity, required. 
             pixel scale of the output image. if not Quantity, assumes units of km/px
-        :focus: tuple, optional.
+        focus : tuple, optional.
             pixel location of planet center
             if None, assumes center of image.
-        :beam: float, 3-element array-like, or 2-d np.array, optional.
+        beam : float, 3-element array-like, or 2-d np.array, optional.
             Gaussian beam with which to convolve the observation
             see docstring of utils.convolve_with_beam()
             if no beam is specified, will make infinite-resolution
 
         Returns
         -------
-        np.array, mock observation image
+        np.array
+            mock observation image
         '''
 
         arr_out = np.zeros(shape)
