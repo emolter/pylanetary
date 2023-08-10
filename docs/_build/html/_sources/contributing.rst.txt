@@ -1,32 +1,34 @@
 Contributing to Pylanetary
-==========================
+**************************
 
 Thanks for considering making a contribution!
 
 Contribution Workflow
 ---------------------
-If you are considering making a contribution, please follow the steps below. The tutorial on the `GitHub flow <https://docs.github.com/en/get-started/quickstart/github-flow>`__ may be helpful if you are new to git and GitHub.
+If you are considering making a contribution, please follow the steps below. The tutorial on the `GitHub flow <https://docs.github.com/en/get-started/quickstart/github-flow>`_ may be helpful if you are new to git and GitHub.
 
- * Open an issue `here <https://github.com/emolter/pylanetary/issues>`__ describing the problem you intend to solve or the new feature you intend to build. We are pretty lax about how issues are presented or formatted, but it still might be useful to look through `the issues quickstart <https://docs.github.com/en/issues/tracking-your-work-with-issues/quickstart>`__. 
+ * Open an issue `here <https://github.com/emolter/pylanetary/issues>`_ describing the problem you intend to solve or the new feature you intend to build. We are pretty lax about how issues are presented or formatted, but it still might be useful to look through `the issues quickstart <https://docs.github.com/en/issues/tracking-your-work-with-issues/quickstart>`_. 
  
- * Make a fork the main branch of the repository. See the `contributing quickstart <https://docs.github.com/en/get-started/quickstart/contributing-to-projects>`__ for the recommended workflow and git commands. See the `forking quickstart <https://docs.github.com/en/get-started/quickstart/fork-a-repo>`__ for a more detailed tutorial about forking, including setup for synchronizing with the upstream branch.
+ * Make a fork the main branch of the repository. See the `contributing quickstart <https://docs.github.com/en/get-started/quickstart/contributing-to-projects>`_ for the recommended workflow and git commands. See the `forking quickstart <https://docs.github.com/en/get-started/quickstart/fork-a-repo>`_ for a more detailed tutorial about forking, including setup for synchronizing with the upstream branch.
  
  * Make your changes or new development. Please see the New Features section below, and start a conversation in the comments of the issue you submitted if you have questions about how best to implement your changes.
  
- * Open a draft pull request. We strongly encourage you to do this early in development. The workflow to do this is also in the `contributing quickstart <https://docs.github.com/en/get-started/quickstart/contributing-to-projects>`__. It is helpful if you `link the pull request to the issue you opened <https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue>`__. 
+ * Open a draft pull request. We strongly encourage you to do this early in development. The workflow to do this is also in the `contributing quickstart <https://docs.github.com/en/get-started/quickstart/contributing-to-projects>`_. It is helpful if you `link the pull request to the issue you opened <https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue>`_. 
  
- * When you are ready, request a review of the pull request. Please understand that some changes are nearly always requested upon first review.
+ * When you are ready, request a review of the pull request. Please understand that changes are nearly always requested upon first review.
 
 New Features
 ------------
 We welcome new features!
 
 Tests are highly encouraged, but can be built up over time.  At least one
-example use is necessary for a new module to be accepted.
+example usage is necessary for a new module to be accepted.
 
 The minimum requirements for a new feature are:
 
- * Add the feature as a subdirectory of pylanetary with at least an
+ * Open a discussion on the Issues page and receive feedback about how your new feature can best be implemented.
+
+ * If your feature is relatively large and doesn't fit anywhere else, make a new subdirectory of pylanetary with at least an
    ``__init__.py`` and a ``core.py``::
  
      pylanetary/feature
@@ -53,10 +55,10 @@ wavelength band, etc. Defaults for a given planet, observatory, wavelength band,
 may be provided as .yaml (preferred) or another text file format, and should go in the ``pylanetary/feature/data`` subdirectory. See ``pylanetary/rings/data`` for an example.
 
 Features that are primarily relevant to a single observatory, planet, wavelength band, etc.
-should be placed in separate GitHub repositories and import pylanetary. Again, if portions 
-of that functionality are generic, they can be included in pylanetary .
+should be placed in separate GitHub repositories and import pylanetary. If portions 
+of that functionality are generic, you could consider including them in pylanetary and then writing a separate, more specific package that imports pylanetary.
 
-Docstrings should be written for every function and should adhere to the `numpy docstyle <https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html>`__
+Docstrings should be written for every function and should adhere to the `numpy docstyle <https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html>`_
 format.
 
 Dependencies

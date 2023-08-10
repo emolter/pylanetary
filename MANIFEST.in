@@ -1,10 +1,10 @@
 include README.rst
 include CHANGES.rst
 include setup.cfg
-include LICENSE.rst
+include LICENSE.txt
 include pyproject.toml
 
-recursive-include planetary_toolkit *.pyx *.c *.pxd
+recursive-include pylanetary *.pyx *.c *.pxd
 recursive-include docs *
 recursive-include licenses *
 recursive-include scripts *

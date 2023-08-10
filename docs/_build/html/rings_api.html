@@ -6,11 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>Rings API &#8212; pylanetary 0.0.5 documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=039e1c02" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=0a554088"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Utils API" href="utils_api.html" />
@@ -42,49 +43,30 @@
 <span class="sig-name descname"><span class="pre">as_2d_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixscale</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">focus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beam</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.Ring.as_2d_array" title="Permalink to this definition">¶</a></dt>
 <dd><p>make a 2-d array that looks like a mock observation of the ring
 with optional smearing over a beam</p>
-<section id="parameters">
-<h2>Parameters<a class="headerlink" href="#parameters" title="Permalink to this heading">¶</a></h2>
 <dl class="field-list simple">
-<dt class="field-odd">shape<span class="colon">:</span></dt>
-<dd class="field-odd"><p>tuple, required. 
-output image shape</p>
-</dd>
-</dl>
-<dl class="simple">
-<dt>pixscale: float or astropy Quantity, required. </dt><dd><p>pixel scale of the output image. assumes km/px if not Quantity</p>
-</dd>
-</dl>
-<dl class="field-list simple">
-<dt class="field-odd">focus<span class="colon">:</span></dt>
-<dd class="field-odd"><p>tuple, optional, default None.
-pixel location of planet around which ring orbits.
-if not specified, center of image is assumed</p>
-</dd>
-<dt class="field-even">width<span class="colon">:</span></dt>
-<dd class="field-even"><p>float or Quantity, optional. default None.
-non-projected (face-on) full width of ring.
-if not specified, assumes width of 1 km.</p>
-</dd>
-<dt class="field-odd">flux<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float or Quantity, optional, default None.
-technically not a flux, but a specific intensity!
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>shape</strong> (<em>tuple</em><em>, </em><em>required.</em>) – output image shape</p></li>
+<li><p><strong>pixscale</strong> (<em>float</em><em> or </em><em>astropy Quantity</em><em>, </em><em>required.</em>) – pixel scale of the output image. assumes km/px if not Quantity</p></li>
+<li><p><strong>focus</strong> (<em>tuple</em><em>, </em><em>optional</em><em>, </em><em>default None.</em>) – pixel location of planet around which ring orbits.
+if not specified, center of image is assumed</p></li>
+<li><p><strong>width</strong> (<em>float</em><em> or </em><em>Quantity</em><em>, </em><em>optional. default None.</em>) – non-projected (face-on) full width of ring.
+if not specified, assumes width of 1 km.</p></li>
+<li><p><strong>flux</strong> (<em>float</em><em> or </em><em>Quantity</em><em>, </em><em>optional</em><em>, </em><em>default None.</em>) – technically not a flux, but a specific intensity!
 sets specific intensity of ring
-if not specified, assumes 1 [unit??].</p>
+if not specified, assumes 1 [unit??].</p></li>
+<li><p><strong>beam</strong> (<em>float</em><em>, </em><em>3-element array-like</em><em>, or </em><em>2-d array</em><em>, </em><em>optional</em><em>, </em><em>default None.</em>) – Gaussian beam with which to convolve the observation
+see docstring of utils.convolve_with_beam()</p></li>
+</ul>
 </dd>
-<dt class="field-even">beam<span class="colon">:</span></dt>
-<dd class="field-even"><p>float, 3-element array-like, or 2-d array, optional, default None.
-Gaussian beam with which to convolve the observation
-see docstring of utils.convolve_with_beam()</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>beam-convolved ring image</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.array</p>
 </dd>
 </dl>
-</section>
-<section id="returns">
-<h2>Returns<a class="headerlink" href="#returns" title="Permalink to this heading">¶</a></h2>
-<p>np.array, beam-convolved ring image</p>
-</section>
-<section id="examples">
-<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this heading">¶</a></h2>
-</section>
+<p class="rubric">Examples</p>
 </dd></dl>
 
 <dl class="py method">
@@ -92,61 +74,35 @@ see docstring of utils.convolve_with_beam()</p>
 <span class="sig-name descname"><span class="pre">as_azimuthal_wedges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixscale</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">focus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nwedges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">60</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.Ring.as_azimuthal_wedges" title="Permalink to this definition">¶</a></dt>
 <dd><p>return n partial elliptical annulus wedges, e.g. for computing
 azimuthal profile of ring</p>
-<section id="id1">
-<h2>Parameters<a class="headerlink" href="#id1" title="Permalink to this heading">¶</a></h2>
 <dl class="field-list simple">
-<dt class="field-odd">shape<span class="colon">:</span></dt>
-<dd class="field-odd"><p>tuple, required. 
-shape of image in pixels</p>
-</dd>
-<dt class="field-even">focus<span class="colon">:</span></dt>
-<dd class="field-even"><p>tuple, required. 
-location of planet (one ellipse focus) in pixels</p>
-</dd>
-<dt class="field-odd">pixscale<span class="colon">:</span></dt>
-<dd class="field-odd"><p>astropy Quantity or float, required
-pixel scale of image. assumes km/px if not Quantity</p>
-</dd>
-<dt class="field-even">nwedges<span class="colon">:</span></dt>
-<dd class="field-even"><p>int, optional. default 60.
-number of wedges to compute</p>
-</dd>
-<dt class="field-odd">width<span class="colon">:</span></dt>
-<dd class="field-odd"><p>astropy quantity required</p>
-</dd>
-<dt class="field-even">n<span class="colon">:</span></dt>
-<dd class="field-even"><p>int, optional. default 1000.
-number of points for as_elliptical_annulus to compute. 
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>shape</strong> (<em>tuple</em><em>, </em><em>required.</em>) – shape of image in pixels</p></li>
+<li><p><strong>focus</strong> (<em>tuple</em><em>, </em><em>required.</em>) – location of planet (one ellipse focus) in pixels</p></li>
+<li><p><strong>pixscale</strong> (<em>astropy Quantity</em><em> or </em><em>float</em><em>, </em><em>required</em>) – pixel scale of image. assumes km/px if not Quantity</p></li>
+<li><p><strong>nwedges</strong> (<em>int</em><em>, </em><em>optional. default 60.</em>) – number of wedges to compute</p></li>
+<li><p><strong>width</strong> (<em>astropy quantity required</em>) – </p></li>
+<li><p><strong>n</strong> (<em>int</em><em>, </em><em>optional. default 1000.</em>) – number of points for as_elliptical_annulus to compute.
 see that docstring for details.
-should be much larger than nwedges</p>
+should be much larger than nwedges</p></li>
+<li><p><strong>z</strong> (<em>int</em><em>, </em><em>optional. default 5</em>) – factor for ndimage.zoom
+larger makes more accurate wedge areas</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><em>np.array</em> – shape (nwedges,).
+angles in radians from 0 to 2*pi corresponding to lower corner of wedge</p></li>
+<li><p><em>list</em> – len nwedges. list of wedge masks</p></li>
+</ul>
+</p>
 </dd>
 </dl>
-<dl class="simple">
-<dt>z: int, optional. default 5</dt><dd><p>factor for ndimage.zoom
-larger makes more accurate wedge areas</p>
-</dd>
-</dl>
-</section>
-<section id="id2">
-<h2>Returns<a class="headerlink" href="#id2" title="Permalink to this heading">¶</a></h2>
-<dl class="simple">
-<dt>np.array, shape (nwedges,)</dt><dd><p>angles in radians from 0 to 2*pi corresponding to lower corner of wedge</p>
-</dd>
-</dl>
-<p>list, len nwedges. list of wedge masks</p>
-</section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Permalink to this heading">¶</a></h2>
-<ul class="simple">
-<li><dl class="simple">
-<dt>current implementation removes foreshortening correction “magically”</dt><dd><p>by making the angular width of the wedges in the image plane
+<p class="rubric">Notes</p>
+<p>current implementation removes foreshortening correction “magically”
+by making the angular width of the wedges in the image plane
 see ring-system-modeling-tutorial.ipynb for a more detailed
 explanation and example</p>
-</dd>
-</dl>
-</li>
-</ul>
-</section>
 <section id="to-do">
 <h2>To-do<a class="headerlink" href="#to-do" title="Permalink to this heading">¶</a></h2>
 <p>This is computationally expensive!
@@ -161,47 +117,30 @@ a lot of geometry</p>
 <span class="sig-name descname"><span class="pre">as_elliptical_annulus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">focus</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixscale</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.Ring.as_elliptical_annulus" title="Permalink to this definition">¶</a></dt>
 <dd><p>make Astropy aperture photometry elliptical annulus object
 surrounding the ring</p>
-<section id="id3">
-<h2>Parameters<a class="headerlink" href="#id3" title="Permalink to this heading">¶</a></h2>
 <dl class="field-list simple">
-<dt class="field-odd">focus<span class="colon">:</span></dt>
-<dd class="field-odd"><p>tuple, required. 
-location of planet (one of the foci of the ellipse) in pixels</p>
-</dd>
-<dt class="field-even">pixscale<span class="colon">:</span></dt>
-<dd class="field-even"><p>float or Quantity, required. 
-pixel scale of observations. assumes km/px if not Quantity</p>
-</dd>
-<dt class="field-odd">width<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float or Quantity, required.
-true (non-projected) full width of ring. assumes km if not Quantity</p>
-</dd>
-<dt class="field-even">n<span class="colon">:</span></dt>
-<dd class="field-even"><p>int, optional. default 1000.
-number of data points to rotate and project
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>focus</strong> (<em>tuple</em><em>, </em><em>required.</em>) – location of planet (one of the foci of the ellipse) in pixels</p></li>
+<li><p><strong>pixscale</strong> (<em>float</em><em> or </em><em>Quantity</em><em>, </em><em>required.</em>) – pixel scale of observations. assumes km/px if not Quantity</p></li>
+<li><p><strong>width</strong> (<em>float</em><em> or </em><em>Quantity</em><em>, </em><em>required.</em>) – true (non-projected) full width of ring. assumes km if not Quantity</p></li>
+<li><p><strong>n</strong> (<em>int</em><em>, </em><em>optional. default 1000.</em>) – number of data points to rotate and project
 higher n means more accurate estimation
-of aperture.EllipticalAnnulus projected a, b, theta values</p>
-</dd>
-<dt class="field-odd">return_params<span class="colon">:</span></dt>
-<dd class="field-odd"><p>bool, optional. default False. 
-If True, return model ellipse dict
-see docstring of project_ellipse_double()</p>
-</dd>
-</dl>
-</section>
-<section id="id4">
-<h2>Returns<a class="headerlink" href="#id4" title="Permalink to this heading">¶</a></h2>
-<dl class="simple">
-<dt>photutils.EllipticalAnnulus object. if return_params == True,</dt><dd><p>also returns the dictionary from project_ellipse_double</p>
-</dd>
-</dl>
-</section>
-<section id="id5">
-<h2>To do<a class="headerlink" href="#id5" title="Permalink to this heading">¶</a></h2>
-<ul class="simple">
-<li><p>experiment with using manually-defined b_in to make epsilon-like ring</p></li>
+of aperture.EllipticalAnnulus projected a, b, theta values</p></li>
+<li><p><strong>return_params</strong> (<em>bool</em><em>, </em><em>optional. default False.</em>) – If True, return model ellipse dict
+see docstring of project_ellipse_double()</p></li>
 </ul>
-</section>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><em>photutils.EllipticalAnnulus object.</em> – if return_params == True,
+also returns the dictionary from project_ellipse_double</p></li>
+<li><p><em>To do</em></p></li>
+<li><p><em>—–</em></p></li>
+<li><p><em>* experiment with using manually-defined b_in to make epsilon-like ring</em></p></li>
+</ul>
+</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -218,34 +157,25 @@ and JPL Horizons ephemeris</p>
 <span class="sig-name descname"><span class="pre">as_2d_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixscale</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">focus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beam</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.RingSystemModelObservation.as_2d_array" title="Permalink to this definition">¶</a></dt>
 <dd><p>return a 2-d array that looks like a mock observation
 optional smearing over Gaussian beam</p>
-<section id="id6">
-<h2>Parameters<a class="headerlink" href="#id6" title="Permalink to this heading">¶</a></h2>
 <dl class="field-list simple">
-<dt class="field-odd">shape<span class="colon">:</span></dt>
-<dd class="field-odd"><p>tuple, required. 
-output image shape in number of pixels</p>
-</dd>
-<dt class="field-even">pixscale<span class="colon">:</span></dt>
-<dd class="field-even"><p>float or Quantity, required. 
-pixel scale of the output image. if not Quantity, assumes units of km/px</p>
-</dd>
-<dt class="field-odd">focus<span class="colon">:</span></dt>
-<dd class="field-odd"><p>tuple, optional.
-pixel location of planet center
-if None, assumes center of image.</p>
-</dd>
-<dt class="field-even">beam<span class="colon">:</span></dt>
-<dd class="field-even"><p>float, 3-element array-like, or 2-d np.array, optional.
-Gaussian beam with which to convolve the observation
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>shape</strong> (<em>tuple</em><em>, </em><em>required.</em>) – output image shape in number of pixels</p></li>
+<li><p><strong>pixscale</strong> (<em>float</em><em> or </em><em>Quantity</em><em>, </em><em>required.</em>) – pixel scale of the output image. if not Quantity, assumes units of km/px</p></li>
+<li><p><strong>focus</strong> (<em>tuple</em><em>, </em><em>optional.</em>) – pixel location of planet center
+if None, assumes center of image.</p></li>
+<li><p><strong>beam</strong> (<em>float</em><em>, </em><em>3-element array-like</em><em>, or </em><em>2-d np.array</em><em>, </em><em>optional.</em>) – Gaussian beam with which to convolve the observation
 see docstring of utils.convolve_with_beam()
-if no beam is specified, will make infinite-resolution</p>
+if no beam is specified, will make infinite-resolution</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>mock observation image</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.array</p>
 </dd>
 </dl>
-</section>
-<section id="id7">
-<h2>Returns<a class="headerlink" href="#id7" title="Permalink to this heading">¶</a></h2>
-<p>np.array, mock observation image</p>
-</section>
 </dd></dl>
 
 </dd></dl>
@@ -253,210 +183,160 @@ if no beam is specified, will make infinite-resolution</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="pylanetary.rings.core.b_from_ae">
 <span class="sig-prename descclassname"><span class="pre">pylanetary.rings.core.</span></span><span class="sig-name descname"><span class="pre">b_from_ae</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.b_from_ae" title="Permalink to this definition">¶</a></dt>
-<dd><section id="id8">
-<h2>Parameters<a class="headerlink" href="#id8" title="Permalink to this heading">¶</a></h2>
-<dl class="field-list simple">
-<dt class="field-odd">a<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float, required.
-semimajor axis of ellipse</p>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>a</strong> (<em>float</em><em>, </em><em>required.</em>) – semimajor axis of ellipse</p></li>
+<li><p><strong>e</strong> (<em>float</em><em>, </em><em>required.</em>) – eccentricity of ellipse</p></li>
+</ul>
 </dd>
-<dt class="field-even">e<span class="colon">:</span></dt>
-<dd class="field-even"><p>float, required.
-eccentricity of ellipse</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>semiminor axis of ellipse</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
 </dd>
 </dl>
-</section>
-<section id="id9">
-<h2>Returns<a class="headerlink" href="#id9" title="Permalink to this heading">¶</a></h2>
-<p>float, semiminor axis of ellipse</p>
-</section>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pylanetary.rings.core.calc_abtheta">
 <span class="sig-prename descclassname"><span class="pre">pylanetary.rings.core.</span></span><span class="sig-name descname"><span class="pre">calc_abtheta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ell</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.calc_abtheta" title="Permalink to this definition">¶</a></dt>
-<dd><p>given vectors defining the circumference of an ellipse, 
+<dd><p>given vectors defining the circumference of an ellipse,
 find corresponding values of a, b, and theta
 using the fact that locations of a, b are max, min of ellipse vectors</p>
-<section id="id10">
-<h2>Parameters<a class="headerlink" href="#id10" title="Permalink to this heading">¶</a></h2>
 <dl class="field-list simple">
-<dt class="field-odd">ell<span class="colon">:</span></dt>
-<dd class="field-odd"><p>np.array, required, shape (n, 3), vectors along circumference of ring</p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ell</strong> (<em>np.array</em><em>, </em><em>required</em>) – shape (n, 3), vectors along circumference of ring</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><em>float</em> – semimajor axis of ellipse</p></li>
+<li><p><em>float</em> – semiminor axis of ellipse</p></li>
+<li><p><em>float</em> – rotation angle of ellipse in degrees</p></li>
+</ul>
+</p>
 </dd>
 </dl>
-</section>
-<section id="id11">
-<h2>Returns<a class="headerlink" href="#id11" title="Permalink to this heading">¶</a></h2>
-<dl class="field-list simple">
-<dt class="field-odd">a<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float, semimajor axis of ellipse</p>
-</dd>
-<dt class="field-even">b<span class="colon">:</span></dt>
-<dd class="field-even"><p>float, semiminor axis of ellipse</p>
-</dd>
-<dt class="field-odd">theta<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float, rotation angle of ellipse in degrees</p>
-</dd>
-</dl>
-</section>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pylanetary.rings.core.double_rotate">
 <span class="sig-prename descclassname"><span class="pre">pylanetary.rings.core.</span></span><span class="sig-name descname"><span class="pre">double_rotate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params_ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params_sys</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.double_rotate" title="Permalink to this definition">¶</a></dt>
-<dd><p>rotate system * rotate ring
+<dd><p>rotate system x rotate ring
 same convention as planetary ring node
 to agree with planetary ring node, params_sys = [90, B - 90, np_ang]
 and params_ring = [w, i, 0]</p>
-<section id="id12">
-<h2>Parameters<a class="headerlink" href="#id12" title="Permalink to this heading">¶</a></h2>
 <dl class="field-list simple">
-<dt class="field-odd">vec<span class="colon">:</span></dt>
-<dd class="field-odd"><p>np.array, required, shape (n, 3). 
-3-element [x, y, 0] vectors on the perimeter of the ring 
-i.e. semimajor axis is [a, 0, 0] and semiminor axis is [0, b, 0]</p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vec</strong> (<em>np.array</em><em>, </em><em>required</em>) – shape (n, 3).
+3-element [x, y, 0] vectors on the perimeter of the ring
+i.e. semimajor axis is [a, 0, 0] and semiminor axis is [0, b, 0]</p></li>
+<li><p><strong>params_ring</strong> (<em>np.array</em><em>, </em><em>required</em>) – params_ring = [w, i, omega] all in degrees w.r.t the ring plane</p></li>
+<li><p><strong>params_sys</strong> (<em>np.array</em><em>, </em><em>required</em>) – params_sys = [w, i, omega] in degrees for the ring plane w.r.t. observer</p></li>
+</ul>
 </dd>
-<dt class="field-even">params_ring<span class="colon">:</span></dt>
-<dd class="field-even"><p>np.array, required.
-params_ring = [w, i, omega] all in degrees w.r.t the ring plane</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>shape (n, 3), the rotated vectors</p>
 </dd>
-<dt class="field-odd">params_sys<span class="colon">:</span></dt>
-<dd class="field-odd"><p>np.array, required. 
-params_sys = [w, i, omega] in degrees for the ring plane w.r.t. observer</p>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.array</p>
 </dd>
 </dl>
-</section>
-<section id="id13">
-<h2>Returns<a class="headerlink" href="#id13" title="Permalink to this heading">¶</a></h2>
-<p>np.array, shape (n, 3), the rotated vectors</p>
-</section>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pylanetary.rings.core.foreshortening">
 <span class="sig-prename descclassname"><span class="pre">pylanetary.rings.core.</span></span><span class="sig-name descname"><span class="pre">foreshortening</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">theta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.foreshortening" title="Permalink to this definition">¶</a></dt>
 <dd><p>corrects for foreshortening of inclined rings</p>
-<section id="id14">
-<h2>Parameters<a class="headerlink" href="#id14" title="Permalink to this heading">¶</a></h2>
 <dl class="field-list simple">
-<dt class="field-odd">theta<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float, required.
-units radians. azimuth angle along the ring from 0 to 2*pi</p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>theta</strong> (<em>float</em><em>, </em><em>required.</em>) – units radians. azimuth angle along the ring from 0 to 2*pi</p></li>
+<li><p><strong>i</strong> (<em>float</em><em>, </em><em>required.</em>) – units degrees. inclination of ring</p></li>
+</ul>
 </dd>
-<dt class="field-even">i<span class="colon">:</span></dt>
-<dd class="field-even"><p>float, required.
-units degrees. inclination of ring</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>fraction by which to multiply ring brightness at azimuth
+angle theta to correct foreshortening.</p>
 </dd>
-</dl>
-</section>
-<section id="id15">
-<h2>Returns<a class="headerlink" href="#id15" title="Permalink to this heading">¶</a></h2>
-<dl class="simple">
-<dt>Float, fraction by which to multiply ring brightness at azimuth</dt><dd><p>angle theta to correct foreshortening.</p>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
 </dd>
 </dl>
-</section>
-<section id="references">
-<h2>References<a class="headerlink" href="#references" title="Permalink to this heading">¶</a></h2>
+<p class="rubric">References</p>
 <p>de Pater et al 2006, doi:10.1016/j.icarus.2005.08.011</p>
-</section>
-<section id="id16">
-<h2>To Do<a class="headerlink" href="#id16" title="Permalink to this heading">¶</a></h2>
+<p class="rubric">Notes</p>
 <p>needs to accept Astropy angles</p>
-</section>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pylanetary.rings.core.plane_project">
 <span class="sig-prename descclassname"><span class="pre">pylanetary.rings.core.</span></span><span class="sig-name descname"><span class="pre">plane_project</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.plane_project" title="Permalink to this definition">¶</a></dt>
 <dd><p>projects vectors X into plane normal to vector Z</p>
-<section id="id17">
-<h2>Parameters<a class="headerlink" href="#id17" title="Permalink to this heading">¶</a></h2>
 <dl class="field-list simple">
-<dt class="field-odd">X<span class="colon">:</span></dt>
-<dd class="field-odd"><p>np.array, required, shape (n,3). vectorss to project</p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>np.array</em><em>, </em><em>required</em>) – shape (n,3). vectors to project</p></li>
+<li><p><strong>Z</strong> (<em>np.array</em><em>, </em><em>required</em>) – shape (3,). direction to project in.</p></li>
+</ul>
 </dd>
-<dt class="field-even">Z<span class="colon">:</span></dt>
-<dd class="field-even"><p>np.array, required, shape (3,). direction to project in.</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>shape (3,). the projected vector.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.array</p>
 </dd>
 </dl>
-</section>
-<section id="id18">
-<h2>Returns<a class="headerlink" href="#id18" title="Permalink to this heading">¶</a></h2>
-<p>np.array, shape (3,). the projected vector.</p>
-</section>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pylanetary.rings.core.project_ellipse_double">
 <span class="sig-prename descclassname"><span class="pre">pylanetary.rings.core.</span></span><span class="sig-name descname"><span class="pre">project_ellipse_double</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params_ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params_sys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([0,</span> <span class="pre">0,</span> <span class="pre">0])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proj_plane</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0,</span> <span class="pre">0,</span> <span class="pre">1]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.project_ellipse_double" title="Permalink to this definition">¶</a></dt>
-<dd><section id="description">
-<h2>Description<a class="headerlink" href="#description" title="Permalink to this heading">¶</a></h2>
-<p>make a projection of an ellipse representing a ring
+<dd><p>make a projection of an ellipse representing a ring
 with ring system parameters as Euler angles [w, i, omega]
-and individual ring parameters relative to the system</p>
-<blockquote>
-<div><p>also as Euler angles [w, i, omega]</p>
-</div></blockquote>
-<p>The angles params=[w, i, omega] and params_sys=[w_sys, i_sys, omega_sys] 
+and individual ring parameters relative to the system
+also as Euler angles [w, i, omega].
+The angles params=[w, i, omega] and params_sys=[w_sys, i_sys, omega_sys]
 represent two sets of Euler angles [gamma, beta, alpha]
 such that the total rotation is given by
-(params_sys rotation matrix) * (params rotation matrix)</p>
-<p>This code builds an ellipse in the x,y plane represented by vectors, 
+(params_sys rotation matrix) x (params rotation matrix)
+This code builds an ellipse in the x,y plane represented by vectors,
 applies the double rotation to those vectors, then re-projects the
 ellipse into the x,y plane. This simulates an observation of a ring.</p>
-<section id="id19">
-<h3>References<a class="headerlink" href="#id19" title="Permalink to this heading">¶</a></h3>
+<p class="rubric">References</p>
 <p><a class="reference external" href="https://en.wikipedia.org/wiki/Euler_angles">https://en.wikipedia.org/wiki/Euler_angles</a>
 <a class="reference external" href="https://en.wikipedia.org/wiki/Orbital_elements#Euler_angle_transformations">https://en.wikipedia.org/wiki/Orbital_elements#Euler_angle_transformations</a></p>
-</section>
-</section>
-<section id="id20">
-<h2>Parameters<a class="headerlink" href="#id20" title="Permalink to this heading">¶</a></h2>
 <dl class="field-list simple">
-<dt class="field-odd">a<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float, required.
-semimajor axis in any distance unit.</p>
-</dd>
-<dt class="field-even">e<span class="colon">:</span></dt>
-<dd class="field-even"><p>float, required.
-eccentricity, unitless.</p>
-</dd>
-<dt class="field-odd">params_ring<span class="colon">:</span></dt>
-<dd class="field-odd"><p>np.array, required, shape (3,).
-[w, i, omega] of ring relative to ring system.</p>
-</dd>
-<dt class="field-even">params_sys<span class="colon">:</span></dt>
-<dd class="field-even"><p>np.array, required, shape (3,).
-[w, i, omega] of ring plane relative to observer.</p>
-</dd>
-<dt class="field-odd">n<span class="colon">:</span></dt>
-<dd class="field-odd"><p>int, required.
-number of equally-spaced points in ellipse circumference to compute</p>
-</dd>
-<dt class="field-even">origin<span class="colon">:</span></dt>
-<dd class="field-even"><p>np.array, required, shape (3,).
-vector pointing to center of the ellipse</p>
-</dd>
-<dt class="field-odd">proj_plane<span class="colon">:</span></dt>
-<dd class="field-odd"><p>np.array, required, shape (3,).
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>a</strong> (<em>float</em><em>, </em><em>required.</em>) – semimajor axis in any distance unit.</p></li>
+<li><p><strong>e</strong> (<em>float</em><em>, </em><em>required.</em>) – eccentricity, unitless.</p></li>
+<li><p><strong>params_ring</strong> (<em>np.array</em><em>, </em><em>required</em>) – shape (3,).
+[w, i, omega] of ring relative to ring system.</p></li>
+<li><p><strong>params_sys</strong> (<em>np.array</em><em>, </em><em>required</em>) – shape (3,).
+[w, i, omega] of ring plane relative to observer.</p></li>
+<li><p><strong>n</strong> (<em>int</em><em>, </em><em>required.</em>) – number of equally-spaced points in ellipse circumference to compute</p></li>
+<li><p><strong>origin</strong> (<em>np.array</em><em>, </em><em>required</em>) – shape (3,).
+vector pointing to center of the ellipse</p></li>
+<li><p><strong>proj_plane</strong> (<em>np.array</em><em>, </em><em>required</em>) – shape (3,).
 normal vector to plane that you want to re-project back to after rotation
-typically this will be [0, 0, 1], i.e., re-project to x,y plane</p>
+typically this will be [0, 0, 1], i.e., re-project to x,y plane</p></li>
+</ul>
 </dd>
-</dl>
-</section>
-<section id="id21">
-<h2>Returns<a class="headerlink" href="#id21" title="Permalink to this heading">¶</a></h2>
-<dl class="simple">
-<dt>dictionary of projected ellipse parameters with the following keys:</dt><dd><p>a: np.array, shape (3,), projected semimajor axis of ring
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>dictionary of projected ellipse parameters with the following keys:
+a: np.array, shape (3,), projected semimajor axis of ring
 b: np.array, shape (3,), projected semiminor axis of ring
 f0: np.array, shape (3,), vector to one focus
 f1: np.array, shape (3,), vector to the other focus
 ell: np.array, shape (n,3), vectors along circumference of ring</p>
 </dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
 </dl>
-</section>
 </dd></dl>
 
 <dl class="py function">
@@ -464,117 +344,92 @@ ell: np.array, shape (n,3), vectors along circumference of ring</p>
 <span class="sig-prename descclassname"><span class="pre">pylanetary.rings.core.</span></span><span class="sig-name descname"><span class="pre">ring_area</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta_width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">B</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">90.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.ring_area" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute projected area of an eccentric ring at a given opening angle
 and peri-apo width asymmetry</p>
-<section id="id22">
-<h2>Parameters<a class="headerlink" href="#id22" title="Permalink to this heading">¶</a></h2>
 <dl class="field-list simple">
-<dt class="field-odd">a<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float, required. 
-[distance] semimajor axis</p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>a</strong> (<em>float</em><em>, </em><em>required.</em>) – [distance] semimajor axis</p></li>
+<li><p><strong>e</strong> (<em>float</em><em>, </em><em>required.</em>) – eccentricity</p></li>
+<li><p><strong>width</strong> (<em>float</em><em>, </em><em>required.</em>) – [distance] average width of ring
+for an asymmetric ring, use (apoapsis_width + periapsis_width)/2</p></li>
+<li><p><strong>delta_width</strong> (<em>float</em><em>, </em><em>optional. default 0.0</em>) – [distance] apoapsis width minus periapsis width</p></li>
+<li><p><strong>B</strong> (<em>float</em><em>, </em><em>optional. default 90</em><em> (</em><em>i.e.</em><em>, </em><em>open</em><em>)</em>) – [degrees] ring opening angle</p></li>
+</ul>
 </dd>
-<dt class="field-even">e<span class="colon">:</span></dt>
-<dd class="field-even"><p>float, required. 
-eccentricity</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>projected area in [distance unit]^2</p>
 </dd>
-<dt class="field-odd">width<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float, required.
-[distance] average width of ring 
-for an asymmetric ring, use (apoapsis_width + periapsis_width)/2</p>
-</dd>
-<dt class="field-even">delta_width<span class="colon">:</span></dt>
-<dd class="field-even"><p>float, optional. default 0.0
-[distance] apoapsis width minus periapsis width</p>
-</dd>
-<dt class="field-odd">B<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float, optional. default 90 (i.e., open)
-[degrees] ring opening angle</p>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
 </dd>
 </dl>
-</section>
-<section id="id23">
-<h2>Returns<a class="headerlink" href="#id23" title="Permalink to this heading">¶</a></h2>
-<p>projected area in [distance unit]^2</p>
-</section>
-<section id="id24">
-<h2>References<a class="headerlink" href="#id24" title="Permalink to this heading">¶</a></h2>
+<p class="rubric">References</p>
 <p>Molter et al. 2019, doi:10.3847/1538-3881/ab258c</p>
-</section>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pylanetary.rings.core.vector_ellipse">
 <span class="sig-prename descclassname"><span class="pre">pylanetary.rings.core.</span></span><span class="sig-name descname"><span class="pre">vector_ellipse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([0,</span> <span class="pre">0,</span> <span class="pre">0])</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.vector_ellipse" title="Permalink to this definition">¶</a></dt>
 <dd><p>Vector equation of an ellipse in two dimensions</p>
-<section id="id25">
-<h2>Parameters<a class="headerlink" href="#id25" title="Permalink to this heading">¶</a></h2>
 <dl class="field-list simple">
-<dt class="field-odd">u<span class="colon">:</span></dt>
-<dd class="field-odd"><p>np.array, required, shape (3,).
-vectorized semimajor axis, e.g. [a,0,0]</p>
-</dd>
-<dt class="field-even">v<span class="colon">:</span></dt>
-<dd class="field-even"><p>np.array, required, shape (3,)
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> (<em>np.array</em><em>, </em><em>required</em>) – shape (3,).
+vectorized semimajor axis, e.g. [a,0,0]</p></li>
+<li><p><strong>v</strong> (<em>np.array</em><em>, </em><em>required</em>) – shape (3,)
 vectorized semiminor axis, e.g. [0,b,0]
-should be perpendicular to u</p>
+should be perpendicular to u</p></li>
+<li><p><strong>n</strong> (<em>int</em><em>, </em><em>required</em>) – number of vectors to compute</p></li>
+<li><p><strong>origin</strong> (<em>np.array</em><em>, </em><em>required</em>) – shape (3,)
+vector pointing to the center of the ellipse</p></li>
+</ul>
 </dd>
-<dt class="field-odd">n<span class="colon">:</span></dt>
-<dd class="field-odd"><p>int, required.
-number of vectors to compute</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>shape (n, 3)
+vectors pointing to the circumference of the ellipse</p>
 </dd>
-<dt class="field-even">origin<span class="colon">:</span></dt>
-<dd class="field-even"><p>np.array, required, shape (3,)
-vector pointing to the center of the ellipse</p>
-</dd>
-</dl>
-</section>
-<section id="id26">
-<h2>Returns<a class="headerlink" href="#id26" title="Permalink to this heading">¶</a></h2>
-<dl class="simple">
-<dt>np.array, required, shape (n, 3)</dt><dd><p>vectors pointing to the circumference of the ellipse</p>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.array</p>
 </dd>
 </dl>
-</section>
-<section id="id27">
-<h2>References<a class="headerlink" href="#id27" title="Permalink to this heading">¶</a></h2>
+<p class="rubric">References</p>
 <p><a class="reference external" href="https://math.stackexchange.com/questions/3994666/parametric-equation-of-an-ellipse-in-the-3d-space#:~:text=In%20the%20parametric%20equation%20x,a%20point%20with%20minimum%20curvature">https://math.stackexchange.com/questions/3994666/parametric-equation-of-an-ellipse-in-the-3d-space#:~:text=In%20the%20parametric%20equation%20x,a%20point%20with%20minimum%20curvature</a>.</p>
-</section>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pylanetary.rings.core.vector_magnitude">
 <span class="sig-prename descclassname"><span class="pre">pylanetary.rings.core.</span></span><span class="sig-name descname"><span class="pre">vector_magnitude</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.vector_magnitude" title="Permalink to this definition">¶</a></dt>
-<dd><p>this is a bit faster than using np.linalg.norm</p>
-<section id="id28">
-<h2>Parameters<a class="headerlink" href="#id28" title="Permalink to this heading">¶</a></h2>
+<dd><p>magnitude of a vector
+this is a bit faster than using np.linalg.norm</p>
 <dl class="field-list simple">
-<dt class="field-odd">a<span class="colon">:</span></dt>
-<dd class="field-odd"><p>np.array, required, shape (n, 3) or (n, 2)
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>a</strong> (<em>np.array</em><em>, </em><em>required</em>) – shape (n, 3) or (n, 2)
 corresponding to n vectors</p>
 </dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>same shape as input, magnitude of input vector a</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
 </dl>
-</section>
-<section id="id29">
-<h2>Returns<a class="headerlink" href="#id29" title="Permalink to this heading">¶</a></h2>
-<p>np.array, same shape as input, magnitude of input vector a</p>
-</section>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pylanetary.rings.core.vector_normalize">
 <span class="sig-prename descclassname"><span class="pre">pylanetary.rings.core.</span></span><span class="sig-name descname"><span class="pre">vector_normalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.vector_normalize" title="Permalink to this definition">¶</a></dt>
 <dd><p>returns the original vector if it has length zero</p>
-<section id="id30">
-<h2>Parameters<a class="headerlink" href="#id30" title="Permalink to this heading">¶</a></h2>
 <dl class="field-list simple">
-<dt class="field-odd">v<span class="colon">:</span></dt>
-<dd class="field-odd"><p>np.array, required, shape (n, 3) or (n, 2)
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>v</strong> (<em>np.array</em><em>, </em><em>required</em>) – shape (n, 3) or (n, 2)
 corresponding to n vectors</p>
 </dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>same shape as input. the normalized vectors</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
 </dl>
-</section>
-<section id="id31">
-<h2>Returns<a class="headerlink" href="#id31" title="Permalink to this heading">¶</a></h2>
-<p>np.array, same shape as input. the normalized vectors</p>
-</section>
 </dd></dl>
 
 </section>
@@ -600,6 +455,8 @@ corresponding to n vectors</p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="description.html">Description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing to Pylanetary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="citing.html">Citing this Software</a></li>
 <li class="toctree-l1"><a class="reference internal" href="navigation_api.html">Navigation API</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Rings API</a><ul>
@@ -655,7 +512,7 @@ corresponding to n vectors</p>
       &copy;2023, Edward M. Molter.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.0.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.1.2</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
       |

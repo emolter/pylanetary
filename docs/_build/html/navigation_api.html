@@ -6,11 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>Navigation API &#8212; pylanetary 0.0.5 documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=039e1c02" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=0a554088"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Rings API" href="rings_api.html" />
@@ -48,54 +49,41 @@
 <span class="sig-name descname"><span class="pre">ldmodel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tb</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">law</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'exp'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beam</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.navigation.core.ModelEllipsoid.ldmodel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Make a limb-darkened model disk convolved with the beam
 See docstring of limb_darkening() for options</p>
-<section id="parameters">
-<h2>Parameters<a class="headerlink" href="#parameters" title="Permalink to this heading">¶</a></h2>
 <dl class="field-list simple">
-<dt class="field-odd">tb<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float, required. 
-[flux] brightness temperature of disk at mu=1</p>
-</dd>
-<dt class="field-even">a<span class="colon">:</span></dt>
-<dd class="field-even"><p>float or tuple, required. 
-[-] limb darkening parameter(s)</p>
-</dd>
-<dt class="field-odd">law<span class="colon">:</span></dt>
-<dd class="field-odd"><p>str, optional. default “exp”
-limb darkening law to use</p>
-</dd>
-<dt class="field-even">beam<span class="colon">:</span></dt>
-<dd class="field-even"><p>see docstring of utils.convolve_with_beam</p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tb</strong> (<em>float</em><em>, </em><em>required.</em>) – [flux] brightness temperature of disk at mu=1</p></li>
+<li><p><strong>a</strong> (<em>float</em><em> or </em><em>tuple</em><em>, </em><em>required.</em>) – [-] limb darkening parameter(s)</p></li>
+<li><p><strong>law</strong> (<em>str</em><em>, </em><em>optional. default &quot;exp&quot;</em>) – limb darkening law to use</p></li>
+<li><p><strong>beam</strong> (<em>float</em><em> or </em><em>tuple</em><em> or </em><em>np.array</em>) – see docstring of utils.convolve_with_beam</p></li>
+</ul>
 </dd>
 </dl>
-</section>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pylanetary.navigation.core.ModelEllipsoid.write">
 <span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">outstem</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.navigation.core.ModelEllipsoid.write" title="Permalink to this definition">¶</a></dt>
-<dd><section id="id1">
-<h2>Parameters<a class="headerlink" href="#id1" title="Permalink to this heading">¶</a></h2>
-<dl class="field-list simple">
-<dt class="field-odd">outstem<span class="colon">:</span></dt>
-<dd class="field-odd"><p>stem of filenames to write</p>
-</dd>
-</dl>
-</section>
-<section id="writes">
-<h2>Writes<a class="headerlink" href="#writes" title="Permalink to this heading">¶</a></h2>
-</section>
-<section id="to-do">
-<h2>To do<a class="headerlink" href="#to-do" title="Permalink to this heading">¶</a></h2>
-<ul class="simple">
-<li><p>Rewrite this to make a single multi-hdu fits file from scratch</p></li>
-<li><dl class="simple">
-<dt>Alternatively, decide to remove this and have write functionality only</dt><dd><p>in Nav</p>
-</dd>
-</dl>
-</li>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>outstem</strong> (<em>str</em><em>, </em><em>required.</em>) – stem of filenames to write</p></li>
+<li><p><strong>Writes</strong> – </p></li>
+<li><p><strong>------</strong> – </p></li>
+<li><p><strong>do</strong> (<em>To</em>) – </p></li>
+<li><p><strong>-----</strong> – </p></li>
+<li><p><strong>scratch</strong> (<em>* Rewrite this to make a single multi-hdu fits file from</em>) – </p></li>
+<li><p><strong>Alternatively</strong> (<em>*</em>) – in Nav</p></li>
+<li><p><strong>only</strong> (<em>decide to remove this and have write functionality</em>) – in Nav</p></li>
 </ul>
-</section>
+</dd>
+</dl>
 </dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pylanetary.navigation.core.ModelEllipsoid.zonalmodel">
+<span class="sig-name descname"><span class="pre">zonalmodel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lons</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tbs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.navigation.core.ModelEllipsoid.zonalmodel" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -106,19 +94,15 @@ limb darkening law to use</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="pylanetary.navigation.core.Nav.colocate">
 <span class="sig-name descname"><span class="pre">colocate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'convolution'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">diagnostic_plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.navigation.core.Nav.colocate" title="Permalink to this definition">¶</a></dt>
-<dd><section id="description">
-<h2>Description<a class="headerlink" href="#description" title="Permalink to this heading">¶</a></h2>
-<p>Co-locate the model planet with the observed planet</p>
-</section>
-<section id="id2">
-<h2>Parameters<a class="headerlink" href="#id2" title="Permalink to this heading">¶</a></h2>
-<dl class="field-list">
-<dt class="field-odd">mode<span class="colon">:</span></dt>
-<dd class="field-odd"><p>str, optional. Default ‘convolution’.
-[-] Which method should be used to overlay planet model and data. Choices are:</p>
-<dl>
-<dt>‘canny’: uses the Canny edge detection algorithm.</dt><dd><dl class="simple">
-<dt>kwargs: </dt><dd><dl class="field-list simple">
+<dd><p>Co-locate the model planet with the observed planet</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mode</strong> (<em>str</em><em>, </em><em>optional. Default 'convolution'.</em>) – <p>Which method should be used to overlay planet model and data. Choices are:</p>
+<ul>
+<li><dl>
+<dt>’canny’: uses the Canny edge detection algorithm.</dt><dd><dl class="simple">
+<dt>kwargs:</dt><dd><dl class="field-list simple">
 <dt class="field-odd">tb<span class="colon">:</span></dt>
 <dd class="field-odd"><p>float, required.
 [same flux unit as data] brightness temperature of disk at mu=1</p>
@@ -150,7 +134,10 @@ high_thresh : approximate flux value of background disk (i.e., cloud-free, volca
 sigma : 5</p>
 </div></blockquote>
 </dd>
-<dt>‘convolution’: takes the shift that maximizes the convolution of model and planet</dt><dd><dl class="simple">
+</dl>
+</li>
+<li><dl class="simple">
+<dt>’convolution’: takes the shift that maximizes the convolution of model and planet</dt><dd><dl class="simple">
 <dt>kwargs:</dt><dd><dl class="field-list simple">
 <dt class="field-odd">tb<span class="colon">:</span></dt>
 <dd class="field-odd"><p>float, required.
@@ -176,36 +163,33 @@ see ldmodel docstring</p>
 </dl>
 </dd>
 </dl>
-<p>‘disk’: same as convolution</p>
+</li>
+<li><p>’disk’: same as convolution</p></li>
+</ul>
+</p></li>
+<li><p><strong>diagnostic_plot</strong> (<em>bool</em><em>, </em><em>optional. default True</em>) – do you want the diagnostic plots to be shown</p></li>
+<li><p><strong>save_plot</strong> (<em>str</em><em>, </em><em>optional. default None.</em>) – file path to save the diagnostic plot. if None, does not save.</p></li>
+</ul>
 </dd>
-<dt class="field-even">diagnostic_plot<span class="colon">:</span></dt>
-<dd class="field-even"><p>bool, optional. default True
-do you want the diagnostic plots to be shown</p>
-</dd>
-<dt class="field-odd">save_plot<span class="colon">:</span></dt>
-<dd class="field-odd"><p>str, optional. default None.
-file path to save the diagnostic plot. if None, does not save.</p>
-</dd>
-</dl>
-</section>
-<section id="returns">
-<h2>Returns<a class="headerlink" href="#returns" title="Permalink to this heading">¶</a></h2>
-<dl class="simple">
-<dt>dx, dy: float</dt><dd><p>[pixels] best-fit difference in position between model and data
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><em>float</em> – dx in pixels. best-fit difference in position between model and data
 To shift data to center (i.e., colocated with model), apply a shift of -dx, -dy
-To shift model to data, apply a shift of dx, dy</p>
-</dd>
-<dt>dxerr, dyerr: float</dt><dd><p>[pixels] uncertainty in the shift based on the cross-correlation 
-from image_registration.chi2_shift</p>
+To shift model to data, apply a shift of dx, dy</p></li>
+<li><p><em>float</em> – dy in pixels</p></li>
+<li><p><em>float</em> – dxerr in pixels uncertainty in the shift based on the cross-correlation
+from image_registration.chi2_shift. These should be treated with extreme caution
+because they were designed to work on identical images corrupted by random
+noise, and are being used for non-identical images (model and data)</p></li>
+<li><p><em>float</em> – dyerr in pixels</p></li>
+</ul>
+</p>
 </dd>
 </dl>
-</section>
-<section id="examples">
-<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this heading">¶</a></h2>
+<p class="rubric">Examples</p>
 <p>need at least one example of each mode here</p>
-</section>
-<section id="id3">
-<h2>To Do<a class="headerlink" href="#id3" title="Permalink to this heading">¶</a></h2>
+<section id="to-do">
+<h2>To Do<a class="headerlink" href="#to-do" title="Permalink to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>sometimes dxerr, dyerr give unrealistic or undefined behavior</p></li>
 </ul>
@@ -215,91 +199,64 @@ from image_registration.chi2_shift</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="pylanetary.navigation.core.Nav.reproject">
 <span class="sig-name descname"><span class="pre">reproject</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pixscale_arcsec</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cubic'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.navigation.core.Nav.reproject" title="Permalink to this definition">¶</a></dt>
-<dd><section id="id4">
-<h2>Description<a class="headerlink" href="#id4" title="Permalink to this heading">¶</a></h2>
-<p>Projects the data onto a flat x-y grid according to self.lat_g, self.lon_w
-This function only works properly if self.lat_g and self.lon_w</p>
-<blockquote>
-<div><p>are centered with respect to self.data; for instance, 
-if ONE of xy_shift_data or xy_shift_model has been applied 
+<dd><p>Projects the data onto a flat x-y grid according to self.lat_g, self.lon_w
+This function only works properly if self.lat_g and self.lon_w
+are centered with respect to self.data; for instance,
+if ONE of xy_shift_data or xy_shift_model has been applied
 using the dx, dy output of colocate()</p>
-</div></blockquote>
-</section>
-<section id="id5">
-<h2>Parameters<a class="headerlink" href="#id5" title="Permalink to this heading">¶</a></h2>
 <dl class="field-list simple">
-<dt class="field-odd">pixscale_arcsec<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float, optional. default self.pixscale_arcsec.
-[arcsec] Pixel scale of output
-If not set, output data will have the same pixel scale as the input data 
-at the sub-observer point. 
-Note that everywhere else will be super-sampled.</p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pixscale_arcsec</strong> (<em>float</em><em>, </em><em>optional. default self.pixscale_arcsec</em>) – [arcsec] Pixel scale of output
+If not set, output data will have the same pixel scale as the input data
+at the sub-observer point.
+Note that everywhere else will be super-sampled.</p></li>
+<li><p><strong>interp</strong> (<em>str</em><em>, </em><em>optional. default 'cubic'</em>) – type of interpolation to do between pixels in the projection.</p></li>
+</ul>
 </dd>
-<dt class="field-even">interp<span class="colon">:</span></dt>
-<dd class="field-even"><p>str, optional. default ‘cubic’
-type of interpolation to do between pixels in the projection.</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><em>np.array</em> – the projected data</p></li>
+<li><p><em>np.array</em> – cosine of the emission angle (mu)
+at each pixel in the projection</p></li>
+<li><p><em>To-do list</em></p></li>
+<li><p><em>———-</em></p></li>
+<li><p><em>* rewrite to rely on cartopy, which enables arbitrary projections</em></p></li>
+</ul>
+</p>
 </dd>
 </dl>
-</section>
-<section id="id6">
-<h2>Returns<a class="headerlink" href="#id6" title="Permalink to this heading">¶</a></h2>
-<p>projected: np.array, the projected data 
-mu_projected: np.array, cosine of the emission angle (mu)</p>
-<blockquote>
-<div><p>at each pixel in the projection</p>
-</div></blockquote>
-</section>
-<section id="to-do-list">
-<h2>To-do list<a class="headerlink" href="#to-do-list" title="Permalink to this heading">¶</a></h2>
-<ul class="simple">
-<li><p>rewrite to rely on cartopy, which enables arbitrary projections</p></li>
-</ul>
-</section>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pylanetary.navigation.core.Nav.xy_shift_data">
 <span class="sig-name descname"><span class="pre">xy_shift_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dy</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.navigation.core.Nav.xy_shift_data" title="Permalink to this definition">¶</a></dt>
-<dd><section id="id7">
-<h2>Description<a class="headerlink" href="#id7" title="Permalink to this heading">¶</a></h2>
-<p>FFTshift data by a user-defined amount
+<dd><p>FFTshift data by a user-defined amount
 for example, to apply the suggested shift from colocate()</p>
-</section>
-<section id="id8">
-<h2>Parameters<a class="headerlink" href="#id8" title="Permalink to this heading">¶</a></h2>
 <dl class="field-list simple">
-<dt class="field-odd">dx<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float, required. [pixels] shift in x</p>
-</dd>
-<dt class="field-even">dy<span class="colon">:</span></dt>
-<dd class="field-even"><p>float, required. [pixels] shift in y</p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dx</strong> (<em>float</em><em>, </em><em>required</em>) – [pixels] shift in x</p></li>
+<li><p><strong>dy</strong> (<em>float</em><em>, </em><em>required</em>) – [pixels] shift in y</p></li>
+</ul>
 </dd>
 </dl>
-</section>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pylanetary.navigation.core.Nav.xy_shift_model">
 <span class="sig-name descname"><span class="pre">xy_shift_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dy</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.navigation.core.Nav.xy_shift_model" title="Permalink to this definition">¶</a></dt>
-<dd><section id="id9">
-<h2>Description<a class="headerlink" href="#id9" title="Permalink to this heading">¶</a></h2>
-<dl class="simple">
-<dt>FFTshift model (i.e., lat_g, lon_w, and mu) </dt><dd><p>by a user-defined amount</p>
-</dd>
-</dl>
-<p>for example, to apply the suggested shift from colocate()</p>
-</section>
-<section id="id10">
-<h2>Parameters<a class="headerlink" href="#id10" title="Permalink to this heading">¶</a></h2>
+<dd><p>FFTshift model (i.e., lat_g, lon_w, and mu)
+by a user-defined amount.
+for example, to apply the suggested shift from colocate()</p>
 <dl class="field-list simple">
-<dt class="field-odd">dx<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float, required. [pixels] shift in x</p>
-</dd>
-<dt class="field-even">dy<span class="colon">:</span></dt>
-<dd class="field-even"><p>float, required. [pixels] shift in y</p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dx</strong> (<em>float</em><em>, </em><em>required</em>) – [pixels] shift in x</p></li>
+<li><p><strong>dy</strong> (<em>float</em><em>, </em><em>required</em>) – [pixels] shift in y</p></li>
+</ul>
 </dd>
 </dl>
-</section>
 </dd></dl>
 
 </dd></dl>
@@ -308,118 +265,92 @@ for example, to apply the suggested shift from colocate()</p>
 <dt class="sig sig-object py" id="pylanetary.navigation.core.emission_angle">
 <span class="sig-prename descclassname"><span class="pre">pylanetary.navigation.core.</span></span><span class="sig-name descname"><span class="pre">emission_angle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ob_lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">surf_n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.navigation.core.emission_angle" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes the cosine of the emission angle of surface wrt observer</p>
-<section id="id11">
-<h2>Parameters<a class="headerlink" href="#id11" title="Permalink to this heading">¶</a></h2>
 <dl class="field-list simple">
-<dt class="field-odd">ob_lat<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float or np.array, required. 
-[deg] sub-observer latitude</p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ob_lat</strong> (<em>float</em><em> or </em><em>np.array</em><em>, </em><em>required.</em>) – [deg] sub-observer latitude</p></li>
+<li><p><strong>surf_n</strong> (<em>np.array</em><em>, </em><em>required.</em>) – [x,y,z] surface normal vector at each ob_lat</p></li>
+</ul>
 </dd>
-<dt class="field-even">surf_n<span class="colon">:</span></dt>
-<dd class="field-even"><p>np.array, required.
-[x,y,z] surface normal vector at each ob_lat</p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>mu: [-] cosine of emission angle</p>
 </dd>
 </dl>
-</section>
-<section id="id12">
-<h2>Returns<a class="headerlink" href="#id12" title="Permalink to this heading">¶</a></h2>
-<dl class="field-list simple">
-<dt class="field-odd">mu<span class="colon">:</span></dt>
-<dd class="field-odd"><p>[-] cosine of emission angle</p>
-</dd>
-</dl>
-</section>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pylanetary.navigation.core.lat_lon">
 <span class="sig-prename descclassname"><span class="pre">pylanetary.navigation.core.</span></span><span class="sig-name descname"><span class="pre">lat_lon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ob_lon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ob_lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixscale_km</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">np_ang</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">req</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rpol</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.navigation.core.lat_lon" title="Permalink to this definition">¶</a></dt>
 <dd><p>Projection of an ellipsoid onto a 2-D array with latitude and longitude grid</p>
-<section id="id13">
-<h2>Parameters<a class="headerlink" href="#id13" title="Permalink to this heading">¶</a></h2>
 <dl class="field-list simple">
-<dt class="field-odd">x<span class="colon">:</span></dt>
-<dd class="field-odd"><p></p></dd>
-<dt class="field-even">y<span class="colon">:</span></dt>
-<dd class="field-even"><p></p></dd>
-</dl>
-<p>ob_lon, ob_lat : 
-pixscale_km : 
-np_ang : 
-req, rpol :</p>
-</section>
-<section id="id14">
-<h2>Returns<a class="headerlink" href="#id14" title="Permalink to this heading">¶</a></h2>
-<p>lat_g : planetographic latitudes, shape ???
-lat_c : planetocentric latitudes, shape ???
-lon_w : West longitudes, shape ???</p>
-</section>
-<section id="id15">
-<h2>Examples<a class="headerlink" href="#id15" title="Permalink to this heading">¶</a></h2>
-</section>
-<section id="id16">
-<h2>To-do list<a class="headerlink" href="#id16" title="Permalink to this heading">¶</a></h2>
-<p>write lots of tests to ensure all the geometry is correct
-but what to test against?
-this has been working reasonably well for years with real data, but there might</p>
-<blockquote>
-<div><p>still be small bugs.</p>
-</div></blockquote>
-<dl class="simple">
-<dt>for example, should figure out <em>actually</em> whether longitudes are E or W when</dt><dd><p>passed sub-observer longitudes in each formalism.
-should have the option to choose East or West longitudes</p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – </p></li>
+<li><p><strong>y</strong> – </p></li>
+<li><p><strong>ob_lon</strong> – </p></li>
+<li><p><strong>ob_lat</strong> – </p></li>
+<li><p><strong>pixscale_km</strong> – </p></li>
+<li><p><strong>np_ang</strong> – </p></li>
+<li><p><strong>req</strong> – </p></li>
+<li><p><strong>rpol</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><em>np.array</em> – planetographic latitudes, shape ???</p></li>
+<li><p><em>np.array</em> – planetocentric latitudes, shape ???</p></li>
+<li><p><em>np.array</em> – West longitudes, shape ???</p></li>
+</ul>
+</p>
 </dd>
 </dl>
-<p>probably need to write some math in this docstring</p>
+<p class="rubric">Examples</p>
+<section id="to-do-list">
+<h2>To-do list<a class="headerlink" href="#to-do-list" title="Permalink to this heading">¶</a></h2>
+<p>write lots of tests to ensure all the geometry is correct
+but what to test against?
+this has been working reasonably well for years with real data, but there might
+still be small bugs.
+for example, should figure out <em>actually</em> whether longitudes are E or W when
+passed sub-observer longitudes in each formalism.
+should have the option to choose East or West longitudes
+probably need to write some math in this docstring</p>
 </section>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pylanetary.navigation.core.limb_darkening">
 <span class="sig-prename descclassname"><span class="pre">pylanetary.navigation.core.</span></span><span class="sig-name descname"><span class="pre">limb_darkening</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">law</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'exp'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.navigation.core.limb_darkening" title="Permalink to this definition">¶</a></dt>
-<dd><section id="id17">
-<h2>Parameters<a class="headerlink" href="#id17" title="Permalink to this heading">¶</a></h2>
-<dl class="field-list">
-<dt class="field-odd">mu<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float or array-like, required. 
-[-] cosine of emission angle</p>
-</dd>
-<dt class="field-even">a<span class="colon">:</span></dt>
-<dd class="field-even"><p>float or array-like, required. 
-[-] limb-darkening parameter(s)
-if law==”disc”, a is ignored 
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mu</strong> (<em>float</em><em> or </em><em>array-like</em><em>, </em><em>required.</em>) – [-] cosine of emission angle</p></li>
+<li><p><strong>a</strong> (<em>float</em><em> or </em><em>array-like</em><em>, </em><em>required.</em>) – [-] limb-darkening parameter(s)
+if law==”disc”, a is ignored
 if law==”exp”, “linear”, or “minnaert”, a must have length 1
-if law==”quadratic”, “square-root”, a must have length 2 such that [a0, a1] are</p>
-<blockquote>
-<div><p>the free parameters in the first and second terms, respectively.</p>
-</div></blockquote>
-</dd>
-<dt class="field-odd">law<span class="colon">:</span></dt>
-<dd class="field-odd"><p>str, optional. default “exp”.
-what type of limb darkening law to use. options are:
+if law==”quadratic”, “square-root”, a must have length 2 such that [a0, a1] are
+the free parameters in the first and second terms, respectively.</p></li>
+<li><p><strong>law</strong> (<em>str</em><em>, </em><em>optional. default &quot;exp&quot;.</em>) – what type of limb darkening law to use. options are:
 disc : no limb darkening applied
 linear : ld = 1 - a * (1 - mu)
 exp : ld = mu**a
 minnaert : ld = mu0**a * mu**(a-1)
-quadratic : ld = 1 - a[0]*(1-mu) - a[1]*(1-mu)**2 
-square-root : ld = 1 - a[0]*(1-mu) - a[1]*(1-np.sqrt(mu))</p>
+quadratic : ld = 1 - a[0]*(1-mu) - a[1]*(1-mu)**2
+square-root : ld = 1 - a[0]*(1-mu) - a[1]*(1-np.sqrt(mu))</p></li>
+<li><p><strong>mu0</strong> (<em>float</em><em> or </em><em>array-like</em><em>, </em><em>optional. default None.</em>) – [-] cosine of solar incidence angle.
+has no effect unless law==”minnaert”, in which case it is required.</p></li>
+</ul>
 </dd>
-<dt class="field-even">mu0<span class="colon">:</span></dt>
-<dd class="field-even"><p>float or array-like, optional. default None. 
-[-] cosine of solar incidence angle.
-has no effect unless law==”minnaert”, in which case it is required.</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>limb-darkening value at each input mu value</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float or np.array</p>
 </dd>
 </dl>
-</section>
-<section id="id18">
-<h2>Returns<a class="headerlink" href="#id18" title="Permalink to this heading">¶</a></h2>
-<p>ld: limb-darkening value at each input mu value</p>
-</section>
-<section id="references">
-<h2>References<a class="headerlink" href="#references" title="Permalink to this heading">¶</a></h2>
+<p class="rubric">References</p>
 <p>Overview of published limb darkening laws
 <a class="reference external" href="https://www.astro.keele.ac.uk/jkt/codes/jktld.html">https://www.astro.keele.ac.uk/jkt/codes/jktld.html</a></p>
-</section>
 </dd></dl>
 
 <dl class="py function">
@@ -428,18 +359,16 @@ has no effect unless law==”minnaert”, in which case it is required.</p>
 <dd><p>Computes the normal vector to the surface of the planet.
 Taking the dot product of output with sub-obs or sub-sun vector
 gives the cosine of emission angle</p>
-<section id="id19">
-<h2>Parameters<a class="headerlink" href="#id19" title="Permalink to this heading">¶</a></h2>
-</section>
-<section id="id20">
-<h2>Returns<a class="headerlink" href="#id20" title="Permalink to this heading">¶</a></h2>
-</section>
-<section id="id21">
-<h2>To do<a class="headerlink" href="#id21" title="Permalink to this heading">¶</a></h2>
-<ul class="simple">
-<li><p>This has not been tested at all</p></li>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><ul class="simple">
+<li><p><em>To do</em></p></li>
+<li><p><em>—–</em></p></li>
+<li><p><em>* This has not been tested at all</em></p></li>
 </ul>
-</section>
+</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -447,12 +376,6 @@ gives the cosine of emission angle</p>
 <span class="sig-prename descclassname"><span class="pre">pylanetary.navigation.core.</span></span><span class="sig-name descname"><span class="pre">surface_normal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lat_g</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon_w</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ob_lon</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.navigation.core.surface_normal" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes the normal vector to the surface of the planet.
 Take dot product with sub-obs or sub-sun vector to find cosine of emission angle</p>
-<section id="id22">
-<h2>Parameters<a class="headerlink" href="#id22" title="Permalink to this heading">¶</a></h2>
-</section>
-<section id="id23">
-<h2>Returns<a class="headerlink" href="#id23" title="Permalink to this heading">¶</a></h2>
-</section>
 </dd></dl>
 
 </section>
@@ -478,6 +401,8 @@ Take dot product with sub-obs or sub-sun vector to find cosine of emission angle
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="description.html">Description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing to Pylanetary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="citing.html">Citing this Software</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Navigation API</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#pylanetary.navigation.core.ModelBody"><code class="docutils literal notranslate"><span class="pre">ModelBody</span></code></a></li>
@@ -529,7 +454,7 @@ Take dot product with sub-obs or sub-sun vector to find cosine of emission angle
       &copy;2023, Edward M. Molter.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.0.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.1.2</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
       |
