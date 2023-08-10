@@ -20,37 +20,31 @@ data processing and modeling tools for ring, moon, and planet observations
 
 Installation
 ------------
-Pylanetary and its dependencies are pip installable (tested in a blank Conda environment)::
 
-	conda create -n pylanetary-tester python=3.9
-	source activate pylanetary-tester
-	pip install pylanetary
+* download the requirements.txt file using the "download raw" option
+* ``conda create -n pylanetary-tester python=3.9`` (or any Python from 3.7 to 3.10)
+* ``conda activate pylanetary-tester``
+* ``pip install -r requirements.txt``
+* ``pip install git+https://github.com/emolter/pylanetary.git@main``
 	
-Some of the ring modeling modules rely on a pre-release (at time of writing) version of ``astroquery``, so you may need to download that package via ``git`` as shown in ``requirements.txt``
+Pylanetary relies on as-yet-unreleased versions of the image\_registration and astroquery packages, and pypi does not support installation of unreleased packages. This is the reason that simply pip install pylanetary will not work right.
 
-To install the development branch, run::
-
-	conda create -n pylanetary-tester python=3.9
-	source activate pylanetary-tester
-	git clone -b active-dev https://github.com/emolter/pylanetary.git
-	cd pylanetary
-	pip install -r requirements.txt
-	python setup.py install
+Usage
+-----
+See our `readthedocs page <https://pylanetary.readthedocs.io/en/latest/>`_
 
 Scope and Goal
 --------------
-The idea behind pylanetary is to bring solar system science tools into the open-source Python 3 / Astropy ecosystem. We, and many of our colleagues, rely heavily on useful code snippets passed down from other solar system scientists. But these pieces of code are untested, in multiple languages (IDL, Python 2, etc.), closed-source, and have many untracked dependencies. We want to fix that.
+The idea behind pylanetary is to bring solar system science tools into the open-source Python 3 / Astropy ecosystem. We, and many of our colleagues, rely heavily on useful code snippets passed down from other solar system scientists. But these pieces of code are untested, in multiple languages, closed-source, and have many untracked dependencies. We want to fix that.
 
-At present, we are working on two main packages:
+At present, two main packages are reasonably well-supported:
 1. navigation: Tools to make and use ellipsoidal models of planets/large moons. This subpackage projects planet models into arbitrary observing geometries and pixel scales, compares those models with observational data, assigns latitudes, longitudes, and emission angles to observational data, and projects images onto latitude-longitude grids.
 2. rings: Tools to model planetary ring systems.  This subpackage projects ring models into arbitrary observing geometries and pixel scales, compares those models with observational data, and makes radial and azimuthal profiles of observed rings.
 
-The eventual goal is to become Astropy-affiliated, but that is a long way off.
-At present, this repository is just a skeleton. We would love your help developing it!  See Contributing.
+The eventual goal is to become Astropy-affiliated, but that is a long way off. We would love your help developing it!  See Contributing.
 
 License
 -------
-
 This project is Copyright (c) Ned Molter & Chris Moeckel and licensed under
 the terms of the BSD 3-Clause license. This package is based upon
 the `Astropy package template <https://github.com/astropy/package-template>`_
@@ -60,10 +54,9 @@ more information.
 
 Contributing
 ------------
-
-We love contributions! pylanetary is open source,
+We love contributions! Pylanetary is open source,
 built on open source, and we'd love to have you hang out in our community.
-Please read ``CONTRIBUTING.rst`` before you start.
+Please read `the contribution page <https://pylanetary.readthedocs.io/en/latest/contributing.html>`_ before you start.
 
 **Imposter syndrome disclaimer**: We want your help. No, really.
 

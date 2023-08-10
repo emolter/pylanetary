@@ -6,14 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>Description &#8212; pylanetary 0.0.5 documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=039e1c02" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=0a554088"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Citing this Software" href="citing.html" />
+    <link rel="next" title="Contributing to Pylanetary" href="contributing.html" />
     <link rel="prev" title="Installation" href="installation.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
@@ -33,12 +33,14 @@
             
   <section id="description">
 <h1>Description<a class="headerlink" href="#description" title="Permalink to this heading">¶</a></h1>
-<p>The idea behind pylanetary is to bring solar system science tools into the open-source Python 3 / Astropy ecosystem. We, and many of our colleagues, rely heavily on useful code snippets passed down from other solar system scientists. But these pieces of code are untested, in multiple languages (IDL, Python 2, etc.), closed-source, and have many untracked dependencies. We want to fix that.</p>
-<p>At present, we are working on two main packages:
-1. navigation: Tools to make and use ellipsoidal models of planets/large moons. This subpackage projects planet models into arbitrary observing geometries and pixel scales, compares those models with observational data, assigns latitudes, longitudes, and emission angles to observational data, and projects images onto latitude-longitude grids.
-2. rings: Tools to model planetary ring systems.  This subpackage projects ring models into arbitrary observing geometries and pixel scales, compares those models with observational data, and makes radial and azimuthal profiles of observed rings.</p>
+<p>The idea behind pylanetary is to bring solar system science tools into the open-source Python 3 / Astropy ecosystem. We, and many of our colleagues, rely heavily on useful code snippets passed down from other solar system scientists. But these pieces of code are untested, in multiple languages, closed-source, and have many untracked dependencies. We want to fix that.</p>
+<p>At present, two main packages are reasonably well-supported:</p>
+<ol class="arabic simple">
+<li><p>navigation: Tools to make and use ellipsoidal models of planets/large moons. This subpackage projects planet models into arbitrary observing geometries and pixel scales, compares those models with observational data, assigns latitudes, longitudes, and emission angles to observational data, and projects images onto latitude-longitude grids.</p></li>
+<li><p>rings: Tools to model planetary ring systems.  This subpackage projects ring models into arbitrary observing geometries and pixel scales, compares those models with observational data, and makes radial and azimuthal profiles of observed rings.</p></li>
+</ol>
 <p>The eventual goal is to become Astropy-affiliated, but that is a long way off.
-At present, this repository is just a skeleton. We would love your help developing it!</p>
+At present, this repository is just a skeleton. We would love your help developing it! See <a class="reference external" href="https://pylanetary.readthedocs.io/en/latest/contributing.html">Contributing to Pylanetary</a>.</p>
 </section>
 
 
@@ -62,6 +64,7 @@ At present, this repository is just a skeleton. We would love your help developi
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing to Pylanetary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="citing.html">Citing this Software</a></li>
 <li class="toctree-l1"><a class="reference internal" href="navigation_api.html">Navigation API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rings_api.html">Rings API</a></li>
@@ -73,7 +76,7 @@ At present, this repository is just a skeleton. We would love your help developi
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
       <li>Previous: <a href="installation.html" title="previous chapter">Installation</a></li>
-      <li>Next: <a href="citing.html" title="next chapter">Citing this Software</a></li>
+      <li>Next: <a href="contributing.html" title="next chapter">Contributing to Pylanetary</a></li>
   </ul></li>
 </ul>
 </div>
@@ -103,7 +106,7 @@ At present, this repository is just a skeleton. We would love your help developi
       &copy;2023, Edward M. Molter.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.0.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.1.2</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
       |
