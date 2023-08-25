@@ -8,6 +8,7 @@ from scipy import ndimage
 from skimage import feature
 from scipy.interpolate import griddata
 import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from ..utils import *
 
@@ -310,9 +311,9 @@ class ModelEllipsoid:
             shape = (sz, sz)
         
         xcen, ycen = int(shape[0]/2), int(shape[1]/2) #pixels at center of planet
-        xx = np.arange(shape[0]) - xcen
-        yy = np.arange(shape[1]) - ycen
-        x,y = np.meshgrid(xx,yy)
+        yy = np.arange(shape[0]) - xcen
+        xx = np.arange(shape[1]) - ycen
+        x,y = np.meshgrid(xx,yy) 
         self.lat_g, self.lat_c, self.lon_w = lat_lon(x,y,ob_lon,ob_lat,pixscale_km,np_ang,req,rpol)
         self.surf_n = surface_normal(self.lat_g, self.lon_w, self.ob_lon)
         self.mu = emission_angle(self.ob_lat, self.surf_n)
@@ -606,32 +607,31 @@ class Nav(ModelBody):
             edges = feature.canny(self.data, sigma=kwargs['sigma'], low_threshold = kwargs['low_thresh'], high_threshold = kwargs['high_thresh'])
             model = feature.canny(model_planet, sigma=kwargs['sigma'], low_threshold = kwargs['low_thresh'], high_threshold = kwargs['high_thresh'])
             data_to_compare = edges
+        
         [dx,dy,dxerr,dyerr] = chi2_shift(model, data_to_compare, err=kwargs['err'])
         
         if diagnostic_plot:
             
             model_shifted = shift2d(model, dx, dy)
+            aspect_ratio = data_to_compare.shape[0] / data_to_compare.shape[1]
+            if aspect_ratio >= 1:
+                szx = 12
+                szy = szx/aspect_ratio
+            else:
+                szy = 12
+                szx = szy*aspect_ratio
+            fig, ax = plt.subplots(1,1, figsize = (szy, szx))
+            im = ax.imshow(data_to_compare - model_shifted, origin = 'lower', vmax = kwargs['tb']*2)
+            ax.set_title('Data minus model')
+            ax.set_xlabel('Pixel Value')
+            ax.set_ylabel('Pixel Value')
             
-            fig, (ax0, ax1, ax2) = plt.subplots(1, 3, figsize=(10, 5))
-            
-            ax0.imshow(data_to_compare, origin = 'lower')
-            if mode == 'canny':
-                ax0.set_title('data edges')
-            elif mode == 'lddisk' or mode == 'disk':
-                ax0.set_title('data')
-            
-            ax1.imshow(model, origin = 'lower')
-            if mode == 'canny':
-                ax1.set_title(r'Canny filter, $\sigma=$%d'%kwargs['sigma'])
-            elif mode == 'lddisk' or mode == 'disk':
-                ax1.set_title(r'Limb-darkened disk model')
-            
-            #ax2.imshow(model_shifted, origin = 'lower', alpha = 0.5)
-            ax2.imshow(data_to_compare - model_shifted, origin = 'lower', alpha = 0.5)
-            ax2.set_title('Data minus model')
+            divider = make_axes_locatable(ax)
+            cax = divider.append_axes('right', size='5%', pad=0.05)
+            fig.colorbar(im, cax=cax, orientation='vertical', label='flux')
             
             if save_plot is not None:
-                plt.savefig(save_plot)
+                fig.savefig(save_plot, dpi=300)
             plt.show()
             plt.close()
             
