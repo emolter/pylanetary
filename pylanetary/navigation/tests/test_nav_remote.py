@@ -84,6 +84,35 @@ def test_nav_nonsquare(datadir):
     assert dy == 6.5
     
     
+def test_nav_jupiter_minnaert(datadir):
     
+    # hst parameters
+    flux = 1.15e4 # surface brightness in whatever units are in the fits file
+    a = 0.9 # exponential limb-darkening law exponent
+    fwhm = 3 # approximate FWHM of the point-spread function in pixels
+    hdul = fits.open(os.path.join(datadir, 'hlsp_wfcj_hst_wfc3-uvis_jupiter-2017-pj07_f631n_v2_0711ut0947-nav.fits'))
+    data = hdul[1].data
+    obs_time = hdul[0].header['DATE-OBS']+' '+hdul[0].header['TIME-OBS']
+    rotation = float(hdul[0].header['ORIENTAT'])
+    pixscale_arcsec = float(hdul[0].header['PIXSCAL'])
     
+    # instantiate the nav object
+    jup = Body('Jupiter', epoch=obs_time, location='@hst') 
+    jup.ephem['NPole_ang'] = jup.ephem['NPole_ang'] - rotation
+    data[np.isnan(data)] = 0.0
+    nav = navigation.Nav(data, jup, pixscale_arcsec)
+    ldmodel = nav.ldmodel(flux, a, beam=fwhm, law='minnaert')
+    
+    ldmodel_expected = np.load(os.path.join(datadir, 'ldmodel_jupiter_minnaert.npy'))
+    assert np.allclose(ldmodel, ldmodel_expected, rtol=1e-3, equal_nan=True)
+    
+    dx, dy, dxerr, dyerr = nav.colocate(mode='disk', 
+            tb = flux, 
+            a = a, 
+            law = 'minnaert',
+            beam = fwhm, 
+            diagnostic_plot=False,
+            )
+    assert np.isclose(dx, 5.865234375, rtol=1e-1)
+    assert np.isclose(dy, -9.041015625, rtol=1e-1)
     

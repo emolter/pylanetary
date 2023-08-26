@@ -12,6 +12,7 @@ Welcome to pylanetary's documentation!
 
    installation
    description
+   nav-examples
    usage
    contributing
    citing

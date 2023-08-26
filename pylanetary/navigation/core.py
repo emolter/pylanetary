@@ -20,8 +20,7 @@ To implement
     * test on Jupiter (GRS), Io (Loki), and others
 * function to write ModelEllipsoid and Nav.reproject() outputs to fits
 * test support for 2-D Gaussian beams and measured PSFs
-* should surface normal also account for latitude?
-* make better docstrings for everything (Nav is done)
+* make better docstrings for everything
 '''
 
 def lat_lon(x,y,ob_lon,ob_lat,pixscale_km,np_ang,req,rpol):
@@ -132,9 +131,9 @@ def surface_normal(lat_g, lon_w, ob_lon):
 
 def sun_normal(lat_g, lon_w, sun_lon, sun_lat):
     '''
-    Computes the normal vector to the surface of the planet.
-    Taking the dot product of output with sub-obs or sub-sun vector
-    gives the cosine of emission angle
+    Computes the normal vector to the sun.
+    Taking the dot product of output with sub-sun vector
+    gives the cosine of solar incidence angle
     
     Parameters
     ----------
@@ -245,7 +244,7 @@ class ModelEllipsoid:
     Projection of an ellipsoid onto a 2-D array with latitude and longitude grid
     '''
     
-    def __init__(self, ob_lon, ob_lat, pixscale_km, np_ang, req, rpol, center=(0.0, 0.0), shape=None):
+    def __init__(self, ob_lon, ob_lat, pixscale_km, np_ang, req, rpol, center=(0.0, 0.0), shape=None, sun_lon = None, sun_lat = None):
         '''
         Parameters
         ----------
@@ -259,15 +258,19 @@ class ModelEllipsoid:
             of ob_lon, ob_lat, np_ang
         pixscale_km : float, required. 
             [km] pixel scale
-        req: float, required. 
+        req : float, required. 
             [km] equatorial radius
-        rpol: float, required. 
+        rpol : float, required. 
             [km] polar radius
-        center: 2-element array-like, optional. default (0,0). 
+        center : 2-element array-like, optional. default (0,0). 
             pixel location of center of planet
-        shape: 2-element tuple, optional. 
+        shape : 2-element tuple, optional. 
             shape of output arrays.
             if None, shape is just larger than diameter / pixscale
+        sun_lon : float, optional, default None
+            sub-solar longitude. if None, assume same as ob_lon
+        sun_lat : float, optional, default None
+            sub_solar latitude. if None, assume same as ob_lat
         
         Attributes
         ----------
@@ -278,6 +281,10 @@ class ModelEllipsoid:
         ob_lon : float
             see parameters
         ob_lat : float
+            see parameters
+        sun_lon : float
+            see parameters
+        sun_lat : float
             see parameters
         pixscale_km : float
             see parameters
@@ -293,13 +300,16 @@ class ModelEllipsoid:
         surf_n : np.array
             shape (3,x,y) CHECK THIS. Normal vector to the surface 
             of the planet at each pixel. NaN where off planet disk
+        sun_n : np.array
+            shape (3,x,y), solar normal vectors
+        mu0 : np.array
+            shape (x,y), cosine of solar incidence angle at each pixel
         
         Examples
         --------
         see notebooks/planetnav-tutorial.ipynb
         '''
         
-        # TO DO: handle Astropy units here
         self.req, self.rpol = req, rpol
         self.pixscale_km = pixscale_km
         self.ob_lon = ob_lon
@@ -309,6 +319,14 @@ class ModelEllipsoid:
         if shape is None:
             sz = int(2*np.ceil(np.max([req, rpol]) / pixscale_km) + 1)
             shape = (sz, sz)
+        if sun_lon is None:
+            self.sun_lon = ob_lon
+        else:
+            self.sun_lon = sun_lon
+        if sun_lat is None:
+            self.sun_lat = ob_lat
+        else:
+            self.sun_lat = sun_lat
         
         xcen, ycen = int(shape[0]/2), int(shape[1]/2) #pixels at center of planet
         yy = np.arange(shape[0]) - xcen
@@ -317,6 +335,13 @@ class ModelEllipsoid:
         self.lat_g, self.lat_c, self.lon_w = lat_lon(x,y,ob_lon,ob_lat,pixscale_km,np_ang,req,rpol)
         self.surf_n = surface_normal(self.lat_g, self.lon_w, self.ob_lon)
         self.mu = emission_angle(self.ob_lat, self.surf_n)
+        
+        # sun geometry
+        self.sun_n = sun_normal(self.lat_g, self.lon_w, self.sun_lon, self.sun_lat)
+        self.mu0 = emission_angle(self.ob_lat, self.sun_n)
+        
+        avg_circumference = 2*np.pi*((self.req + self.rpol)/2.0)
+        self.deg_per_px = self.pixscale_km * (1/avg_circumference) * 360
         
         # TO DO: test lon_e vs lon_w for different planets!
         # different systems are default for different planets!
@@ -330,7 +355,7 @@ class ModelEllipsoid:
         return f'ModelEllipsoid instance; req={self.req}, rpol={self.rpol}'
         
         
-    def ldmodel(self, tb, a, law='exp', beam=None):
+    def ldmodel(self, tb, a, beam=None, law='exp', mu0=None):
         '''
         Make a limb-darkened model disk convolved with the beam
         See docstring of limb_darkening() for options
@@ -341,14 +366,23 @@ class ModelEllipsoid:
             [flux] brightness temperature of disk at mu=1
         a : float or tuple, required. 
             [-] limb darkening parameter(s) 
-        law : str, optional. default "exp"
-            limb darkening law to use
         beam : float or tuple or np.array
-            see docstring of utils.convolve_with_beam
+            units pixels. see docstring of utils.convolve_with_beam
+        law : str, optional, default "exp"
+            limb darkening law
+        mu0 : np.array, optional, default None
+            cosine of solar incidence angle.
+            if None, code will check if self.mu0 is defined, and use that
+            has no effect unless law=="minnaert".
+            if self.mu0 undefined, law=="minnaert", and mu0=None, then
+            code will fail
         '''
-        ## TO DO: make this allow a 2-D Gaussian beam!
+        if mu0 is None:
+            mu0=getattr(self, "mu0", None)
         
-        ldmodel = limb_darkening(np.copy(self.mu), a, law=law)
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', RuntimeWarning)
+            ldmodel = limb_darkening(np.copy(self.mu), a, law=law, mu0=mu0)
         ldmodel[np.isnan(ldmodel)] = 0.0
         ldmodel = tb*ldmodel
         if beam is None:
@@ -369,8 +403,11 @@ class ModelEllipsoid:
         
         return ldm * zm    
 
+
     def write(self, outstem):
         '''
+        Writes navigated data to multi-extension fits
+        
         Parameters
         ----------
         outstem : str, required.
@@ -378,6 +415,11 @@ class ModelEllipsoid:
         
         Writes
         ------
+        
+        References
+        ----------
+        NAV multi-extension fits file format originally pioneered by Mike Wong
+        e.g. https://doi.org/10.3847/1538-4365/ab775f
         
         To do
         -----
@@ -416,28 +458,31 @@ class ModelBody(ModelEllipsoid):
         '''
         Parameters
         ----------
-        body : utils.Body object, required
+        body : pylanetary.utils.Body object, required
         pixscale : float or Quantity, required. 
-            [arcsec] pixel scale of the input image
+            [arcsec/px] pixel scale of the input image
         shape : tuple, optional. 
             shape of output arrays.
             if None, shape is just larger than diameter / pixscale
         
         Attributes
         ----------
+        body : pylanetary.utils.Body object
+            see parameters
         name : str
-            [-] Name of input body as read from input Body object
+            Name of input body as read from input Body object
         ephem : Astropy QTable. 
             single line of astroquery.horizons ephemeris 
             as read from utils.Body object.
             must have 'PDObsLon', 'PDObsLat', 'delta', and 'NPole_ang' fields.
             If you want to modify the ephemeris, modify body.ephem
         pixscale_arcsec : float
-            [arcsec] pixel scale of image
-        ephem : QTable
-            see parameters
-        deg_per_px : float
-            [deg] approximate size of one pixel at the sub-observer point
+            [arcsec/px] pixel scale of image; see parameters
+        pixscale_km : float
+            [km/px] pixel scale of image computed from input pixel scale in arcsec
+            and distance from object to body according to body.ephem
+        parent_attrs : 
+            all attributes of ModelEllipsoid
         '''
         
         self.body = body
@@ -452,10 +497,9 @@ class ModelBody(ModelEllipsoid):
                     self.ephem['PDObsLat'],
                     self.pixscale_km,
                     self.ephem['NPole_ang'],
-                    self.req,self.rpol, shape=shape)
-        
-        avg_circumference = 2*np.pi*((self.req + self.rpol)/2.0)
-        self.deg_per_px = self.pixscale_km * (1/avg_circumference) * 360
+                    self.req,self.rpol, shape=shape,
+                    sun_lon = self.ephem['PDSunLon'], 
+                    sun_lat = self.ephem['PDSunLat'])
         
         
     def __str__(self):
@@ -464,7 +508,7 @@ class ModelBody(ModelEllipsoid):
 
 class Nav(ModelBody):
     '''
-    functions for comparing a model ellipsoid with data for navigation and analysis
+    functions for comparing a model ellipsoid with observed 2-d imaging data
     '''    
     
     def __init__(self, data, body, pixscale):
@@ -483,27 +527,8 @@ class Nav(ModelBody):
         ----------
         data : np.array
             see parameters
-        req : float
-            see parameters
-        rpol : float
-            see parameters
-        pixscale_arcsec : float
-            [arcsec] pixel scale of image
-        pixscale_km : float
-            [km] pixel scale of image
-        ephem : QTable
-            see parameters
-        deg_per_px : float
-            [deg] approximate size of one pixel at the sub-observer point
-        lat_g : np.array
-            [deg] planetographic latitudes. NaN where off planet disk
-        lon_w : np.array
-            [deg] west longitudes. NaN where off planet disk
-        mu : np.array
-            [-] cosines of the emission angle. NaN where off planet disk
-        surf_n : np.array,  
-            [-] Normal vector to the surface of the planet, shape (3,x,y).
-            NaN where off planet disk
+        parent_attrs : 
+            all attributes of ModelBody and ModelEllipsoid classes
         
         Examples
         --------
@@ -539,11 +564,16 @@ class Nav(ModelBody):
                         [same flux unit as data] brightness temperature of disk at mu=1 
                     :a: float, required.
                         [-] exponential limb darkening param
+                    :law: str, optional. default 'exp'
+                        type of limb darkening model to use
                     :beam: float, tuple, or np.array, optional. default None.
+                        units pixels. see utils.convolve_with_beam
                     :low_thresh: float, required.
+                        see documentation of skimage.feature.canny
                     :high_thresh: float, required.
+                        see documentation of skimage.feature.canny
                     :sigma: int, required.
-                see documentation of skimage.feature.canny for explanation of kwargs
+                        see documentation of skimage.feature.canny
                 To find edges of planet disk, typical "good" values are:
                     low_thresh : RMS noise in image
                     high_thresh : approximate flux value of background disk (i.e., cloud-free, volcano-free region)
@@ -558,8 +588,9 @@ class Nav(ModelBody):
                     :law: str, optional. default 'exp'
                         type of limb darkening model to use
                     :beam: float, tuple, or np.array, optional. default None.
-                        see ldmodel docstring
-                    :err: float, per-pixel error in input image
+                        units pixels. see utils.convolve_with_beam
+                    :err: float
+                        per-pixel error in input image
         
             * 'disk': same as convolution
 
@@ -621,7 +652,11 @@ class Nav(ModelBody):
                 szy = 12
                 szx = szy*aspect_ratio
             fig, ax = plt.subplots(1,1, figsize = (szy, szx))
-            im = ax.imshow(data_to_compare - model_shifted, origin = 'lower', vmax = kwargs['tb']*2)
+            if (mode == 'convolution') or (mode == 'disk'):
+                vmax = kwargs['tb']*1.3
+            else:
+                vmax = 1
+            im = ax.imshow(data_to_compare - model_shifted, origin = 'lower', vmax = vmax)
             ax.set_title('Data minus model')
             ax.set_xlabel('Pixel Value')
             ax.set_ylabel('Pixel Value')
@@ -655,7 +690,7 @@ class Nav(ModelBody):
 
     def xy_shift_model(self, dx, dy):
         '''
-        FFTshift model (i.e., lat_g, lon_w, and mu) 
+        FFTshift model (i.e., lat_g, lon_w, mu, and mu0) 
         by a user-defined amount.
         for example, to apply the suggested shift from colocate()
         
@@ -671,14 +706,14 @@ class Nav(ModelBody):
         good_shifted = shift2d(good,dx,dy)
         bad_shifted = good_shifted < 0.1
         outputs = []
-        for arr in [self.mu, self.lon_w, self.lat_g]:
+        for arr in [self.mu, self.lon_w, self.lat_g, self.mu0]:
             
             arr[~good] = 0.0
             arr_shifted = shift2d(arr,dx,dy)
             arr_shifted[bad_shifted] = np.nan
             outputs.append(arr_shifted)
             
-        self.mu, self.lon_w, self.lat_g = outputs 
+        self.mu, self.lon_w, self.lat_g, self.mu0 = outputs 
         
     
     def reproject(self, pixscale_arcsec = None, interp = 'cubic'):
