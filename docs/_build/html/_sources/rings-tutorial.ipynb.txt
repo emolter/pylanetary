@@ -5,9 +5,9 @@
    "id": "db3981c7",
    "metadata": {},
    "source": [
-    "# Overview\n",
+    "# Rings Tutorial\n",
     "\n",
-    "This tutorial showcases the utilities contained in the rings subpackage of pylanetary. Learn how to use the Ring, RingSystemModelObservation "
+    "This tutorial showcases the utilities contained in the rings subpackage of pylanetary. Learn how to use the Ring and RingSystemModelObservation classes."
    ]
   },
   {
@@ -35,7 +35,7 @@
    "id": "e9c0cffa",
    "metadata": {},
    "source": [
-    "# Making a single/basic model ring"
+    "## Basic model ring"
    ]
   },
   {
@@ -99,9 +99,9 @@
    "id": "472196ad",
    "metadata": {},
    "source": [
-    "## giving rings width and brightness\n",
+    "### Finite width and brightness\n",
     "\n",
-    "of course, real rings are not infinitesimal mathematical constructs. they have width, and in an astronomical context, they also have surface brightness. Note here that we can also modify the ring properties in place, but we must specify Astropy units when doing so."
+    "Real rings are not infinitesimal mathematical constructs. they have width, and in an astronomical context, they also have surface brightness. Note here that we can also modify the ring properties in place, but we must specify Astropy units when doing so."
    ]
   },
   {
@@ -142,7 +142,7 @@
    "id": "92e5df51",
    "metadata": {},
    "source": [
-    "## using ring objects as masks\n",
+    "### Ring objects as masks\n",
     "\n",
     "suppose we wanted to extract the flux from a real image in an annulus defined by the ring above. this is easily done, because under the hood, these rings are photutils.EllipticalAnnulus objects. We can simply say,"
    ]
@@ -179,7 +179,7 @@
    "id": "78d7bb97",
    "metadata": {},
    "source": [
-    "## convolving with a beam\n",
+    "### convolve model ring with beam\n",
     "\n",
     "we can also define an elliptical beam to convolve with as we cast into a 2-D array"
    ]
@@ -220,9 +220,9 @@
    "id": "8df12ae2",
    "metadata": {},
    "source": [
-    "# Model ring system observation\n",
+    "## Model ring system observation\n",
     "\n",
-    "the RingSystemModelObservation tool makes mock observations of rings. It contains a static data table of ring properties for Jupiter, Saturn, Uranus, and Neptune. It interfaces with the Planetary Ring Node query tool and the JPL Horizons query tool to make the proper projected geometry for a given time of observation. The end result is basically a fully-editable Python version of the Planetary Ring Node.  Here is an example of a simple query:"
+    "The RingSystemModelObservation tool makes mock observations of rings. It contains a static data table of ring properties for Jupiter, Saturn, Uranus, and Neptune. It interfaces with the Planetary Ring Node query tool and the JPL Horizons query tool to make the proper projected geometry for a given time of observation. The end result is basically a fully-editable Python version of the Planetary Ring Node.  Here is an example of a simple query:"
    ]
   },
   {
@@ -325,7 +325,7 @@
    "id": "442cecf6",
    "metadata": {},
    "source": [
-    "## modifying the defaults\n",
+    "### modifying ring system defaults\n",
     "\n",
     "sometimes we want something other than the default values for radius, eccentricity, etc., or to play with different ephemerides. In this case, we can simply modify the Ring objects directly before plotting.  Let's make the epsilon ring larger, and the alpha ring more eccentric"
    ]
@@ -366,7 +366,7 @@
    "id": "9ade7312",
    "metadata": {},
    "source": [
-    "## support for minor rings\n",
+    "### minor rings\n",
     "\n",
     "The static data tables loaded from the PDS support minor rings and dusty rings, too."
    ]
@@ -419,7 +419,7 @@
    "id": "19783aa9",
    "metadata": {},
    "source": [
-    "## modifying widths and fluxes\n",
+    "### modifying widths and fluxes\n",
     "\n",
     "This image shows some weaknesses of the default behavior: for minor rings, the relative brightnesses and/or widths are very often incorrect due to a lack of good data. We can get around this either by modifying each Ring object after instantiating them, or by inputting a list of fluxes and/or widths as we instantiate the model. See the documentation of Ring, Ring.as_2d_array, and Ring.as_elliptical_annulus"
    ]
@@ -429,11 +429,9 @@
    "id": "138d13b6",
    "metadata": {},
    "source": [
-    "# Analysis with real data\n",
+    "## Example Analysis with Observational Data\n",
     "\n",
-    "Here, these tools are applied to real Keck K-band data. We extract the radial profiles of the ring system and the azimuthal profile of the epsilon ring.\n",
-    "\n",
-    "## Import Keck data, then make a model at the same datetime"
+    "Here, these tools are applied to real Keck K-band data. We extract the radial profiles of the ring system and the azimuthal profile of the epsilon ring."
    ]
   },
   {
@@ -452,7 +450,7 @@
     }
    ],
    "source": [
-    "hdul = fits.open('data/urk140.fits') #urh60.fits\n",
+    "hdul = fits.open('/Users/emolter/Python/pylanetary/notebooks/data/urk140.fits') #urh60.fits\n",
     "pixscale_arcsec = 0.009942 #arcsec, keck\n",
     "keck_coords = (360*u.deg - 155.4744 * u.deg, 19.8264 * u.deg, 4145 * u.m) #lon (East), lat, alt(m)\n",
     "\n",
@@ -524,7 +522,7 @@
    "id": "fd966abb",
    "metadata": {},
    "source": [
-    "## Extract total ring flux"
+    "### Extract total ring flux"
    ]
   },
   {
@@ -601,7 +599,7 @@
    "id": "8934fde9",
    "metadata": {},
    "source": [
-    "## Radial profile of the ring system"
+    "### Radial profile"
    ]
   },
   {
@@ -614,7 +612,7 @@
      "name": "stderr",
      "output_type": "stream",
      "text": [
-      "/var/folders/g0/r491pzqx4kx0tfmpx8970ntm0000gn/T/ipykernel_56602/668933652.py:33: UserWarning: FixedFormatter should only be used together with FixedLocator\n",
+      "/var/folders/g0/r491pzqx4kx0tfmpx8970ntm0000gn/T/ipykernel_49546/668933652.py:33: UserWarning: FixedFormatter should only be used together with FixedLocator\n",
       "  ax.set_xticklabels(ax.get_xticks()/1000)\n"
      ]
     },
@@ -678,7 +676,7 @@
    "id": "585ecb56",
    "metadata": {},
    "source": [
-    "## Azimuthal profile of epsilon ring"
+    "## Azimuthal profile"
    ]
   },
   {
@@ -815,7 +813,7 @@
    "source": [
     "### A note on foreshortening\n",
     "\n",
-    "After [de Pater et al. 2006](doi:10.1016/j.icarus.2005.08.011) and others, a geometric correction needs to be applied to a tilted ring to account for the [foreshortening effect](https://i.ytimg.com/vi/25wSIcjY1Bw/maxresdefault.jpg).  However, this correction is not necessary here, because the wedges we use for extraction are themselves foreshortened, and the code calculates their \"true\" areas accordingly. \n",
+    "After [de Pater et al. 2006](https://doi.org/10.1016/j.icarus.2005.08.011) and others, a geometric correction needs to be applied to a tilted ring to account for the [foreshortening effect](https://i.ytimg.com/vi/25wSIcjY1Bw/maxresdefault.jpg).  However, this correction is not necessary here, because the wedges we use for extraction are themselves foreshortened, and the code calculates their \"true\" areas accordingly. \n",
     "\n",
     "The perfect data experiment below shows evidence that this is really true."
    ]
@@ -829,7 +827,7 @@
    "source": [
     "def foreshortening(theta, i):\n",
     "    '''\n",
-    "    from de Pater et al 2006, doi:10.1016/j.icarus.2005.08.011\n",
+    "    from de Pater et al 2006, https://doi.org/10.1016/j.icarus.2005.08.011\n",
     "    \n",
     "    i: degrees\n",
     "    theta: radians\n",
@@ -979,7 +977,7 @@
    "id": "a8ac1ce7",
    "metadata": {},
    "source": [
-    "# Making a movie of the epsilon ring precession"
+    "## Movie of epsilon ring precession"
    ]
   },
   {
@@ -1095,20 +1093,12 @@
    "id": "ffa82937",
    "metadata": {},
    "source": [
-    "# Loose ends / to-do list\n",
+    "## Loose ends / to-do list\n",
     "\n",
     "- need support for apoapsis wider than periapsis\n",
     "- optically thin vs optically thick rings will act differently when foreshortened, especially if the ring is broad. This is not currently accounted for and sort of requires radiative transfer to do properly.\n",
     "- Ease-of-use of flux density units should be tested; still need to make final decision there"
    ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "id": "004fe54f",
-   "metadata": {},
-   "outputs": [],
-   "source": []
   }
  ],
  "metadata": {

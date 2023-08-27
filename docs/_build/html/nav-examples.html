@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Example navigation workflows &#8212; pylanetary 0.0.5 documentation</title>
+    <title>Example navigation workflow &#8212; pylanetary 0.0.5 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=039e1c02" />
     <link rel="stylesheet" type="text/css" href="_static/nbsphinx-code-cells.css" />
@@ -17,8 +17,8 @@
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Overview" href="rings-tutorial.html" />
-    <link rel="prev" title="Overview" href="nav-tutorial.html" />
+    <link rel="next" title="Rings Tutorial" href="rings-tutorial.html" />
+    <link rel="prev" title="Navigation tutorial" href="nav-tutorial.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -35,12 +35,12 @@
 
           <div class="body" role="main">
             
-  <section id="Example-navigation-workflows">
-<h1>Example navigation workflows<a class="headerlink" href="#Example-navigation-workflows" title="Link to this heading">¶</a></h1>
+  <section id="Example-navigation-workflow">
+<h1>Example navigation workflow<a class="headerlink" href="#Example-navigation-workflow" title="Link to this heading">¶</a></h1>
 <section id="lat-lon-grid-for-Jupiter-HST-data">
 <h2>lat-lon grid for Jupiter HST data<a class="headerlink" href="#lat-lon-grid-for-Jupiter-HST-data" title="Link to this heading">¶</a></h2>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># package imports</span>
@@ -55,7 +55,7 @@
 <section id="import-the-data-and-scrape-header">
 <h3>import the data and scrape header<a class="headerlink" href="#import-the-data-and-scrape-header" title="Link to this heading">¶</a></h3>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># hst parameters</span>
@@ -71,7 +71,7 @@
 <section id="instantiate-a-Nav-object">
 <h3>instantiate a Nav object<a class="headerlink" href="#instantiate-a-Nav-object" title="Link to this heading">¶</a></h3>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># instantiate the nav object</span>
@@ -89,8 +89,8 @@
 <section id="attempt-co-locate">
 <h3>attempt co-locate<a class="headerlink" href="#attempt-co-locate" title="Link to this heading">¶</a></h3>
 <p>Here we are using a limb-darkened disk model with an exponential darkening law. I just chose a=0.7 ad-hoc here, since I didn’t know what a good value was</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">flux</span> <span class="o">=</span> <span class="mf">1.15e4</span> <span class="c1"># surface brightness in whatever units are in the fits file</span>
@@ -106,12 +106,19 @@
 </pre></div>
 </div>
 </div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/nav-examples_7_0.png" src="_images/nav-examples_7_0.png" />
+</div>
+</div>
 </section>
 <section id="assess-fit-quality">
 <h3>assess fit quality<a class="headerlink" href="#assess-fit-quality" title="Link to this heading">¶</a></h3>
 <p>This fit doesn’t look very good. As the diagnostic plot shows, there is a bright (positive) edge to the lower left and a dark (negative) edge to the upper right, indicating that the model center is up and to the right of the true center. Let’s look at the data and limb-darkened model side by side to see how they both look.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ldmodel</span> <span class="o">=</span> <span class="n">nav</span><span class="o">.</span><span class="n">ldmodel</span><span class="p">(</span><span class="n">flux</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">beam</span><span class="o">=</span><span class="n">fwhm</span><span class="p">,</span> <span class="n">law</span><span class="o">=</span><span class="s1">&#39;exp&#39;</span><span class="p">)</span>
@@ -134,7 +141,7 @@
 <h3>re-try with better model<a class="headerlink" href="#re-try-with-better-model" title="Link to this heading">¶</a></h3>
 <p>We can see that in the real data, the sub-solar point is somewhere toward the upper right of the center of the planet, whereas in our model the brightest point on the disk is at center. Let’s try using a Minnaert law instead.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># plot the side-by-side comparison again</span>
@@ -177,7 +184,7 @@ solution</p>
 <h3>applying the shift<a class="headerlink" href="#applying-the-shift" title="Link to this heading">¶</a></h3>
 <p>Once we are happy with the values of dx and dy, we can move the model over by that amount. This will change the nav.lat_g, nav.lon_w, nav.mu, and nav.mu0 arrays to have the new center. If we want to do even better than this, we can either continue to improve the model, or manually fudge the numbers at this stage so the difference plot is visually bang-on.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">nav</span><span class="o">.</span><span class="n">xy_shift_model</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">)</span>
@@ -189,7 +196,7 @@ solution</p>
 <h3>plotting and writing<a class="headerlink" href="#plotting-and-writing" title="Link to this heading">¶</a></h3>
 <p>Let’s make some nice plots of this solution, and save the solution in the same format as the HST OPAL program uses</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">isplanet</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">nav</span><span class="o">.</span><span class="n">lat_g</span><span class="p">)</span>
@@ -206,25 +213,16 @@ solution</p>
 </pre></div>
 </div>
 </div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-/var/folders/g0/r491pzqx4kx0tfmpx8970ntm0000gn/T/ipykernel_37181/1596924864.py:9: UserWarning: The following kwargs were not used by contour: &#39;linewidth&#39;
-  ax0.contour(isplanet, levels=[0.5], colors=&#39;white&#39;, linewidth = 3)
-</pre></div></div>
-</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="_images/nav-examples_15_1.png" src="_images/nav-examples_15_1.png" />
+<img alt="_images/nav-examples_15_0.png" src="_images/nav-examples_15_0.png" />
 </div>
 </div>
 <p>Now let’s write:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">nav</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;/Users/emolter/Desktop/delete-me.fits&#39;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="n">hdul</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span><span class="p">)</span>
@@ -236,7 +234,9 @@ solution</p>
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-/Users/emolter/anaconda/envs/py39/lib/python3.9/site-packages/pylanetary/navigation/core.py:709: RuntimeWarning: invalid value encountered in arccos
+/Users/emolter/anaconda/envs/py39/lib/python3.9/site-packages/pylanetary/navigation/core.py:717: RuntimeWarning: invalid value encountered in arccos
+  np.rad2deg(np.arccos(self.mu)),
+/Users/emolter/anaconda/envs/py39/lib/python3.9/site-packages/pylanetary/navigation/core.py:718: RuntimeWarning: invalid value encountered in arccos
   np.rad2deg(np.arccos(self.mu0)),]
 </pre></div></div>
 </div>
@@ -273,23 +273,13 @@ solution</p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="description.html">Description</a></li>
-<li class="toctree-l1"><a class="reference internal" href="nav-tutorial.html">Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="nav-tutorial.html#make-a-projected-model-planet-disk">make a projected model planet disk</a></li>
-<li class="toctree-l1"><a class="reference internal" href="nav-tutorial.html#model-corresponding-to-real-data">model corresponding to real data</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Example navigation workflows</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="nav-tutorial.html">Navigation tutorial</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Example navigation workflow</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#lat-lon-grid-for-Jupiter-HST-data">lat-lon grid for Jupiter HST data</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="rings-tutorial.html">Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rings-tutorial.html#Making-a-single/basic-model-ring">Making a single/basic model ring</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rings-tutorial.html#Model-ring-system-observation">Model ring system observation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rings-tutorial.html#Analysis-with-real-data">Analysis with real data</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rings-tutorial.html#Making-a-movie-of-the-epsilon-ring-precession">Making a movie of the epsilon ring precession</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rings-tutorial.html#Loose-ends-/-to-do-list">Loose ends / to-do list</a></li>
-<li class="toctree-l1"><a class="reference internal" href="utils-tutorial.html">unit conversions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="utils-tutorial.html#I/F-calculation">I/F calculation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="utils-tutorial.html#The-Body-utility-for-planet/moon-attributes">The Body utility for planet/moon attributes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rings-tutorial.html">Rings Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils-tutorial.html">Utils Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing to Pylanetary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="citing.html">Citing this Software</a></li>
 <li class="toctree-l1"><a class="reference internal" href="navigation_api.html">Navigation API</a></li>
@@ -301,8 +291,8 @@ solution</p>
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="nav-tutorial.html" title="previous chapter">Overview</a></li>
-      <li>Next: <a href="rings-tutorial.html" title="next chapter">Overview</a></li>
+      <li>Previous: <a href="nav-tutorial.html" title="previous chapter">Navigation tutorial</a></li>
+      <li>Next: <a href="rings-tutorial.html" title="next chapter">Rings Tutorial</a></li>
   </ul></li>
 </ul>
 </div>

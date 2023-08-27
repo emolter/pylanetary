@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Overview &#8212; pylanetary 0.0.5 documentation</title>
+    <title>Navigation tutorial &#8212; pylanetary 0.0.5 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=039e1c02" />
     <link rel="stylesheet" type="text/css" href="_static/nbsphinx-code-cells.css" />
@@ -17,7 +17,7 @@
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Example navigation workflows" href="nav-examples.html" />
+    <link rel="next" title="Example navigation workflow" href="nav-examples.html" />
     <link rel="prev" title="Description" href="description.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
@@ -35,42 +35,52 @@
 
           <div class="body" role="main">
             
-  <div class="nbinput nblast docutils container">
+  <section id="Navigation-tutorial">
+<h1>Navigation tutorial<a class="headerlink" href="#Navigation-tutorial" title="Link to this heading">¶</a></h1>
+<p>This tutorial showcases the utilities contained in the navigation subpackage of pylanetary. Learn how to use the ModelEllipsoid and Nav classes, how to find a navigation solution for observational data, how to re-project that solution to a rectilinear grid, and how to save a navigation solution to a multi-extension fits file.</p>
+<div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pylanetary.navigation</span> <span class="kn">import</span> <span class="o">*</span>
-<span class="kn">from</span> <span class="nn">pylanetary.utils</span> <span class="kn">import</span> <span class="n">Body</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># imports</span>
+<span class="kn">from</span> <span class="nn">pylanetary.navigation</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">pylanetary.utils</span> <span class="kn">import</span> <span class="n">Body</span><span class="p">,</span> <span class="n">convolve_with_beam</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">mpl_toolkits.axes_grid1</span> <span class="kn">import</span> <span class="n">make_axes_locatable</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">astropy.units</span> <span class="k">as</span> <span class="nn">u</span>
+<span class="kn">from</span> <span class="nn">astropy.io</span> <span class="kn">import</span> <span class="n">fits</span>
 </pre></div>
 </div>
 </div>
-<section id="Overview">
-<h1>Overview<a class="headerlink" href="#Overview" title="Link to this heading">¶</a></h1>
-<p>This tutorial showcases the utilities contained in the navigation subpackage of pylanetary. Learn how to use the ModelEllipsoid and Nav classes</p>
-</section>
-<section id="make-a-projected-model-planet-disk">
-<h1>make a projected model planet disk<a class="headerlink" href="#make-a-projected-model-planet-disk" title="Link to this heading">¶</a></h1>
-<p>Compute latitude, longitude, emission angle values for an ellipsoidal planetary body on a given pixel scale with given north polar angle and sub-observer latitude and longitude</p>
+<section id="Basic-planet-disk-model">
+<h2>Basic planet disk model<a class="headerlink" href="#Basic-planet-disk-model" title="Link to this heading">¶</a></h2>
+<p>Compute latitude, longitude, emission angle values for an ellipsoidal planetary body on a given pixel scale and a given observation geometry using the ModelEllipsoid class.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ob_lon</span> <span class="o">=</span> <span class="mf">37.1</span> <span class="c1">#degrees</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">## user-defined inputs</span>
+<span class="n">ob_lon</span> <span class="o">=</span> <span class="mf">37.1</span> <span class="c1">#degrees</span>
 <span class="n">ob_lat</span> <span class="o">=</span> <span class="o">-</span><span class="mi">65</span> <span class="c1">#degrees</span>
 <span class="n">pixscale_km</span> <span class="o">=</span> <span class="mi">600</span>
 <span class="n">np_ang</span> <span class="o">=</span> <span class="mi">285</span> <span class="c1">#degrees</span>
 <span class="n">req</span> <span class="o">=</span> <span class="mi">25560</span> <span class="c1">#km</span>
 <span class="n">rpol</span> <span class="o">=</span> <span class="mi">24970</span> <span class="c1">#km</span>
+<span class="n">sun_lon</span> <span class="o">=</span> <span class="mf">60.</span>
+<span class="n">sun_lat</span> <span class="o">=</span> <span class="mf">10.</span>
 
-<span class="n">ellipsoid</span> <span class="o">=</span> <span class="n">ModelEllipsoid</span><span class="p">(</span><span class="n">ob_lon</span><span class="p">,</span> <span class="n">ob_lat</span><span class="p">,</span> <span class="n">pixscale_km</span><span class="p">,</span> <span class="n">np_ang</span><span class="p">,</span> <span class="n">req</span><span class="p">,</span> <span class="n">rpol</span><span class="p">)</span>
+<span class="c1"># instantiate a ModelEllipsoid</span>
+<span class="n">ellipsoid</span> <span class="o">=</span> <span class="n">ModelEllipsoid</span><span class="p">(</span><span class="n">ob_lon</span><span class="p">,</span> <span class="n">ob_lat</span><span class="p">,</span> <span class="n">pixscale_km</span><span class="p">,</span> <span class="n">np_ang</span><span class="p">,</span> <span class="n">req</span><span class="p">,</span> <span class="n">rpol</span><span class="p">,</span> <span class="n">sun_lon</span><span class="o">=</span><span class="n">sun_lon</span><span class="p">,</span> <span class="n">sun_lat</span><span class="o">=</span><span class="n">sun_lat</span><span class="p">)</span>
+
+<span class="c1"># its attributes can be called as such</span>
 <span class="n">shape</span> <span class="o">=</span> <span class="n">ellipsoid</span><span class="o">.</span><span class="n">lon_w</span><span class="o">.</span><span class="n">shape</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+<span class="n">deg_per_px</span> <span class="o">=</span> <span class="n">ellipsoid</span><span class="o">.</span><span class="n">deg_per_px</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;One pixel corresponds to approximately </span><span class="si">{</span><span class="n">deg_per_px</span><span class="si">:</span><span class="s1">.1f</span><span class="si">}</span><span class="s1"> degrees lat/lon at the sub-observer point&#39;</span><span class="p">)</span>
 
+<span class="c1"># plot it</span>
 <span class="n">extent</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">pixscale_km</span><span class="o">*</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">pixscale_km</span><span class="o">*</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="n">pixscale_km</span><span class="o">*</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">pixscale_km</span><span class="o">*</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
-<span class="n">fig</span><span class="p">,</span> <span class="p">(</span><span class="n">ax0</span><span class="p">,</span> <span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">15</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+<span class="n">fig</span><span class="p">,</span> <span class="p">((</span><span class="n">ax0</span><span class="p">,</span> <span class="n">ax1</span><span class="p">),(</span><span class="n">ax2</span><span class="p">,</span> <span class="n">ax3</span><span class="p">))</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
 
 <span class="n">im0</span> <span class="o">=</span> <span class="n">ax0</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">ellipsoid</span><span class="o">.</span><span class="n">lon_w</span><span class="p">,</span> <span class="n">origin</span> <span class="o">=</span> <span class="s1">&#39;lower&#39;</span><span class="p">,</span> <span class="n">extent</span><span class="o">=</span><span class="n">extent</span><span class="p">)</span>
 <span class="n">ax0</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;West Longitudes&#39;</span><span class="p">)</span>
@@ -78,14 +88,19 @@
 <span class="n">ax1</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Planetographic Latitudes&#39;</span><span class="p">)</span>
 <span class="n">im2</span> <span class="o">=</span> <span class="n">ax2</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">ellipsoid</span><span class="o">.</span><span class="n">mu</span><span class="p">,</span> <span class="n">origin</span> <span class="o">=</span> <span class="s1">&#39;lower&#39;</span><span class="p">,</span> <span class="n">extent</span><span class="o">=</span><span class="n">extent</span><span class="p">)</span>
 <span class="n">ax2</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Emission Angles&#39;</span><span class="p">)</span>
+<span class="n">im3</span> <span class="o">=</span> <span class="n">ax3</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">ellipsoid</span><span class="o">.</span><span class="n">mu0</span><span class="p">,</span> <span class="n">origin</span> <span class="o">=</span> <span class="s1">&#39;lower&#39;</span><span class="p">,</span> <span class="n">extent</span><span class="o">=</span><span class="n">extent</span><span class="p">)</span>
+<span class="n">ax3</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Solar Incidence Angles&#39;</span><span class="p">)</span>
 
-<span class="n">ax0</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Distance (km)&#39;</span><span class="p">)</span>
-<span class="n">ax1</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">([])</span>
-<span class="n">ax2</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">([])</span>
-
-<span class="k">for</span> <span class="n">ax</span> <span class="ow">in</span> <span class="p">[</span><span class="n">ax0</span><span class="p">,</span> <span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span><span class="p">]:</span>
+<span class="n">ims</span> <span class="o">=</span> <span class="p">[</span><span class="n">im0</span><span class="p">,</span> <span class="n">im1</span><span class="p">,</span> <span class="n">im2</span><span class="p">,</span> <span class="n">im3</span><span class="p">]</span>
+<span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Longitude [deg]&#39;</span><span class="p">,</span> <span class="s1">&#39;Latitude [deg]&#39;</span><span class="p">,</span> <span class="s1">&#39;cos(mu[deg])&#39;</span><span class="p">,</span> <span class="s1">&#39;cos(mu0[deg])&#39;</span><span class="p">]</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ax</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">([</span><span class="n">ax0</span><span class="p">,</span> <span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span><span class="p">,</span> <span class="n">ax3</span><span class="p">]):</span>
     <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Distance (km)&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Distance (km)&#39;</span><span class="p">)</span>
+    <span class="n">divider</span> <span class="o">=</span> <span class="n">make_axes_locatable</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+    <span class="n">cax</span> <span class="o">=</span> <span class="n">divider</span><span class="o">.</span><span class="n">append_axes</span><span class="p">(</span><span class="s1">&#39;right&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="s1">&#39;5%&#39;</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">ims</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">cax</span><span class="o">=</span><span class="n">cax</span><span class="p">,</span> <span class="n">orientation</span><span class="o">=</span><span class="s1">&#39;vertical&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">labels</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
 
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </pre></div>
@@ -96,7 +111,7 @@
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-(87, 87)
+One pixel corresponds to approximately 1.4 degrees lat/lon at the sub-observer point
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -106,15 +121,14 @@
 <img alt="_images/nav-tutorial_3_1.png" src="_images/nav-tutorial_3_1.png" />
 </div>
 </div>
-<section id="Make-a-beam-convolved-limb-darkened-disk-model">
-<h2>Make a beam-convolved limb-darkened disk model<a class="headerlink" href="#Make-a-beam-convolved-limb-darkened-disk-model" title="Link to this heading">¶</a></h2>
+<section id="Beam-convolved-limb-darkened-disk-model">
+<h3>Beam-convolved limb-darkened disk model<a class="headerlink" href="#Beam-convolved-limb-darkened-disk-model" title="Link to this heading">¶</a></h3>
+<p>The ModelEllipsoid object can be leveraged to make limb-darkened or limb-brightened disk models of the planet. Several limb-darkening laws are supported - take a look at the documentation. Using the convolve_with_beam() function in utils, we can also convolve this (or anything else) with a beam. This function supports Gaussian beams or full 2-D PSFs as input; check out its docs, too!</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pylanetary.utils</span> <span class="kn">import</span> <span class="n">convolve_with_beam</span>
-
-<span class="n">tb</span> <span class="o">=</span> <span class="mf">99.</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tb</span> <span class="o">=</span> <span class="mf">99.</span>
 <span class="n">a</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">]</span>
 <span class="n">beam</span> <span class="o">=</span> <span class="p">(</span><span class="mf">10.</span><span class="p">,</span> <span class="mf">5.</span><span class="p">,</span> <span class="mf">30.</span><span class="p">)</span> <span class="c1">#FWHM_X, FWHM_Y, THETA_DEG</span>
 <span class="n">lddisk</span> <span class="o">=</span> <span class="n">ellipsoid</span><span class="o">.</span><span class="n">ldmodel</span><span class="p">(</span><span class="n">tb</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">law</span><span class="o">=</span><span class="s1">&#39;quadratic&#39;</span><span class="p">)</span>
@@ -133,31 +147,26 @@
 </div>
 </section>
 </section>
-<section id="model-corresponding-to-real-data">
-<h1>model corresponding to real data<a class="headerlink" href="#model-corresponding-to-real-data" title="Link to this heading">¶</a></h1>
-<section id="instantiate-model-from-Body-utility">
-<h2>instantiate model from Body utility<a class="headerlink" href="#instantiate-model-from-Body-utility" title="Link to this heading">¶</a></h2>
-<p>The Body utility will pull static information about the target, including the equatorial and polar radius, from a .yaml file. It will also query the Horizons ephemeris tool; this information is stored in <code class="docutils literal notranslate"><span class="pre">ura.ephem</span></code> in the example below. See utils tutorial for more details.</p>
+<section id="Model-corresponding-to-real-observations">
+<h2>Model corresponding to real observations<a class="headerlink" href="#Model-corresponding-to-real-observations" title="Link to this heading">¶</a></h2>
+<section id="The-ModelBody-class">
+<h3>The ModelBody class<a class="headerlink" href="#The-ModelBody-class" title="Link to this heading">¶</a></h3>
+<p>The ModelBody class inherits from ModelEllipsoid, so everything enabled by ModelEllipsoid above is just as easy with ModelBody. The difference is that ephemeris information is pulled from Horizons automatically for a given observation date and observatory location. Static data about the target of interest, e.g., equatorial and polar radii, are pulled from a .yaml file. See the docstring of utils.Body for more details.</p>
+<p>Note that unlike the Nav class described below, ModelBody does not require input data, so it can be used for observation planning but is not optimal for comparing with observed data.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">astropy.io</span> <span class="kn">import</span> <span class="n">fits</span>
-
-<span class="c1">## rewrite with Body util</span>
-<span class="c1">## should look something like:</span>
-<span class="n">hdul</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;data/h_2019oct28.fits&#39;</span><span class="p">)</span> <span class="c1">#urh60.fits</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">obs_time</span> <span class="o">=</span> <span class="s1">&#39;2019-10-28 08:50:50&#39;</span>
 <span class="n">pixscale_arcsec</span> <span class="o">=</span> <span class="mf">0.009971</span> <span class="c1">#arcsec, keck</span>
-
-<span class="n">header</span> <span class="o">=</span> <span class="n">hdul</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
-<span class="n">data</span> <span class="o">=</span> <span class="n">hdul</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
-<span class="n">obs_time</span> <span class="o">=</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;DATE-OBS&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;EXPSTART&#39;</span><span class="p">][:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">obs_time</span><span class="p">)</span>
-
-<span class="c1"># something like this</span>
-<span class="n">ura</span> <span class="o">=</span> <span class="n">Body</span><span class="p">(</span><span class="s1">&#39;Uranus&#39;</span><span class="p">,</span> <span class="n">epoch</span><span class="o">=</span><span class="n">obs_time</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="s1">&#39;568&#39;</span><span class="p">)</span> <span class="c1">#Keck</span>
+<span class="n">ura</span> <span class="o">=</span> <span class="n">Body</span><span class="p">(</span><span class="s1">&#39;Uranus&#39;</span><span class="p">,</span> <span class="n">epoch</span><span class="o">=</span><span class="n">obs_time</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="s1">&#39;568&#39;</span><span class="p">)</span> <span class="c1">#Maunakea keyword is 568</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">ModelBody</span><span class="p">(</span><span class="n">ura</span><span class="p">,</span> <span class="n">pixscale_arcsec</span><span class="p">)</span>
-<span class="n">nav</span> <span class="o">=</span> <span class="n">Nav</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">ura</span><span class="p">,</span> <span class="n">pixscale_arcsec</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;ModelBody class for target </span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1"> with equatorial and polar radii </span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">req</span><span class="p">,</span><span class="w"> </span><span class="n">model</span><span class="o">.</span><span class="n">rpol</span><span class="si">}</span><span class="s1"> km&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;ModelBody computed geometry on a grid of shape </span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">lat_g</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Cosine of solar incidence angle at a random location is </span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">mu0</span><span class="p">[</span><span class="mi">240</span><span class="p">,</span><span class="mi">200</span><span class="p">]</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;North polar angle w.r.t. sky North at time of observation is </span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">ephem</span><span class="p">[</span><span class="s2">&quot;NPole_ang&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Pixel scale is </span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">pixscale_km</span><span class="si">:</span><span class="s1">.1f</span><span class="si">}</span><span class="s1"> km/px&#39;</span><span class="p">)</span>
 
 <span class="c1">## save ephemeris as astropy Table for testing suite - delete later</span>
 <span class="c1">#from astropy import io</span>
@@ -173,59 +182,133 @@
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-2019-10-28 08:50:50
+ModelBody class for target Uranus with equatorial and polar radii (25559.0, 24973.0) km
+ModelBody computed geometry on a grid of shape (377, 377)
+Cosine of solar incidence angle at a random location is 0.96
+North polar angle w.r.t. sky North at time of observation is 261.0522
+Pixel scale is 136.2 km/px
 </pre></div></div>
 </div>
-<p>Note: if you want to change anything about the ephemeris data, you would do something like this:</p>
+</section>
+<section id="The-Nav-class">
+<h3>The Nav class<a class="headerlink" href="#The-Nav-class" title="Link to this heading">¶</a></h3>
+<p>The Nav class inherits from ModelBody, so it has all the same attributes and functionality as ModelBody which, in turn, has the same attributes and functionality as ModelEllipsoid! The difference is that Nav contains additional functions to compare our models with real observed data. Here is how to instantiate it:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">hdul</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;/Users/emolter/Python/pylanetary/notebooks/data/h_2019oct28.fits&#39;</span><span class="p">)</span> <span class="c1">#urh60.fits</span>
+<span class="n">pixscale_arcsec</span> <span class="o">=</span> <span class="mf">0.009971</span> <span class="c1">#arcsec, keck</span>
+<span class="n">header</span> <span class="o">=</span> <span class="n">hdul</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">hdul</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+<span class="n">obs_time</span> <span class="o">=</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;DATE-OBS&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;EXPSTART&#39;</span><span class="p">][:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span>
+
+<span class="n">ura</span> <span class="o">=</span> <span class="n">Body</span><span class="p">(</span><span class="s1">&#39;Uranus&#39;</span><span class="p">,</span> <span class="n">epoch</span><span class="o">=</span><span class="n">obs_time</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="s1">&#39;568&#39;</span><span class="p">)</span> <span class="c1">#Maunakea keyword is 568</span>
+<span class="n">nav</span> <span class="o">=</span> <span class="n">Nav</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">ura</span><span class="p">,</span> <span class="n">pixscale_arcsec</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>Note: because ModelBody and Nav are called from a Body instance, we can easily change the default ephemeris information before instantiating them, if desired. For example, to rotate the model so that North is up, you would do this:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>ura = Body(&#39;Uranus&#39;, epoch=obs_time, location=&#39;568&#39;) #Keck
 ura.ephem[&#39;NPole_ang&#39;] = 0.0
-model = ModelBody(ura, pixscale_arcsec)
+nav = Nav(ura, pixscale_arcsec)
 </pre></div>
 </div>
 </section>
-<section id="Make-limb-darkened-disk-model,-then-center-and-shift">
-<h2>Make limb-darkened disk model, then center and shift<a class="headerlink" href="#Make-limb-darkened-disk-model,-then-center-and-shift" title="Link to this heading">¶</a></h2>
+</section>
+<section id="Comparing-models-with-data">
+<h2>Comparing models with data<a class="headerlink" href="#Comparing-models-with-data" title="Link to this heading">¶</a></h2>
+<p>Let’s use our Nav object to co-locate the lat-lon grid we’ve computed with the observed planet itself. This is achieved with the <code class="docutils literal notranslate"><span class="pre">nav.colocate</span></code> routine. For a more detailed workflow, see the example navigation workflow documentation page.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># try centering using convolution with limb-darkened disk</span>
 <span class="n">flux</span> <span class="o">=</span> <span class="mi">2000</span> <span class="c1"># surface brightness in whatever units are in the fits file</span>
 <span class="n">a</span> <span class="o">=</span> <span class="mf">0.1</span> <span class="c1"># exponential limb-darkening law exponent</span>
 <span class="n">fwhm_keck</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="c1"># approximate FWHM of the point-spread function in arcsec</span>
-<span class="n">ldmodel</span> <span class="o">=</span> <span class="n">nav</span><span class="o">.</span><span class="n">ldmodel</span><span class="p">(</span><span class="n">flux</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">beam</span><span class="o">=</span><span class="n">fwhm_keck</span><span class="p">,</span> <span class="n">law</span><span class="o">=</span><span class="s1">&#39;exp&#39;</span><span class="p">)</span>
 
-<span class="c1">## save ldmodel as numpy file for testing suite - delete later</span>
-<span class="c1">#np.save(&#39;/Users/emolter/Python/pylanetary/pylanetary/navigation/tests/data/ldmodel.npy&#39;, ldmodel)</span>
-
-<span class="c1"># center the lat, lon, and mu grids.</span>
-<span class="c1"># note it is not necessary to make the ldmodel separately (as shown above) in order to run centering</span>
-<span class="c1"># err should be the RMS noise of the image</span>
 <span class="n">rms_noise</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">600</span><span class="p">:</span><span class="mi">900</span><span class="p">,</span><span class="mi">50</span><span class="p">:</span><span class="mi">250</span><span class="p">])</span> <span class="o">*</span> <span class="mi">10</span> <span class="c1">#for some reason, error returns zero if true RMS is used</span>
 <span class="c1"># wonder if this should truly be per-pixel error, or per-beam error</span>
 <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">,</span> <span class="n">dxerr</span><span class="p">,</span> <span class="n">dyerr</span> <span class="o">=</span> <span class="n">nav</span><span class="o">.</span><span class="n">colocate</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;disk&#39;</span><span class="p">,</span> <span class="n">tb</span> <span class="o">=</span> <span class="n">flux</span><span class="p">,</span> <span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="p">,</span> <span class="n">beam</span> <span class="o">=</span> <span class="n">fwhm_keck</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="n">rms_noise</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;suggested x,y shift is &#39;</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;x,y uncertainty is &#39;</span><span class="p">,</span> <span class="n">dxerr</span><span class="p">,</span> <span class="n">dyerr</span><span class="p">)</span>
 
-<span class="c1"># we could also use an edge-detection algorithm. this is useful if</span>
-<span class="c1"># the planet disk is faint and the clouds are bright, e.g., for Neptune in K-band</span>
-<span class="n">dx_canny</span><span class="p">,</span> <span class="n">dy_canny</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">nav</span><span class="o">.</span><span class="n">colocate</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;canny&#39;</span><span class="p">,</span> <span class="n">tb</span> <span class="o">=</span> <span class="n">flux</span><span class="p">,</span> <span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="p">,</span> <span class="n">beam</span> <span class="o">=</span> <span class="n">fwhm_keck</span><span class="p">,</span> <span class="n">low_thresh</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span> <span class="n">high_thresh</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="c1">## save ldmodel as numpy file for testing suite - delete later</span>
+<span class="c1">#ldmodel = nav.ldmodel(flux, a, beam=fwhm_keck, law=&#39;exp&#39;)</span>
+<span class="c1">#np.save(&#39;/Users/emolter/Python/pylanetary/pylanetary/navigation/tests/data/ldmodel.npy&#39;, ldmodel)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/nav-tutorial_12_0.png" src="_images/nav-tutorial_12_0.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+suggested x,y shift is  137.591796875 -10.681640625
+x,y uncertainty is  0.005859375 0.00390625
+</pre></div></div>
+</div>
+<p>The diagnostic plot shows us that the model planet has been co-located with the real planet to reasonable accuracy; the disk of the planet is centered around zero, and there are no obvious positive-negative differences at the edges. There appears to be a faint halo around the planet’s disk, probably due to an imperfect PSF in our model.</p>
+<p>Nav.colocate also supports the use of an edge-detection algorithm. This is particularly useful if the planet disk is faint and the clouds are bright, e.g., for Neptune in K-band.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dx_canny</span><span class="p">,</span> <span class="n">dy_canny</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">nav</span><span class="o">.</span><span class="n">colocate</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;canny&#39;</span><span class="p">,</span> <span class="n">tb</span> <span class="o">=</span> <span class="n">flux</span><span class="p">,</span> <span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="p">,</span> <span class="n">beam</span> <span class="o">=</span> <span class="n">fwhm_keck</span><span class="p">,</span> <span class="n">low_thresh</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span> <span class="n">high_thresh</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Canny x,y shift is&#39;</span><span class="p">,</span> <span class="n">dx_canny</span><span class="p">,</span> <span class="n">dy_canny</span><span class="p">)</span>
-
-<span class="n">nav</span><span class="o">.</span><span class="n">xy_shift_model</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/nav-tutorial_14_0.png" src="_images/nav-tutorial_14_0.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Canny x,y shift is 130.974609375 -10.126953125
+</pre></div></div>
+</div>
+<p>The model edges align reasonably well with the data edges, so this looks like a somewhat reasonable solution, too.</p>
+<p>Note here that simply running colocate() does NOT apply the solution; that is, it does not actually shift the model such that the nav.lat_g, nav.lon_w, nav.mu, and nav.mu0 arrays align properly with the planet. This choice is intentional, as it allows the user to try co-locating with different input models and parameters until they are happy with the solution. It also means that manual x,y shifts are supported.</p>
+<p>To apply our x,y shift if we are happy with it, we do the following:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">nav</span><span class="o">.</span><span class="n">xy_shift_model</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">)</span>
 <span class="c1">## note: alternatively, we could center the data</span>
 <span class="c1"># nav.xy_shift_data(-dx, -dy)</span>
-
-
-<span class="c1">#extent = (-pixscale_km*shape[0]/2, pixscale_km*shape[0]/2, -pixscale_km*shape[1]/2, pixscale_km*shape[1]/2)</span>
+</pre></div>
+</div>
+</div>
+<p>Finally, let’s plot the solution:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">#extent = (-pixscale_km*shape[0]/2, pixscale_km*shape[0]/2, -pixscale_km*shape[1]/2, pixscale_km*shape[1]/2)</span>
 <span class="n">fig</span><span class="p">,</span> <span class="p">(</span><span class="n">ax0</span><span class="p">,</span> <span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">15</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
 
 <span class="n">im0</span> <span class="o">=</span> <span class="n">ax0</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">nav</span><span class="o">.</span><span class="n">lon_w</span><span class="p">,</span> <span class="n">origin</span> <span class="o">=</span> <span class="s1">&#39;lower&#39;</span><span class="p">)</span>
 <span class="n">ax0</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;West Longitudes&#39;</span><span class="p">)</span>
 <span class="n">im1</span> <span class="o">=</span> <span class="n">ax1</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">nav</span><span class="o">.</span><span class="n">lat_g</span><span class="p">,</span> <span class="n">origin</span> <span class="o">=</span> <span class="s1">&#39;lower&#39;</span><span class="p">)</span>
 <span class="n">ax1</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Planetographic Latitudes&#39;</span><span class="p">)</span>
-<span class="n">im2</span> <span class="o">=</span> <span class="n">ax2</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">nav</span><span class="o">.</span><span class="n">mu</span><span class="p">,</span> <span class="n">origin</span> <span class="o">=</span> <span class="s1">&#39;lower&#39;</span><span class="p">)</span>
-<span class="n">ax2</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Emission Angles&#39;</span><span class="p">)</span>
+<span class="n">im2</span> <span class="o">=</span> <span class="n">ax2</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">nav</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">origin</span> <span class="o">=</span> <span class="s1">&#39;lower&#39;</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">)</span>
 
 <span class="n">ax0</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Distance (pix)&#39;</span><span class="p">)</span>
 <span class="n">ax1</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">([])</span>
@@ -242,60 +325,44 @@ model = ModelBody(ura, pixscale_arcsec)
 </pre></div>
 </div>
 </div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="_images/nav-tutorial_10_0.png" src="_images/nav-tutorial_10_0.png" />
-</div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-suggested x,y shift is  137.591796875 -10.681640625
-x,y uncertainty is  0.005859375 0.00390625
-</pre></div></div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="_images/nav-tutorial_10_2.png" src="_images/nav-tutorial_10_2.png" />
-</div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-Canny x,y shift is 130.974609375 -10.126953125
-</pre></div></div>
-</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="_images/nav-tutorial_10_4.png" src="_images/nav-tutorial_10_4.png" />
+<img alt="_images/nav-tutorial_18_0.png" src="_images/nav-tutorial_18_0.png" />
 </div>
 </div>
-</section>
-<section id="summary-of-method-for-Souami-et-al-2023,-in-prep">
-<h2>summary of method for Souami et al 2023, in prep<a class="headerlink" href="#summary-of-method-for-Souami-et-al-2023,-in-prep" title="Link to this heading">¶</a></h2>
+<section id="summary-of-nav.colocate-methods">
+<h3>summary of nav.colocate methods<a class="headerlink" href="#summary-of-nav.colocate-methods" title="Link to this heading">¶</a></h3>
+<p>The following was written in support of Souami et al. 2023, in prep. If you use this for your own work, please cite the pylanetary package, and also consider citing the image_registration and astroquery packages.</p>
 <p>The centroid of the stacked Keck frames was found by cross-correlating the images with a limb-darkened disk model of Neptune. The model disk was assumed ellipsoidal, with equatorial and polar radii of 24764 km and 24341 km, respectively <span class="math">\footnote{\url{https://nssdc.gsfc.nasa.gov/planetary/factsheet/neptunefact.html}}</span>. The model was scaled to the distance and orientation of Neptune as viewed from Keck Observatory using the JPL Horizons system, accessed using the
 Astropy-affiliated <span class="math">\texttt{astroquery}</span> Python package. The limb darkening was applied using a Minnaert law with coefficient k = 0.867 <span class="math">\footnote{Wong et al 2018 value in HST blue filter; LMK if anyone finds a better value for the IR somewhere https://doi.org/10.3847/1538-3881/aaa6d6}</span>. The model was convolved with a Gaussian beam to simulate the optics of the telescope. The FWHM of this beam was estimated based on the point-spread function of point sources in the
 field-of-view (e.g., Proteus). The surface brightness of the limb-darkened disk was set to be the approximate surface brightness of Neptune in cloud-free regions. Image registration between model and data was then carried out using a matrix-multiply discrete Fourier transform technique, implemented using the <span class="math">\texttt{chi2_shift}</span> function within the Astropy-affiliated <span class="math">\texttt{image_registration}</span> Python package
-<span class="math">\footnote{https://github.com/keflavich/image_registration}</span>. Given the RMS noise in the image as input, this technique also yields errors in the shifts using a delta-chi-square criterion. The values of the FWHM, model brightness, and limb-darkening parameter were varied within reasonable ranges, and the resulting x,y position was found not to change by more than 1 sigma in either direction.</p>
+<span class="math">\footnote{\url{https://github.com/keflavich/image_registration}}</span>. Given the RMS noise in the image as input, this technique also yields errors in the shifts using a delta-chi-square criterion. The values of the FWHM, model brightness, and limb-darkening parameter were varied within reasonable ranges, and the resulting x,y position was found not to change by more than 1 sigma in either direction.</p>
 </section>
-<section id="reproject-data-onto-lat-lon-grid">
-<h2>reproject data onto lat-lon grid<a class="headerlink" href="#reproject-data-onto-lat-lon-grid" title="Link to this heading">¶</a></h2>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</section>
+<section id="Save-as-fits">
+<h2>Save as fits<a class="headerlink" href="#Save-as-fits" title="Link to this heading">¶</a></h2>
+<p>Pylanetary supports saving the navigation solution as a multi-extension NAV fits file, originally used by Mike Wong in IDL for data from the HST OPAL program</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">mpl_toolkits.axes_grid1.axes_divider</span> <span class="kn">import</span> <span class="n">make_axes_locatable</span>
-<span class="n">projected</span><span class="p">,</span> <span class="n">mu_projected</span> <span class="o">=</span> <span class="n">nav</span><span class="o">.</span><span class="n">reproject</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">#nav.write(&#39;output.fits&#39;, header=header)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Reproject-data-onto-rectilinear-grid">
+<h2>Reproject data onto rectilinear grid<a class="headerlink" href="#Reproject-data-onto-rectilinear-grid" title="Link to this heading">¶</a></h2>
+<p>Basic support exists for projection onto a rectilinear grid, as follows</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">projected</span><span class="p">,</span> <span class="n">mu_projected</span> <span class="o">=</span> <span class="n">nav</span><span class="o">.</span><span class="n">reproject</span><span class="p">()</span>
+
+<span class="kn">from</span> <span class="nn">mpl_toolkits.axes_grid1.axes_divider</span> <span class="kn">import</span> <span class="n">make_axes_locatable</span>
 
 <span class="n">extent</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">360</span><span class="p">,</span> <span class="o">-</span><span class="mi">90</span><span class="p">,</span> <span class="mi">90</span><span class="p">)</span>
 <span class="n">fig</span><span class="p">,</span> <span class="p">(</span><span class="n">ax0</span><span class="p">,</span> <span class="n">ax1</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span><span class="p">))</span>
@@ -336,23 +403,12 @@ Pixel scale 136.192868 km = 3.237871 pixels per degree
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="_images/nav-tutorial_13_1.png" src="_images/nav-tutorial_13_1.png" />
+<img alt="_images/nav-tutorial_23_1.png" src="_images/nav-tutorial_23_1.png" />
 </div>
 </div>
-<p>This works well! For planets with banded structure, it is easy to check the quality of the co-location based on whether or not the bands appear straight in these images. If the centroid is shifted, then the bands are curved!</p>
-<p>Note here that by default, reproject() will keep the same pixel scale as the original data at the sub-observer point. This means that at every other location, the projected image is oversampled as compared with the original data. This oversampling of the original pixel grid can cause unusual-looking artifacts near the limbs of the planet. To change this default behavior, simply use: reproject(pixscale_arcsec=float)</p>
-</section>
-<section id="save-outputs-as-fits">
-<h2>save outputs as fits<a class="headerlink" href="#save-outputs-as-fits" title="Link to this heading">¶</a></h2>
-<p>Internal save functions are not yet implemented</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
-</pre></div>
-</div>
-</div>
+<p>For planets with banded structure, it is easy to check the quality of the co-location based on whether or not the bands appear straight in these images. If the centroid is incorrect, then the bands are curved!</p>
+<p>Note here that by default, reproject() will keep the same pixel scale as the original data at the sub-observer point. This means that at every other location, the projected image is oversampled as compared with the original data. This oversampling of the original pixel grid can cause unusual-looking artifacts near the limbs of the planet. To change this default behavior, simply use: reproject(pixscale_arcsec=whatever)</p>
+<p>We plan to support re-projection to arbitrary geometries (e.g., polar) in the near future, so stay tuned.</p>
 </section>
 </section>
 
@@ -377,30 +433,17 @@ Pixel scale 136.192868 km = 3.237871 pixels per degree
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="description.html">Description</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="#make-a-projected-model-planet-disk">make a projected model planet disk</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#Make-a-beam-convolved-limb-darkened-disk-model">Make a beam-convolved limb-darkened disk model</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Navigation tutorial</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#Basic-planet-disk-model">Basic planet disk model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Model-corresponding-to-real-observations">Model corresponding to real observations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Comparing-models-with-data">Comparing models with data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Save-as-fits">Save as fits</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Reproject-data-onto-rectilinear-grid">Reproject data onto rectilinear grid</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="#model-corresponding-to-real-data">model corresponding to real data</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#instantiate-model-from-Body-utility">instantiate model from Body utility</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#Make-limb-darkened-disk-model,-then-center-and-shift">Make limb-darkened disk model, then center and shift</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#summary-of-method-for-Souami-et-al-2023,-in-prep">summary of method for Souami et al 2023, in prep</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#reproject-data-onto-lat-lon-grid">reproject data onto lat-lon grid</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#save-outputs-as-fits">save outputs as fits</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="nav-examples.html">Example navigation workflows</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rings-tutorial.html">Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rings-tutorial.html#Making-a-single/basic-model-ring">Making a single/basic model ring</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rings-tutorial.html#Model-ring-system-observation">Model ring system observation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rings-tutorial.html#Analysis-with-real-data">Analysis with real data</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rings-tutorial.html#Making-a-movie-of-the-epsilon-ring-precession">Making a movie of the epsilon ring precession</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rings-tutorial.html#Loose-ends-/-to-do-list">Loose ends / to-do list</a></li>
-<li class="toctree-l1"><a class="reference internal" href="utils-tutorial.html">unit conversions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="utils-tutorial.html#I/F-calculation">I/F calculation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="utils-tutorial.html#The-Body-utility-for-planet/moon-attributes">The Body utility for planet/moon attributes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nav-examples.html">Example navigation workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rings-tutorial.html">Rings Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils-tutorial.html">Utils Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing to Pylanetary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="citing.html">Citing this Software</a></li>
 <li class="toctree-l1"><a class="reference internal" href="navigation_api.html">Navigation API</a></li>
@@ -413,7 +456,7 @@ Pixel scale 136.192868 km = 3.237871 pixels per degree
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
       <li>Previous: <a href="description.html" title="previous chapter">Description</a></li>
-      <li>Next: <a href="nav-examples.html" title="next chapter">Example navigation workflows</a></li>
+      <li>Next: <a href="nav-examples.html" title="next chapter">Example navigation workflow</a></li>
   </ul></li>
 </ul>
 </div>

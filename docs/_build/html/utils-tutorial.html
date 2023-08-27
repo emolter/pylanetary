@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>unit conversions &#8212; pylanetary 0.0.5 documentation</title>
+    <title>Utils Tutorial &#8212; pylanetary 0.0.5 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=039e1c02" />
     <link rel="stylesheet" type="text/css" href="_static/nbsphinx-code-cells.css" />
@@ -17,8 +17,8 @@
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Usage" href="usage.html" />
-    <link rel="prev" title="Overview" href="rings-tutorial.html" />
+    <link rel="next" title="Contributing to Pylanetary" href="contributing.html" />
+    <link rel="prev" title="Rings Tutorial" href="rings-tutorial.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -35,18 +35,21 @@
 
           <div class="body" role="main">
             
-  <div class="nbinput nblast docutils container">
+  <section id="Utils-Tutorial">
+<h1>Utils Tutorial<a class="headerlink" href="#Utils-Tutorial" title="Link to this heading">¶</a></h1>
+<div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pylanetary.utils</span> <span class="kn">import</span> <span class="o">*</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># imports</span>
+<span class="kn">from</span> <span class="nn">pylanetary.utils</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 </pre></div>
 </div>
 </div>
 <section id="unit-conversions">
-<h1>unit conversions<a class="headerlink" href="#unit-conversions" title="Link to this heading">¶</a></h1>
+<h2>unit conversions<a class="headerlink" href="#unit-conversions" title="Link to this heading">¶</a></h2>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
@@ -87,7 +90,7 @@ The angular area of the beam is 0.18129440567308777 arcsec^2 assuming Gaussian s
 </div>
 </section>
 <section id="I/F-calculation">
-<h1>I/F calculation<a class="headerlink" href="#I/F-calculation" title="Link to this heading">¶</a></h1>
+<h2>I/F calculation<a class="headerlink" href="#I/F-calculation" title="Link to this heading">¶</a></h2>
 <p>definition from Hammel et al 1989, DOI:10.1016/0019-1035(89)90149-8</p>
 <p>Let’s calculate the I/F of Proteus in H-band from a measurement in erg s-1 cm-2 um-1.</p>
 <div class="nbinput docutils container">
@@ -112,10 +115,10 @@ The angular area of the beam is 0.18129440567308777 arcsec^2 assuming Gaussian s
 <span class="n">trans</span><span class="p">[</span><span class="n">wls</span> <span class="o">&lt;</span> <span class="mf">1.45</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
 <span class="n">bp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">wls</span><span class="p">,</span> <span class="n">trans</span><span class="p">])</span>
 
-<span class="c1">#plt.plot(wls, trans)</span>
-<span class="c1">#plt.xlabel(r&#39;Wavelength ($\mu$m)&#39;)</span>
-<span class="c1">#plt.ylabel(&#39;Transmission&#39;)</span>
-<span class="c1">#plt.show()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">wls</span><span class="p">,</span> <span class="n">trans</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;Wavelength ($\mu$m)&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Transmission&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
 <span class="c1"># find I/F in that filter</span>
 <span class="n">wl_eff</span><span class="p">,</span> <span class="n">IoverF</span> <span class="o">=</span> <span class="n">I_over_F</span><span class="p">(</span><span class="n">observed_flux</span><span class="p">,</span> <span class="n">bp</span><span class="p">,</span> <span class="n">neptune_sun_dist</span><span class="o">/</span><span class="mf">1.5e8</span><span class="p">,</span> <span class="n">Omega</span><span class="p">)</span>
@@ -123,18 +126,32 @@ The angular area of the beam is 0.18129440567308777 arcsec^2 assuming Gaussian s
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
+<div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 Proteus solid angle is 6.55e-15 sr = 0.000278 arcsec^2
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/utils-tutorial_5_1.png" src="_images/utils-tutorial_5_1.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
 Proteus I/F at 1.60 um = 0.11
 </pre></div></div>
 </div>
 </section>
 <section id="The-Body-utility-for-planet/moon-attributes">
-<h1>The Body utility for planet/moon attributes<a class="headerlink" href="#The-Body-utility-for-planet/moon-attributes" title="Link to this heading">¶</a></h1>
+<h2>The Body utility for planet/moon attributes<a class="headerlink" href="#The-Body-utility-for-planet/moon-attributes" title="Link to this heading">¶</a></h2>
 <p>Given the name of a planet or large moon, load static data like mass, equatorial and polar radii, orbital parameters. Also load an ephemeris from Horizons.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
@@ -169,10 +186,10 @@ Jupiter has a 9.925 h sidereal day
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-  targetname      datetime_str        datetime_jd    solar_presence lunar_presence    RA      DEC    RA_app  DEC_app   RA_rate    DEC_rate   AZ  EL   AZ_rate      EL_rate      sat_X      sat_Y   sat_PANG siderealtime airmass magextinct   V      surfbright  illumination illum_defect sat_sep  sat_vis ang_width  PDObsLon  PDObsLat  PDSunLon  PDSunLat SubSol_ang SubSol_dist NPole_ang NPole_dist  EclLon  EclLat       r          r_rate       delta        delta_rate lighttime   vel_sun    vel_obs    elong  elongFlag  alpha  lunar_elong lunar_illum sat_alpha sunTargetPA velocityPA OrbPlaneAng constellation   TDB-UT  ObsEclLon  ObsEclLat   NPole_RA NPole_DEC   GlxLon     GlxLat   solartime earth_lighttime RA_3sigma DEC_3sigma SMAA_3sigma SMIA_3sigma Theta_3sigma Area_3sigma RSS_3sigma r_3sigma r_rate_3sigma SBand_3sigma XBand_3sigma DoppDelay_3sigma true_anom hour_angle alpha_true  PABLon  PABLat
-     ---              ---                  d              ---            ---         deg      deg     deg      deg    arcsec / h arcsec / h deg deg arcsec / min arcsec / min   arcsec     arcsec    deg        ---        ---      mag      mag   mag / arcsec2      %          arcsec     arcsec    ---     arcsec     deg       deg       deg       deg       deg        arcsec      deg      arcsec     deg     deg         AU         km / s         AU           km / s      min       km / s     km / s     deg      ---      deg       deg          %         deg        deg        deg         deg          ---          s        deg        deg        deg       deg       deg        deg        ---          min         arcsec    arcsec      arcsec      arcsec       deg        arcsec2     arcsec      km        km / s         Hz           Hz             s            deg       ---        deg       deg     deg
-------------- -------------------- ----------------- -------------- -------------- -------- ------- -------- -------- ---------- ---------- --- --- ------------ ------------ ---------- --------- -------- ------------ ------- ---------- ------ ------------- ------------ ------------ -------- ------- --------- ---------- -------- ---------- -------- ---------- ----------- --------- ---------- ------- ------- -------------- --------- ---------------- ----------- ---------- ---------- ---------- ------- --------- ------- ----------- ----------- --------- ----------- ---------- ----------- ------------- --------- ---------- ---------- --------- --------- ---------- ---------- --------- --------------- --------- ---------- ----------- ----------- ------------ ----------- ---------- -------- ------------- ------------ ------------ ---------------- --------- ---------- ---------- ------- -------
-Jupiter (599) 2023-Jul-22 16:01:24 2460148.167638889                               40.19323 14.3796 40.51321 14.48005   18.54264   5.443738  --  --           --           -- -274490.01 -20707.16  280.868           --     999         -- -2.307         5.361     98.99349       0.3899 277295.3       *  38.74003 323.215891 3.647646 334.746749 3.418082      72.12        3.87  341.4351     18.077 30.7442 -1.2232 4.960726995505 0.1816532 5.08893897707319 -25.6870428 42.3234149 13.6849002 32.4407047 77.0265        /L 11.5145       130.5      20.383    91.459     252.035    251.603     0.08438           Ari 69.183559 42.5857459 -1.1904864 268.05806  64.49679 158.877077 -40.739407        --             0.0        --         --          --          --           --          --         --       --            --           --           --               --   16.4597         --    11.5158 36.5008 -1.2142
+  targetname      datetime_str        datetime_jd    solar_presence lunar_presence    RA      DEC     RA_app  DEC_app  RA_rate    DEC_rate   AZ  EL   AZ_rate      EL_rate      sat_X      sat_Y   sat_PANG siderealtime airmass magextinct   V      surfbright  illumination illum_defect sat_sep  sat_vis ang_width  PDObsLon  PDObsLat  PDSunLon  PDSunLat SubSol_ang SubSol_dist NPole_ang NPole_dist  EclLon  EclLat       r          r_rate       delta        delta_rate  lighttime   vel_sun    vel_obs    elong   elongFlag  alpha  lunar_elong lunar_illum sat_alpha sunTargetPA velocityPA OrbPlaneAng constellation   TDB-UT  ObsEclLon ObsEclLat   NPole_RA NPole_DEC   GlxLon     GlxLat   solartime earth_lighttime RA_3sigma DEC_3sigma SMAA_3sigma SMIA_3sigma Theta_3sigma Area_3sigma RSS_3sigma r_3sigma r_rate_3sigma SBand_3sigma XBand_3sigma DoppDelay_3sigma true_anom hour_angle alpha_true  PABLon  PABLat
+     ---              ---                  d              ---            ---         deg      deg      deg      deg   arcsec / h arcsec / h deg deg arcsec / min arcsec / min   arcsec     arcsec    deg         h         ---      mag      mag   mag / arcsec2      %          arcsec     arcsec    ---     arcsec     deg       deg       deg       deg       deg        arcsec      deg      arcsec     deg     deg         AU         km / s         AU           km / s       min       km / s     km / s     deg       ---      deg       deg          %         deg        deg        deg         deg          ---          s        deg       deg        deg       deg       deg        deg         h           min         arcsec    arcsec      arcsec      arcsec       deg        arcsec2     arcsec      km        km / s         Hz           Hz             s            deg        h         deg       deg     deg
+------------- -------------------- ----------------- -------------- -------------- -------- -------- -------- ------- ---------- ---------- --- --- ------------ ------------ ---------- --------- -------- ------------ ------- ---------- ------ ------------- ------------ ------------ -------- ------- --------- ---------- -------- ---------- -------- ---------- ----------- --------- ---------- ------- ------- -------------- --------- ---------------- ----------- ----------- ---------- ---------- -------- --------- ------- ----------- ----------- --------- ----------- ---------- ----------- ------------- --------- --------- ---------- --------- --------- ---------- ---------- --------- --------------- --------- ---------- ----------- ----------- ------------ ----------- ---------- -------- ------------- ------------ ------------ ---------------- --------- ---------- ---------- ------- -------
+Jupiter (599) 2023-Aug-27 21:16:14 2460184.386273148                               43.08396 15.13178 43.41099 15.2294   3.768455   0.628637  --  --           --           -- -400056.46 19132.599  289.969           --     999         -- -2.556         5.358      99.0638       0.4061 391899.0       *  43.37403 172.679298 3.828957 183.797149 3.470775      73.64        4.18  342.3435     20.235 34.0487 -1.1952 4.964904491942 0.2177477 4.54524552110738 -24.9001155 37.80165431 13.6749375 25.1445703 108.8608        /L 11.1068       115.9     85.2622   60.0323     253.554    252.316     0.23345           Ari 69.182719  45.48364 -1.3033406 268.05805  64.49679 161.353279 -38.556696        --             0.0        --         --          --          --           --          --         --       --            --           --           --               --   19.7846         --     11.105 39.5995 -1.2564
 </pre></div></div>
 </div>
 <p>This ephemeris assumes we wanted the results right now as observed at the center of mass of Earth. If we instead wanted to observe from the VLA site at the time of the first SL9 impact, we could say:</p>
@@ -191,19 +208,12 @@ Jupiter (599) 2023-Jul-22 16:01:24 2460148.167638889                            
 <div class="output_area docutils container">
 <div class="highlight"><pre>
   targetname     datetime_str      datetime_jd    solar_presence lunar_presence     RA       DEC      RA_app   DEC_app   RA_rate    DEC_rate      AZ         EL      AZ_rate      EL_rate      sat_X      sat_Y    sat_PANG siderealtime airmass magextinct   V     surfbright  illumination illum_defect sat_sep  sat_vis ang_width  PDObsLon  PDObsLat PDSunLon PDSunLat SubSol_ang SubSol_dist NPole_ang NPole_dist  EclLon  EclLat       r          r_rate        delta       delta_rate  lighttime   vel_sun   vel_obs    elong   elongFlag alpha  lunar_elong lunar_illum sat_alpha sunTargetPA velocityPA OrbPlaneAng constellation   TDB-UT   ObsEclLon  ObsEclLat  NPole_RA NPole_DEC   GlxLon     GlxLat    solartime   earth_lighttime RA_3sigma DEC_3sigma SMAA_3sigma SMIA_3sigma Theta_3sigma Area_3sigma RSS_3sigma r_3sigma r_rate_3sigma SBand_3sigma XBand_3sigma DoppDelay_3sigma true_anom  hour_angle  alpha_true  PABLon PABLat
-     ---             ---                d              ---            ---          deg       deg       deg       deg    arcsec / h arcsec / h    deg        deg    arcsec / min arcsec / min   arcsec     arcsec     deg        ---        ---      mag      mag  mag / arcsec2      %          arcsec     arcsec    ---     arcsec     deg       deg      deg      deg       deg        arcsec      deg      arcsec     deg     deg         AU         km / s          AU          km / s       min       km / s    km / s     deg       ---     deg       deg          %         deg        deg        deg         deg          ---          s         deg        deg       deg       deg       deg        deg         ---            min         arcsec    arcsec      arcsec      arcsec       deg        arcsec2     arcsec      km        km / s         Hz           Hz             s            deg        ---         deg       deg    deg
+     ---             ---                d              ---            ---          deg       deg       deg       deg    arcsec / h arcsec / h    deg        deg    arcsec / min arcsec / min   arcsec     arcsec     deg         h         ---      mag      mag  mag / arcsec2      %          arcsec     arcsec    ---     arcsec     deg       deg      deg      deg       deg        arcsec      deg      arcsec     deg     deg         AU         km / s          AU          km / s       min       km / s    km / s     deg       ---     deg       deg          %         deg        deg        deg         deg          ---          s         deg        deg       deg       deg       deg        deg          h             min         arcsec    arcsec      arcsec      arcsec       deg        arcsec2     arcsec      km        km / s         Hz           Hz             s            deg         h          deg       deg    deg
 ------------- ----------------- ----------------- -------------- -------------- --------- --------- --------- --------- ---------- ---------- ---------- --------- ------------ ------------ ---------- ---------- -------- ------------ ------- ---------- ----- ------------- ------------ ------------ -------- ------- --------- --------- --------- -------- -------- ---------- ----------- --------- ---------- -------- ------ -------------- ---------- ---------------- ---------- ----------- --------- ---------- -------- --------- ------ ----------- ----------- --------- ----------- ---------- ----------- ------------- --------- ----------- --------- --------- --------- ---------- --------- ------------- --------------- --------- ---------- ----------- ----------- ------------ ----------- ---------- -------- ------------- ------------ ------------ ---------------- --------- ------------ ---------- ------- ------
-Jupiter (599) 1994-Jul-16 20:13 2449550.342361111              *                213.25946 -12.18286 213.19106 -12.15803   5.902723   -2.87891 103.892463 -1.205187       501.78       725.51 326174.133 -120437.47   98.876 8.6713333888     999         -- -2.11         5.541     99.14532       0.3284 363714.1       *  38.42845 81.605459 -3.417513 70.98207 -3.56489     289.67        3.54   20.6435    -17.936 225.7758 1.0648 5.417202860036 -0.3161016 5.13020024376608 25.7802051 42.66657439 12.534906 26.6589241 101.0317        /T 10.608       2.924     59.9989   68.3603     109.651     289.99     0.06118           Vir 61.183653 215.0912804  1.124912 268.05799   64.4958 332.296937 45.984193 12.9415708965        0.000354        --         --          --          --           --          --         --       --            --           --           --               --  210.4525 -5.541404253     10.609 220.468 1.0993
+Jupiter (599) 1994-Jul-16 20:13 2449550.342361111              *                213.25946 -12.18286 213.19106 -12.15803   5.902723   -2.87891 103.892463 -1.205187       501.78       725.51 326174.133 -120437.47   98.876 8.6713333887     999         -- -2.11         5.541     99.14532       0.3284 363714.1       *  38.42845 81.605459 -3.417513 70.98207 -3.56489     289.67        3.54   20.6435    -17.936 225.7758 1.0648 5.417202860036 -0.3161016 5.13020024376608 25.7802051 42.66657439 12.534906 26.6589241 101.0317        /T 10.608       2.924     59.9989   68.3603     109.651     289.99     0.06118           Vir 61.183653 215.0912804  1.124912 268.05799   64.4958 332.296937 45.984193 12.9415708964        0.000354        --         --          --          --           --          --         --       --            --           --           --               --  210.4525 -5.541404253     10.609 220.468 1.0993
 </pre></div></div>
 </div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
-</pre></div>
-</div>
-</div>
+</section>
 </section>
 
 
@@ -227,20 +237,15 @@ Jupiter (599) 1994-Jul-16 20:13 2449550.342361111              *                
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="description.html">Description</a></li>
-<li class="toctree-l1"><a class="reference internal" href="nav-tutorial.html">Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="nav-tutorial.html#make-a-projected-model-planet-disk">make a projected model planet disk</a></li>
-<li class="toctree-l1"><a class="reference internal" href="nav-tutorial.html#model-corresponding-to-real-data">model corresponding to real data</a></li>
-<li class="toctree-l1"><a class="reference internal" href="nav-examples.html">Example navigation workflows</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rings-tutorial.html">Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rings-tutorial.html#Making-a-single/basic-model-ring">Making a single/basic model ring</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rings-tutorial.html#Model-ring-system-observation">Model ring system observation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rings-tutorial.html#Analysis-with-real-data">Analysis with real data</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rings-tutorial.html#Making-a-movie-of-the-epsilon-ring-precession">Making a movie of the epsilon ring precession</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rings-tutorial.html#Loose-ends-/-to-do-list">Loose ends / to-do list</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">unit conversions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="#I/F-calculation">I/F calculation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="#The-Body-utility-for-planet/moon-attributes">The Body utility for planet/moon attributes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nav-tutorial.html">Navigation tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nav-examples.html">Example navigation workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rings-tutorial.html">Rings Tutorial</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Utils Tutorial</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#unit-conversions">unit conversions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#I/F-calculation">I/F calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#The-Body-utility-for-planet/moon-attributes">The Body utility for planet/moon attributes</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing to Pylanetary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="citing.html">Citing this Software</a></li>
 <li class="toctree-l1"><a class="reference internal" href="navigation_api.html">Navigation API</a></li>
@@ -252,8 +257,8 @@ Jupiter (599) 1994-Jul-16 20:13 2449550.342361111              *                
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="rings-tutorial.html" title="previous chapter">Overview</a></li>
-      <li>Next: <a href="usage.html" title="next chapter">Usage</a></li>
+      <li>Previous: <a href="rings-tutorial.html" title="previous chapter">Rings Tutorial</a></li>
+      <li>Next: <a href="contributing.html" title="next chapter">Contributing to Pylanetary</a></li>
   </ul></li>
 </ul>
 </div>

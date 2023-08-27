@@ -292,8 +292,11 @@ for example, to apply the suggested shift from colocate()</p>
 <li><p><strong>surf_n</strong> (<em>np.array</em><em>, </em><em>required.</em>) – [x,y,z] surface normal vector at each ob_lat</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>mu: [-] cosine of emission angle</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>cosine of emission angle</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float or np.array</p>
 </dd>
 </dl>
 </dd></dl>
@@ -374,24 +377,6 @@ has no effect unless law==”minnaert”, in which case it is required.</p></li>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="pylanetary.navigation.core.sun_normal">
-<span class="sig-prename descclassname"><span class="pre">pylanetary.navigation.core.</span></span><span class="sig-name descname"><span class="pre">sun_normal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lat_g</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon_w</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sun_lon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sun_lat</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.navigation.core.sun_normal" title="Link to this definition">¶</a></dt>
-<dd><p>Computes the normal vector to the sun.
-Taking the dot product of output with sub-sun vector
-gives the cosine of solar incidence angle</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p><ul class="simple">
-<li><p><em>To do</em></p></li>
-<li><p><em>—–</em></p></li>
-<li><p><em>* This has not been tested at all</em></p></li>
-</ul>
-</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
 <dt class="sig sig-object py" id="pylanetary.navigation.core.surface_normal">
 <span class="sig-prename descclassname"><span class="pre">pylanetary.navigation.core.</span></span><span class="sig-name descname"><span class="pre">surface_normal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lat_g</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon_w</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ob_lon</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.navigation.core.surface_normal" title="Link to this definition">¶</a></dt>
 <dd><p>Computes the normal vector to the surface of the planet.
@@ -421,20 +406,10 @@ Take dot product with sub-obs or sub-sun vector to find cosine of emission angle
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="description.html">Description</a></li>
-<li class="toctree-l1"><a class="reference internal" href="nav-tutorial.html">Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="nav-tutorial.html#make-a-projected-model-planet-disk">make a projected model planet disk</a></li>
-<li class="toctree-l1"><a class="reference internal" href="nav-tutorial.html#model-corresponding-to-real-data">model corresponding to real data</a></li>
-<li class="toctree-l1"><a class="reference internal" href="nav-examples.html">Example navigation workflows</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rings-tutorial.html">Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rings-tutorial.html#Making-a-single/basic-model-ring">Making a single/basic model ring</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rings-tutorial.html#Model-ring-system-observation">Model ring system observation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rings-tutorial.html#Analysis-with-real-data">Analysis with real data</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rings-tutorial.html#Making-a-movie-of-the-epsilon-ring-precession">Making a movie of the epsilon ring precession</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rings-tutorial.html#Loose-ends-/-to-do-list">Loose ends / to-do list</a></li>
-<li class="toctree-l1"><a class="reference internal" href="utils-tutorial.html">unit conversions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="utils-tutorial.html#I/F-calculation">I/F calculation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="utils-tutorial.html#The-Body-utility-for-planet/moon-attributes">The Body utility for planet/moon attributes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nav-tutorial.html">Navigation tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nav-examples.html">Example navigation workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rings-tutorial.html">Rings Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils-tutorial.html">Utils Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing to Pylanetary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="citing.html">Citing this Software</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Navigation API</a><ul>
@@ -444,7 +419,6 @@ Take dot product with sub-obs or sub-sun vector to find cosine of emission angle
 <li class="toctree-l2"><a class="reference internal" href="#pylanetary.navigation.core.emission_angle"><code class="docutils literal notranslate"><span class="pre">emission_angle()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#pylanetary.navigation.core.lat_lon"><code class="docutils literal notranslate"><span class="pre">lat_lon()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#pylanetary.navigation.core.limb_darkening"><code class="docutils literal notranslate"><span class="pre">limb_darkening()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#pylanetary.navigation.core.sun_normal"><code class="docutils literal notranslate"><span class="pre">sun_normal()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#pylanetary.navigation.core.surface_normal"><code class="docutils literal notranslate"><span class="pre">surface_normal()</span></code></a></li>
 </ul>
 </li>

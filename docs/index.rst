@@ -16,7 +16,6 @@ Welcome to pylanetary's documentation!
    nav-examples
    rings-tutorial
    utils-tutorial
-   usage
    contributing
    citing
    navigation_api
