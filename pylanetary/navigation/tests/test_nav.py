@@ -118,9 +118,3 @@ def test_model_planet_ellipsoid(datadir):
     assert np.allclose(ell.lon_w, lon_w, rtol=1e-5, equal_nan=True)
     assert np.allclose(ell.mu, mu, rtol=1e-5, equal_nan=True)
     
-    with pytest.raises(NotImplementedError):
-        ell.write('whatever')
-    
-    
-    
-    

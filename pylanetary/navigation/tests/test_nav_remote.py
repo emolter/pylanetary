@@ -116,3 +116,37 @@ def test_nav_jupiter_minnaert(datadir):
     assert np.isclose(dx, 5.865234375, rtol=1e-1)
     assert np.isclose(dy, -9.041015625, rtol=1e-1)
     
+    
+def test_write(datadir):
+    
+    # bring in the Jupiter data from Mike Wong
+    hdul = fits.open(os.path.join(datadir, 'hlsp_wfcj_hst_wfc3-uvis_jupiter-2017-pj07_f631n_v2_0711ut0947-nav.fits'))
+    data = hdul[1].data
+    obs_time = hdul[0].header['DATE-OBS']+' '+hdul[0].header['TIME-OBS']
+    rotation = float(hdul[0].header['ORIENTAT'])
+    pixscale_arcsec = float(hdul[0].header['PIXSCAL'])
+    jup = Body('Jupiter', epoch=obs_time, location='@hst') 
+    jup.ephem['NPole_ang'] = jup.ephem['NPole_ang'] - rotation
+    data[np.isnan(data)] = 0.0
+    nav = navigation.Nav(data, jup, pixscale_arcsec)
+    
+    # manually change all the quantities according to what's in Mike's file
+    nav.lat_g = hdul[2].data
+    nav.lon_w = hdul[3].data
+    nav.mu = np.cos(np.deg2rad(hdul[4].data))
+    nav.mu0 = np.cos(np.deg2rad(hdul[5].data))
+    
+    # write it, then reload it
+    nav.write(os.path.join(datadir, 'tmp.fits'), header=hdul[0].header, flux_unit='I/F')
+    hdul_new = fits.open(os.path.join(datadir, 'tmp.fits'))
+    
+    # assert header info propagated
+    assert hdul_new[0].header == hdul[0].header
+    
+    # assert data are in correct places
+    for i in range(1,6):
+        assert np.allclose(hdul_new[i].data, np.array(hdul[i].data), atol=1e-2, equal_nan=True)
+    
+    # cleanup
+    os.remove(os.path.join(datadir, 'tmp.fits'))
+    

@@ -2,6 +2,7 @@
 import numpy as np
 import warnings
 import astropy.units as u
+from astropy.io import fits
 from image_registration.chi2_shifts import chi2_shift
 from image_registration.fft_tools.shift import shiftnd, shift2d
 from scipy import ndimage
@@ -9,6 +10,7 @@ from skimage import feature
 from scipy.interpolate import griddata
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from astropy.time import Time
 
 from ..utils import *
 
@@ -404,49 +406,6 @@ class ModelEllipsoid:
         return ldm * zm    
 
 
-    def write(self, outstem):
-        '''
-        Writes navigated data to multi-extension fits
-        
-        Parameters
-        ----------
-        outstem : str, required.
-            stem of filenames to write
-        
-        Writes
-        ------
-        
-        References
-        ----------
-        NAV multi-extension fits file format originally pioneered by Mike Wong
-        e.g. https://doi.org/10.3847/1538-4365/ab775f
-        
-        To do
-        -----
-        * Rewrite this to make a single multi-hdu fits file from scratch
-        * Alternatively, decide to remove this and have write functionality only
-            in Nav
-        '''
-        raise NotImplementedError
-        ### need to rewrite this to make fits files from scratch
-        ### with some useful header information
-        hdulist_out = self.im.hdulist
-        #latitudes
-        hdulist_out[0].header['OBJECT'] = target+'_LATITUDES'
-        hdulist_out[0].data = self.lat_g
-        hdulist_out[0].writeto(lead_string + '_latg.fits', overwrite=True)
-        #longitudes
-        hdulist_out[0].header['OBJECT'] = target+'_LONGITUDES'
-        hdulist_out[0].data = self.lon_w
-        hdulist_out[0].writeto(lead_string + '_lonw.fits', overwrite=True)
-        #longitudes
-        hdulist_out[0].header['OBJECT'] = target+'_MU'
-        hdulist_out[0].data = self.mu
-        hdulist_out[0].writeto(lead_string + '_mu.fits', overwrite=True)
-        
-        return
-
-
 class ModelBody(ModelEllipsoid):
     
     '''
@@ -714,6 +673,78 @@ class Nav(ModelBody):
             outputs.append(arr_shifted)
             
         self.mu, self.lon_w, self.lat_g, self.mu0 = outputs 
+        
+        
+    def write(self, outstem, header={}, flux_unit=''):
+        '''
+        Writes navigated data to multi-extension fits
+        
+        Parameters
+        ----------
+        outstem : str, required.
+            stem of filenames to write
+        header : dict, optional, default {}
+            dictionary of header info to put into hdul[0].header
+        flux_unit : str, optional, default ""
+            unit of flux to put in output fits header
+        
+        Writes
+        ------
+        fits file
+        
+        Notes
+        -----
+        hdul[0] contains the header, data is empty
+        hdul[1] contains the data
+        hdul[2] contains latitudes
+        hdul[3] contains longitudes
+        hdul[4] contains emission angles
+        hdul[5] contains solar incidence angles
+        
+        References
+        ----------
+        NAV multi-extension fits file format originally pioneered by Mike Wong
+        e.g. https://doi.org/10.3847/1538-4365/ab775f
+        '''
+        
+        hdu0 = fits.PrimaryHDU()
+        hdu0.header = header
+        
+        hdulist = [hdu0]
+        data_list = [self.data, 
+                    self.lat_g, 
+                    self.lon_w, 
+                    np.rad2deg(np.arccos(self.mu)), 
+                    np.rad2deg(np.arccos(self.mu0)),]
+        extnames_list = ['DATA', 'LAT', 'LON', 'EMI', 'INC']
+        units_list = [flux_unit, 'DEGREES', 'DEGREES', 'DEGREES', 'DEGREES']
+        desc_list = ['', 
+                    'planetographic latitude', 
+                    'System III longitude', 
+                    'emission angle', 
+                    'incidence angle']
+        date = Time.now()
+        date.format = 'iso'
+        date = date.iso[:10]
+        
+        for i in range(len(data_list)):
+            
+            data = data_list[i]
+            hdr = fits.Header()
+            hdr['XTENSION'] = ('IMAGE', 'Image extension')
+            hdr['BITPIX'] = (-32, 'IEEE single precision floating point')
+            hdr['NAXIS'] = 2
+            hdr['NAXIS1'] = data.shape[0]
+            hdr['NAXIS2'] = data.shape[1]
+            hdr['DATATYPE'] = ('REAL*4', 'Type of data')
+            hdr['DATE'] = (date, 'date the navigation solution was written')
+            hdr['INHERIT'] = ('T', 'inherit the primary header')
+            hdr['BUNIT'] = (units_list[i], desc_list[i])
+            hdu = fits.ImageHDU(data=data, header=hdr, name=extnames_list[i])
+            hdulist.append(hdu)
+        
+        hdul = fits.HDUList(hdulist)
+        hdul.writeto(outstem, overwrite=True)
         
     
     def reproject(self, pixscale_arcsec = None, interp = 'cubic'):
