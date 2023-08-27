@@ -151,6 +151,52 @@ def surface_normal(lat_g, lon_w, ob_lon):
 #    ny = np.cos(np.radians(lat_g-sun_lat))*np.sin(np.radians(lon_w-sun_lon))
 #    nz = np.sin(np.radians(lat_g-sun_lat))
 #    return np.asarray([nx,ny,nz])
+
+
+def colocate_diagnostic_plot(model, data, mode):
+    '''
+    assesses goodness-of-fit of navigation solution from colocate
+    
+    Parameters
+    ----------
+    model : np.array, required
+        shifted model data
+    data : np.array, required
+        observed data
+    mode : str, required
+        method of co-location, one of ["canny", "convolution", or "disk"]
+    
+    Returns
+    -------
+    matplotlib figure
+    '''
+    aspect_ratio = data.shape[0] / data.shape[1]
+    if aspect_ratio >= 1:
+        szx = 12
+        szy = szx/aspect_ratio
+    else:
+        szy = 12
+        szx = szy*aspect_ratio
+        
+    if (mode == 'convolution') or (mode == 'disk'):
+        vmax = np.nanmax(model)
+    elif mode == 'canny':
+        vmax = 1
+    else:
+        raise ValueError('mode must be one of convolution, disk, or canny')
+        
+    fig, ax = plt.subplots(1,1, figsize = (szy, szx))
+    
+    im = ax.imshow(data - model, origin = 'lower', vmax = vmax)
+    ax.set_title('Data minus model')
+    ax.set_xlabel('Pixel Value')
+    ax.set_ylabel('Pixel Value')
+    
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes('right', size='5%', pad=0.05)
+    fig.colorbar(im, cax=cax, orientation='vertical', label='flux')
+    
+    return fig, ax
     
     
 def emission_angle(ob_lat, surf_n):
@@ -603,27 +649,7 @@ class Nav(ModelBody):
         if diagnostic_plot:
             
             model_shifted = shift2d(model, dx, dy)
-            aspect_ratio = data_to_compare.shape[0] / data_to_compare.shape[1]
-            if aspect_ratio >= 1:
-                szx = 12
-                szy = szx/aspect_ratio
-            else:
-                szy = 12
-                szx = szy*aspect_ratio
-            fig, ax = plt.subplots(1,1, figsize = (szy, szx))
-            if (mode == 'convolution') or (mode == 'disk'):
-                vmax = kwargs['tb']*1.3
-            else:
-                vmax = 1
-            im = ax.imshow(data_to_compare - model_shifted, origin = 'lower', vmax = vmax)
-            ax.set_title('Data minus model')
-            ax.set_xlabel('Pixel Value')
-            ax.set_ylabel('Pixel Value')
-            
-            divider = make_axes_locatable(ax)
-            cax = divider.append_axes('right', size='5%', pad=0.05)
-            fig.colorbar(im, cax=cax, orientation='vertical', label='flux')
-            
+            fig, ax = colocate_diagnostic_plot(model_shifted, data_to_compare, mode)
             if save_plot is not None:
                 fig.savefig(save_plot, dpi=300)
             plt.show()

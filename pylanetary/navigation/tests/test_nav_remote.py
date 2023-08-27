@@ -58,6 +58,11 @@ def test_navigation(datadir):
     assert np.allclose(projected, projected_expected, rtol = 1e-2, equal_nan=True)
     assert np.allclose(mu_projected, mu_projected_expected, rtol = 1e-2, equal_nan=True)
     
+    # test diagnostic plot
+    import matplotlib
+    fig, ax = navigation.colocate_diagnostic_plot(ldmodel, nav.data, 'canny')
+    assert isinstance(fig, matplotlib.figure.Figure)
+    
     
 def test_nav_nonsquare(datadir):
     '''
