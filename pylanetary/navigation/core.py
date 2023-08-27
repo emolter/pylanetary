@@ -131,26 +131,26 @@ def surface_normal(lat_g, lon_w, ob_lon):
     return np.asarray([nx,ny,nz])
     
 
-def sun_normal(lat_g, lon_w, sun_lon, sun_lat):
-    '''
-    Computes the normal vector to the sun.
-    Taking the dot product of output with sub-sun vector
-    gives the cosine of solar incidence angle
-    
-    Parameters
-    ----------
-    
-    Returns
-    -------
-    
-    To do
-    -----
-    * This has not been tested at all
-    '''
-    nx = np.cos(np.radians(lat_g-sun_lat))*np.cos(np.radians(lon_w-sun_lon))
-    ny = np.cos(np.radians(lat_g-sun_lat))*np.sin(np.radians(lon_w-sun_lon))
-    nz = np.sin(np.radians(lat_g-sun_lat))
-    return np.asarray([nx,ny,nz])
+#def sun_normal(lat_g, lon_w, sun_lon, sun_lat):
+#    '''
+#    Computes the normal vector to the sun.
+#    Taking the dot product of output with sub-sun vector
+#    gives the cosine of solar incidence angle
+#    
+#    Parameters
+#    ----------
+#    
+#    Returns
+#    -------
+#    
+#    To do
+#    -----
+#    * This has not been tested at all
+#    '''
+#    nx = np.cos(np.radians(lat_g-sun_lat))*np.cos(np.radians(lon_w-sun_lon))
+#    ny = np.cos(np.radians(lat_g-sun_lat))*np.sin(np.radians(lon_w-sun_lon))
+#    nz = np.sin(np.radians(lat_g-sun_lat))
+#    return np.asarray([nx,ny,nz])
     
     
 def emission_angle(ob_lat, surf_n):
@@ -166,15 +166,15 @@ def emission_angle(ob_lat, surf_n):
     
     Returns
     -------
-    :mu: [-] cosine of emission angle
+    float or np.array
+        cosine of emission angle
     '''
     surf_n /= np.linalg.norm(surf_n, axis=0) # normalize to magnitude 1
     ob = np.asarray([np.cos(np.radians(ob_lat)),0,np.sin(np.radians(ob_lat))])
     mu = np.dot(surf_n.T, ob).T
     return mu
     
-    
-    
+        
 def limb_darkening(mu, a, law='exp', mu0=None):
     '''
     Parameters
@@ -339,7 +339,7 @@ class ModelEllipsoid:
         self.mu = emission_angle(self.ob_lat, self.surf_n)
         
         # sun geometry
-        self.sun_n = sun_normal(self.lat_g, self.lon_w, self.sun_lon, self.sun_lat)
+        self.sun_n = surface_normal(self.lat_g, self.lon_w, self.sun_lon)
         self.mu0 = emission_angle(self.ob_lat, self.sun_n)
         
         avg_circumference = 2*np.pi*((self.req + self.rpol)/2.0)

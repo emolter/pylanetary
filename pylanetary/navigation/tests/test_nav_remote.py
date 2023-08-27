@@ -113,8 +113,8 @@ def test_nav_jupiter_minnaert(datadir):
             beam = fwhm, 
             diagnostic_plot=False,
             )
-    assert np.isclose(dx, 5.865234375, rtol=1e-1)
-    assert np.isclose(dy, -9.041015625, rtol=1e-1)
+    assert np.isclose(dx, 8.107421875, rtol=1e-1)
+    assert np.isclose(dy, -10.697265625, rtol=1e-1)
     
     
 def test_write(datadir):

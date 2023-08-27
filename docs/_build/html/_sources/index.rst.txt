@@ -12,6 +12,10 @@ Welcome to pylanetary's documentation!
 
    installation
    description
+   nav-tutorial
+   nav-examples
+   rings-tutorial
+   utils-tutorial
    usage
    contributing
    citing
