@@ -12,7 +12,10 @@ Welcome to pylanetary's documentation!
 
    installation
    description
-   usage
+   nav-tutorial
+   nav-examples
+   rings-tutorial
+   utils-tutorial
    contributing
    citing
    navigation_api

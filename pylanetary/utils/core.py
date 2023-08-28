@@ -370,19 +370,21 @@ def convolve_with_beam(data, beam):
     Parameters
     ----------
     data : np.array, required.
-    beam : float/int, 3-element array-like, or np.array, required.
+    beam : float/int, 3-element array-like, np.array, or None, required.
         if float/int, circular Gaussian beam assumed, and this sets the fwhm 
         [pixels].
         if 3-element array-like, those are (fwhm_x, fwhm_y, theta_deg) for a 2-D Gaussian
         [pixels, pixels, degrees].
         if np.array of size > 3, assumes input PSF image
+        if None, returns original data
     
     Returns
     -------
     np.array
         beam-convolved data
     '''
-    
+    if beam is None:
+        return data
     if np.array(beam).size == 1:
         fwhm_x = beam
         fwhm_y = beam

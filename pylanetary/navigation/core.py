@@ -2,12 +2,15 @@
 import numpy as np
 import warnings
 import astropy.units as u
+from astropy.io import fits
 from image_registration.chi2_shifts import chi2_shift
 from image_registration.fft_tools.shift import shiftnd, shift2d
 from scipy import ndimage
 from skimage import feature
 from scipy.interpolate import griddata
 import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+from astropy.time import Time
 
 from ..utils import *
 
@@ -19,8 +22,7 @@ To implement
     * test on Jupiter (GRS), Io (Loki), and others
 * function to write ModelEllipsoid and Nav.reproject() outputs to fits
 * test support for 2-D Gaussian beams and measured PSFs
-* should surface normal also account for latitude?
-* make better docstrings for everything (Nav is done)
+* make better docstrings for everything
 '''
 
 def lat_lon(x,y,ob_lon,ob_lat,pixscale_km,np_ang,req,rpol):
@@ -129,26 +131,72 @@ def surface_normal(lat_g, lon_w, ob_lon):
     return np.asarray([nx,ny,nz])
     
 
-def sun_normal(lat_g, lon_w, sun_lon, sun_lat):
+#def sun_normal(lat_g, lon_w, sun_lon, sun_lat):
+#    '''
+#    Computes the normal vector to the sun.
+#    Taking the dot product of output with sub-sun vector
+#    gives the cosine of solar incidence angle
+#    
+#    Parameters
+#    ----------
+#    
+#    Returns
+#    -------
+#    
+#    To do
+#    -----
+#    * This has not been tested at all
+#    '''
+#    nx = np.cos(np.radians(lat_g-sun_lat))*np.cos(np.radians(lon_w-sun_lon))
+#    ny = np.cos(np.radians(lat_g-sun_lat))*np.sin(np.radians(lon_w-sun_lon))
+#    nz = np.sin(np.radians(lat_g-sun_lat))
+#    return np.asarray([nx,ny,nz])
+
+
+def colocate_diagnostic_plot(model, data, mode):
     '''
-    Computes the normal vector to the surface of the planet.
-    Taking the dot product of output with sub-obs or sub-sun vector
-    gives the cosine of emission angle
+    assesses goodness-of-fit of navigation solution from colocate
     
     Parameters
     ----------
+    model : np.array, required
+        shifted model data
+    data : np.array, required
+        observed data
+    mode : str, required
+        method of co-location, one of ["canny", "convolution", or "disk"]
     
     Returns
     -------
-    
-    To do
-    -----
-    * This has not been tested at all
+    matplotlib figure
     '''
-    nx = np.cos(np.radians(lat_g-sun_lat))*np.cos(np.radians(lon_w-sun_lon))
-    ny = np.cos(np.radians(lat_g-sun_lat))*np.sin(np.radians(lon_w-sun_lon))
-    nz = np.sin(np.radians(lat_g-sun_lat))
-    return np.asarray([nx,ny,nz])
+    aspect_ratio = data.shape[0] / data.shape[1]
+    if aspect_ratio >= 1:
+        szx = 12
+        szy = szx/aspect_ratio
+    else:
+        szy = 12
+        szx = szy*aspect_ratio
+        
+    if (mode == 'convolution') or (mode == 'disk'):
+        vmax = np.nanmax(model)
+    elif mode == 'canny':
+        vmax = 1
+    else:
+        raise ValueError('mode must be one of convolution, disk, or canny')
+        
+    fig, ax = plt.subplots(1,1, figsize = (szy, szx))
+    
+    im = ax.imshow(data - model, origin = 'lower', vmax = vmax)
+    ax.set_title('Data minus model')
+    ax.set_xlabel('Pixel Value')
+    ax.set_ylabel('Pixel Value')
+    
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes('right', size='5%', pad=0.05)
+    fig.colorbar(im, cax=cax, orientation='vertical', label='flux')
+    
+    return fig, ax
     
     
 def emission_angle(ob_lat, surf_n):
@@ -164,15 +212,15 @@ def emission_angle(ob_lat, surf_n):
     
     Returns
     -------
-    :mu: [-] cosine of emission angle
+    float or np.array
+        cosine of emission angle
     '''
     surf_n /= np.linalg.norm(surf_n, axis=0) # normalize to magnitude 1
     ob = np.asarray([np.cos(np.radians(ob_lat)),0,np.sin(np.radians(ob_lat))])
     mu = np.dot(surf_n.T, ob).T
     return mu
     
-    
-    
+        
 def limb_darkening(mu, a, law='exp', mu0=None):
     '''
     Parameters
@@ -244,7 +292,7 @@ class ModelEllipsoid:
     Projection of an ellipsoid onto a 2-D array with latitude and longitude grid
     '''
     
-    def __init__(self, ob_lon, ob_lat, pixscale_km, np_ang, req, rpol, center=(0.0, 0.0), shape=None):
+    def __init__(self, ob_lon, ob_lat, pixscale_km, np_ang, req, rpol, center=(0.0, 0.0), shape=None, sun_lon = None, sun_lat = None):
         '''
         Parameters
         ----------
@@ -258,15 +306,19 @@ class ModelEllipsoid:
             of ob_lon, ob_lat, np_ang
         pixscale_km : float, required. 
             [km] pixel scale
-        req: float, required. 
+        req : float, required. 
             [km] equatorial radius
-        rpol: float, required. 
+        rpol : float, required. 
             [km] polar radius
-        center: 2-element array-like, optional. default (0,0). 
+        center : 2-element array-like, optional. default (0,0). 
             pixel location of center of planet
-        shape: 2-element tuple, optional. 
+        shape : 2-element tuple, optional. 
             shape of output arrays.
             if None, shape is just larger than diameter / pixscale
+        sun_lon : float, optional, default None
+            sub-solar longitude. if None, assume same as ob_lon
+        sun_lat : float, optional, default None
+            sub_solar latitude. if None, assume same as ob_lat
         
         Attributes
         ----------
@@ -277,6 +329,10 @@ class ModelEllipsoid:
         ob_lon : float
             see parameters
         ob_lat : float
+            see parameters
+        sun_lon : float
+            see parameters
+        sun_lat : float
             see parameters
         pixscale_km : float
             see parameters
@@ -292,13 +348,16 @@ class ModelEllipsoid:
         surf_n : np.array
             shape (3,x,y) CHECK THIS. Normal vector to the surface 
             of the planet at each pixel. NaN where off planet disk
+        sun_n : np.array
+            shape (3,x,y), solar normal vectors
+        mu0 : np.array
+            shape (x,y), cosine of solar incidence angle at each pixel
         
         Examples
         --------
         see notebooks/planetnav-tutorial.ipynb
         '''
         
-        # TO DO: handle Astropy units here
         self.req, self.rpol = req, rpol
         self.pixscale_km = pixscale_km
         self.ob_lon = ob_lon
@@ -308,14 +367,29 @@ class ModelEllipsoid:
         if shape is None:
             sz = int(2*np.ceil(np.max([req, rpol]) / pixscale_km) + 1)
             shape = (sz, sz)
+        if sun_lon is None:
+            self.sun_lon = ob_lon
+        else:
+            self.sun_lon = sun_lon
+        if sun_lat is None:
+            self.sun_lat = ob_lat
+        else:
+            self.sun_lat = sun_lat
         
         xcen, ycen = int(shape[0]/2), int(shape[1]/2) #pixels at center of planet
-        xx = np.arange(shape[0]) - xcen
-        yy = np.arange(shape[1]) - ycen
-        x,y = np.meshgrid(xx,yy)
+        yy = np.arange(shape[0]) - xcen
+        xx = np.arange(shape[1]) - ycen
+        x,y = np.meshgrid(xx,yy) 
         self.lat_g, self.lat_c, self.lon_w = lat_lon(x,y,ob_lon,ob_lat,pixscale_km,np_ang,req,rpol)
         self.surf_n = surface_normal(self.lat_g, self.lon_w, self.ob_lon)
         self.mu = emission_angle(self.ob_lat, self.surf_n)
+        
+        # sun geometry
+        self.sun_n = surface_normal(self.lat_g, self.lon_w, self.sun_lon)
+        self.mu0 = emission_angle(self.ob_lat, self.sun_n)
+        
+        avg_circumference = 2*np.pi*((self.req + self.rpol)/2.0)
+        self.deg_per_px = self.pixscale_km * (1/avg_circumference) * 360
         
         # TO DO: test lon_e vs lon_w for different planets!
         # different systems are default for different planets!
@@ -329,7 +403,7 @@ class ModelEllipsoid:
         return f'ModelEllipsoid instance; req={self.req}, rpol={self.rpol}'
         
         
-    def ldmodel(self, tb, a, law='exp', beam=None):
+    def ldmodel(self, tb, a, beam=None, law='exp', mu0=None):
         '''
         Make a limb-darkened model disk convolved with the beam
         See docstring of limb_darkening() for options
@@ -340,14 +414,23 @@ class ModelEllipsoid:
             [flux] brightness temperature of disk at mu=1
         a : float or tuple, required. 
             [-] limb darkening parameter(s) 
-        law : str, optional. default "exp"
-            limb darkening law to use
         beam : float or tuple or np.array
-            see docstring of utils.convolve_with_beam
+            units pixels. see docstring of utils.convolve_with_beam
+        law : str, optional, default "exp"
+            limb darkening law
+        mu0 : np.array, optional, default None
+            cosine of solar incidence angle.
+            if None, code will check if self.mu0 is defined, and use that
+            has no effect unless law=="minnaert".
+            if self.mu0 undefined, law=="minnaert", and mu0=None, then
+            code will fail
         '''
-        ## TO DO: make this allow a 2-D Gaussian beam!
+        if mu0 is None:
+            mu0=getattr(self, "mu0", None)
         
-        ldmodel = limb_darkening(np.copy(self.mu), a, law=law)
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', RuntimeWarning)
+            ldmodel = limb_darkening(np.copy(self.mu), a, law=law, mu0=mu0)
         ldmodel[np.isnan(ldmodel)] = 0.0
         ldmodel = tb*ldmodel
         if beam is None:
@@ -368,41 +451,6 @@ class ModelEllipsoid:
         
         return ldm * zm    
 
-    def write(self, outstem):
-        '''
-        Parameters
-        ----------
-        outstem : str, required.
-            stem of filenames to write
-        
-        Writes
-        ------
-        
-        To do
-        -----
-        * Rewrite this to make a single multi-hdu fits file from scratch
-        * Alternatively, decide to remove this and have write functionality only
-            in Nav
-        '''
-        raise NotImplementedError
-        ### need to rewrite this to make fits files from scratch
-        ### with some useful header information
-        hdulist_out = self.im.hdulist
-        #latitudes
-        hdulist_out[0].header['OBJECT'] = target+'_LATITUDES'
-        hdulist_out[0].data = self.lat_g
-        hdulist_out[0].writeto(lead_string + '_latg.fits', overwrite=True)
-        #longitudes
-        hdulist_out[0].header['OBJECT'] = target+'_LONGITUDES'
-        hdulist_out[0].data = self.lon_w
-        hdulist_out[0].writeto(lead_string + '_lonw.fits', overwrite=True)
-        #longitudes
-        hdulist_out[0].header['OBJECT'] = target+'_MU'
-        hdulist_out[0].data = self.mu
-        hdulist_out[0].writeto(lead_string + '_mu.fits', overwrite=True)
-        
-        return
-
 
 class ModelBody(ModelEllipsoid):
     
@@ -415,28 +463,31 @@ class ModelBody(ModelEllipsoid):
         '''
         Parameters
         ----------
-        body : utils.Body object, required
+        body : pylanetary.utils.Body object, required
         pixscale : float or Quantity, required. 
-            [arcsec] pixel scale of the input image
+            [arcsec/px] pixel scale of the input image
         shape : tuple, optional. 
             shape of output arrays.
             if None, shape is just larger than diameter / pixscale
         
         Attributes
         ----------
+        body : pylanetary.utils.Body object
+            see parameters
         name : str
-            [-] Name of input body as read from input Body object
+            Name of input body as read from input Body object
         ephem : Astropy QTable. 
             single line of astroquery.horizons ephemeris 
             as read from utils.Body object.
             must have 'PDObsLon', 'PDObsLat', 'delta', and 'NPole_ang' fields.
             If you want to modify the ephemeris, modify body.ephem
         pixscale_arcsec : float
-            [arcsec] pixel scale of image
-        ephem : QTable
-            see parameters
-        deg_per_px : float
-            [deg] approximate size of one pixel at the sub-observer point
+            [arcsec/px] pixel scale of image; see parameters
+        pixscale_km : float
+            [km/px] pixel scale of image computed from input pixel scale in arcsec
+            and distance from object to body according to body.ephem
+        parent_attrs : 
+            all attributes of ModelEllipsoid
         '''
         
         self.body = body
@@ -451,10 +502,9 @@ class ModelBody(ModelEllipsoid):
                     self.ephem['PDObsLat'],
                     self.pixscale_km,
                     self.ephem['NPole_ang'],
-                    self.req,self.rpol, shape=shape)
-        
-        avg_circumference = 2*np.pi*((self.req + self.rpol)/2.0)
-        self.deg_per_px = self.pixscale_km * (1/avg_circumference) * 360
+                    self.req,self.rpol, shape=shape,
+                    sun_lon = self.ephem['PDSunLon'], 
+                    sun_lat = self.ephem['PDSunLat'])
         
         
     def __str__(self):
@@ -463,7 +513,7 @@ class ModelBody(ModelEllipsoid):
 
 class Nav(ModelBody):
     '''
-    functions for comparing a model ellipsoid with data for navigation and analysis
+    functions for comparing a model ellipsoid with observed 2-d imaging data
     '''    
     
     def __init__(self, data, body, pixscale):
@@ -482,27 +532,8 @@ class Nav(ModelBody):
         ----------
         data : np.array
             see parameters
-        req : float
-            see parameters
-        rpol : float
-            see parameters
-        pixscale_arcsec : float
-            [arcsec] pixel scale of image
-        pixscale_km : float
-            [km] pixel scale of image
-        ephem : QTable
-            see parameters
-        deg_per_px : float
-            [deg] approximate size of one pixel at the sub-observer point
-        lat_g : np.array
-            [deg] planetographic latitudes. NaN where off planet disk
-        lon_w : np.array
-            [deg] west longitudes. NaN where off planet disk
-        mu : np.array
-            [-] cosines of the emission angle. NaN where off planet disk
-        surf_n : np.array,  
-            [-] Normal vector to the surface of the planet, shape (3,x,y).
-            NaN where off planet disk
+        parent_attrs : 
+            all attributes of ModelBody and ModelEllipsoid classes
         
         Examples
         --------
@@ -538,11 +569,16 @@ class Nav(ModelBody):
                         [same flux unit as data] brightness temperature of disk at mu=1 
                     :a: float, required.
                         [-] exponential limb darkening param
+                    :law: str, optional. default 'exp'
+                        type of limb darkening model to use
                     :beam: float, tuple, or np.array, optional. default None.
+                        units pixels. see utils.convolve_with_beam
                     :low_thresh: float, required.
+                        see documentation of skimage.feature.canny
                     :high_thresh: float, required.
+                        see documentation of skimage.feature.canny
                     :sigma: int, required.
-                see documentation of skimage.feature.canny for explanation of kwargs
+                        see documentation of skimage.feature.canny
                 To find edges of planet disk, typical "good" values are:
                     low_thresh : RMS noise in image
                     high_thresh : approximate flux value of background disk (i.e., cloud-free, volcano-free region)
@@ -557,8 +593,9 @@ class Nav(ModelBody):
                     :law: str, optional. default 'exp'
                         type of limb darkening model to use
                     :beam: float, tuple, or np.array, optional. default None.
-                        see ldmodel docstring
-                    :err: float, per-pixel error in input image
+                        units pixels. see utils.convolve_with_beam
+                    :err: float
+                        per-pixel error in input image
         
             * 'disk': same as convolution
 
@@ -606,32 +643,15 @@ class Nav(ModelBody):
             edges = feature.canny(self.data, sigma=kwargs['sigma'], low_threshold = kwargs['low_thresh'], high_threshold = kwargs['high_thresh'])
             model = feature.canny(model_planet, sigma=kwargs['sigma'], low_threshold = kwargs['low_thresh'], high_threshold = kwargs['high_thresh'])
             data_to_compare = edges
+        
         [dx,dy,dxerr,dyerr] = chi2_shift(model, data_to_compare, err=kwargs['err'])
         
         if diagnostic_plot:
             
             model_shifted = shift2d(model, dx, dy)
-            
-            fig, (ax0, ax1, ax2) = plt.subplots(1, 3, figsize=(10, 5))
-            
-            ax0.imshow(data_to_compare, origin = 'lower')
-            if mode == 'canny':
-                ax0.set_title('data edges')
-            elif mode == 'lddisk' or mode == 'disk':
-                ax0.set_title('data')
-            
-            ax1.imshow(model, origin = 'lower')
-            if mode == 'canny':
-                ax1.set_title(r'Canny filter, $\sigma=$%d'%kwargs['sigma'])
-            elif mode == 'lddisk' or mode == 'disk':
-                ax1.set_title(r'Limb-darkened disk model')
-            
-            #ax2.imshow(model_shifted, origin = 'lower', alpha = 0.5)
-            ax2.imshow(data_to_compare - model_shifted, origin = 'lower', alpha = 0.5)
-            ax2.set_title('Data minus model')
-            
+            fig, ax = colocate_diagnostic_plot(model_shifted, data_to_compare, mode)
             if save_plot is not None:
-                plt.savefig(save_plot)
+                fig.savefig(save_plot, dpi=300)
             plt.show()
             plt.close()
             
@@ -655,7 +675,7 @@ class Nav(ModelBody):
 
     def xy_shift_model(self, dx, dy):
         '''
-        FFTshift model (i.e., lat_g, lon_w, and mu) 
+        FFTshift model (i.e., lat_g, lon_w, mu, and mu0) 
         by a user-defined amount.
         for example, to apply the suggested shift from colocate()
         
@@ -671,14 +691,86 @@ class Nav(ModelBody):
         good_shifted = shift2d(good,dx,dy)
         bad_shifted = good_shifted < 0.1
         outputs = []
-        for arr in [self.mu, self.lon_w, self.lat_g]:
+        for arr in [self.mu, self.lon_w, self.lat_g, self.mu0]:
             
             arr[~good] = 0.0
             arr_shifted = shift2d(arr,dx,dy)
             arr_shifted[bad_shifted] = np.nan
             outputs.append(arr_shifted)
             
-        self.mu, self.lon_w, self.lat_g = outputs 
+        self.mu, self.lon_w, self.lat_g, self.mu0 = outputs 
+        
+        
+    def write(self, outstem, header={}, flux_unit=''):
+        '''
+        Writes navigated data to multi-extension fits
+        
+        Parameters
+        ----------
+        outstem : str, required.
+            stem of filenames to write
+        header : dict, optional, default {}
+            dictionary of header info to put into hdul[0].header
+        flux_unit : str, optional, default ""
+            unit of flux to put in output fits header
+        
+        Writes
+        ------
+        fits file
+        
+        Notes
+        -----
+        hdul[0] contains the header, data is empty
+        hdul[1] contains the data
+        hdul[2] contains latitudes
+        hdul[3] contains longitudes
+        hdul[4] contains emission angles
+        hdul[5] contains solar incidence angles
+        
+        References
+        ----------
+        NAV multi-extension fits file format originally pioneered by Mike Wong
+        e.g. https://doi.org/10.3847/1538-4365/ab775f
+        '''
+        
+        hdu0 = fits.PrimaryHDU()
+        hdu0.header = header
+        
+        hdulist = [hdu0]
+        data_list = [self.data, 
+                    self.lat_g, 
+                    self.lon_w, 
+                    np.rad2deg(np.arccos(self.mu)), 
+                    np.rad2deg(np.arccos(self.mu0)),]
+        extnames_list = ['DATA', 'LAT', 'LON', 'EMI', 'INC']
+        units_list = [flux_unit, 'DEGREES', 'DEGREES', 'DEGREES', 'DEGREES']
+        desc_list = ['', 
+                    'planetographic latitude', 
+                    'System III longitude', 
+                    'emission angle', 
+                    'incidence angle']
+        date = Time.now()
+        date.format = 'iso'
+        date = date.iso[:10]
+        
+        for i in range(len(data_list)):
+            
+            data = data_list[i]
+            hdr = fits.Header()
+            hdr['XTENSION'] = ('IMAGE', 'Image extension')
+            hdr['BITPIX'] = (-32, 'IEEE single precision floating point')
+            hdr['NAXIS'] = 2
+            hdr['NAXIS1'] = data.shape[0]
+            hdr['NAXIS2'] = data.shape[1]
+            hdr['DATATYPE'] = ('REAL*4', 'Type of data')
+            hdr['DATE'] = (date, 'date the navigation solution was written')
+            hdr['INHERIT'] = ('T', 'inherit the primary header')
+            hdr['BUNIT'] = (units_list[i], desc_list[i])
+            hdu = fits.ImageHDU(data=data, header=hdr, name=extnames_list[i])
+            hdulist.append(hdu)
+        
+        hdul = fits.HDUList(hdulist)
+        hdul.writeto(outstem, overwrite=True)
         
     
     def reproject(self, pixscale_arcsec = None, interp = 'cubic'):

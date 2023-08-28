@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Rings Tutorial &#8212; pylanetary 0.0.5 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=039e1c02" />
+    <link rel="stylesheet" type="text/css" href="_static/nbsphinx-code-cells.css" />
+    <script src="_static/documentation_options.js?v=282f96c0"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Utils Tutorial" href="utils-tutorial.html" />
+    <link rel="prev" title="Example navigation workflow" href="nav-examples.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="Rings-Tutorial">
+<h1>Rings Tutorial<a class="headerlink" href="#Rings-Tutorial" title="Link to this heading">¶</a></h1>
+<p>This tutorial showcases the utilities contained in the rings subpackage of pylanetary. Learn how to use the Ring and RingSystemModelObservation classes.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pylanetary.rings</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">cm</span>
+<span class="kn">import</span> <span class="nn">astropy.units</span> <span class="k">as</span> <span class="nn">u</span>
+<span class="kn">from</span> <span class="nn">astropy.time</span> <span class="kn">import</span> <span class="n">Time</span>
+<span class="kn">from</span> <span class="nn">astropy.coordinates</span> <span class="kn">import</span> <span class="n">EarthLocation</span>
+<span class="kn">from</span> <span class="nn">astropy.io</span> <span class="kn">import</span> <span class="n">fits</span>
+<span class="kn">from</span> <span class="nn">astroquery.jplhorizons</span> <span class="kn">import</span> <span class="n">Horizons</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">pylanetary.utils</span> <span class="kn">import</span> <span class="n">convolve_with_beam</span>
+</pre></div>
+</div>
+</div>
+<section id="Basic-model-ring">
+<h2>Basic model ring<a class="headerlink" href="#Basic-model-ring" title="Link to this heading">¶</a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">a</span> <span class="o">=</span> <span class="mi">51149</span> <span class="c1">#km</span>
+<span class="n">e</span> <span class="o">=</span> <span class="mf">0.5</span>
+<span class="n">i</span> <span class="o">=</span> <span class="mf">80.0</span>
+<span class="n">omega</span> <span class="o">=</span> <span class="mf">60.0</span>
+<span class="n">w</span> <span class="o">=</span> <span class="mf">30.</span>
+<span class="n">imsize</span> <span class="o">=</span> <span class="mi">300</span> <span class="c1">#px</span>
+<span class="n">pixscale</span> <span class="o">=</span> <span class="mi">500</span> <span class="c1">#km/px</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ringmodel</span> <span class="o">=</span> <span class="n">Ring</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">omega</span><span class="p">)</span>
+<span class="n">img</span> <span class="o">=</span> <span class="n">ringmodel</span><span class="o">.</span><span class="n">as_2d_array</span><span class="p">((</span><span class="n">imsize</span><span class="p">,</span> <span class="n">imsize</span><span class="p">),</span> <span class="n">pixscale</span><span class="p">)</span> <span class="c1">#shape (pixels), pixscale (km)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">9</span><span class="p">,</span><span class="mi">9</span><span class="p">))</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">origin</span> <span class="o">=</span> <span class="s1">&#39;lower&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">([</span><span class="n">imsize</span><span class="o">/</span><span class="mi">2</span><span class="p">],[</span><span class="n">imsize</span><span class="o">/</span><span class="mi">2</span><span class="p">],</span> <span class="n">color</span> <span class="o">=</span> <span class="s1">&#39;cyan&#39;</span><span class="p">,</span> <span class="n">marker</span> <span class="o">=</span> <span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;center of Uranus&#39;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;example_epsilon_ring.png&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/rings-tutorial_5_0.png" src="_images/rings-tutorial_5_0.png" />
+</div>
+</div>
+<section id="Finite-width-and-brightness">
+<h3>Finite width and brightness<a class="headerlink" href="#Finite-width-and-brightness" title="Link to this heading">¶</a></h3>
+<p>Real rings are not infinitesimal mathematical constructs. they have width, and in an astronomical context, they also have surface brightness. Note here that we can also modify the ring properties in place, but we must specify Astropy units when doing so.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># to do: add a colorbar here!</span>
+<span class="n">ringmodel2</span> <span class="o">=</span> <span class="n">Ring</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">flux</span> <span class="o">=</span> <span class="mf">0.001</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="mi">500</span><span class="p">)</span>
+<span class="n">ringmodel2</span><span class="o">.</span><span class="n">e</span> <span class="o">=</span> <span class="mf">0.4</span>
+<span class="n">ringmodel2</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="mi">10000</span><span class="o">*</span><span class="n">u</span><span class="o">.</span><span class="n">km</span>
+<span class="n">img</span> <span class="o">=</span> <span class="n">ringmodel2</span><span class="o">.</span><span class="n">as_2d_array</span><span class="p">((</span><span class="n">imsize</span><span class="p">,</span> <span class="n">imsize</span><span class="p">),</span> <span class="n">pixscale</span><span class="p">)</span> <span class="c1">#shape (pixels), pixscale (km)</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">9</span><span class="p">,</span><span class="mi">9</span><span class="p">))</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">origin</span> <span class="o">=</span> <span class="s1">&#39;lower&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">([</span><span class="n">imsize</span><span class="o">/</span><span class="mi">2</span><span class="p">],[</span><span class="n">imsize</span><span class="o">/</span><span class="mi">2</span><span class="p">],</span> <span class="n">color</span> <span class="o">=</span> <span class="s1">&#39;cyan&#39;</span><span class="p">,</span> <span class="n">marker</span> <span class="o">=</span> <span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;center of Uranus&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;example_epsilon_ring.png&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/rings-tutorial_7_0.png" src="_images/rings-tutorial_7_0.png" />
+</div>
+</div>
+</section>
+<section id="Ring-objects-as-masks">
+<h3>Ring objects as masks<a class="headerlink" href="#Ring-objects-as-masks" title="Link to this heading">¶</a></h3>
+<p>suppose we wanted to extract the flux from a real image in an annulus defined by the ring above. this is easily done, because under the hood, these rings are photutils.EllipticalAnnulus objects. We can simply say,</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ann</span> <span class="o">=</span> <span class="n">ringmodel2</span><span class="o">.</span><span class="n">as_elliptical_annulus</span><span class="p">((</span><span class="n">imsize</span><span class="p">,</span> <span class="n">imsize</span><span class="p">),</span> <span class="n">pixscale</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">ann</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;class &#39;photutils.aperture.ellipse.EllipticalAnnulus&#39;&gt;
+</pre></div></div>
+</div>
+<p>See below for an example that uses these aperture masks on real data</p>
+</section>
+<section id="convolve-model-ring-with-beam">
+<h3>convolve model ring with beam<a class="headerlink" href="#convolve-model-ring-with-beam" title="Link to this heading">¶</a></h3>
+<p>we can also define an elliptical beam to convolve with as we cast into a 2-D array</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">img</span> <span class="o">=</span> <span class="n">ringmodel2</span><span class="o">.</span><span class="n">as_2d_array</span><span class="p">((</span><span class="n">imsize</span><span class="p">,</span> <span class="n">imsize</span><span class="p">),</span> <span class="n">pixscale</span><span class="p">,</span> <span class="n">beam</span> <span class="o">=</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">30</span><span class="p">))</span>
+<span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;/Users/emolter/Python/pylanetary/pylanetary/rings/tests/data/as_2d_array_testarr.npy&#39;</span><span class="p">,</span> <span class="n">img</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">9</span><span class="p">,</span><span class="mi">9</span><span class="p">))</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">origin</span> <span class="o">=</span> <span class="s1">&#39;lower&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">([</span><span class="n">imsize</span><span class="o">/</span><span class="mi">2</span><span class="p">],[</span><span class="n">imsize</span><span class="o">/</span><span class="mi">2</span><span class="p">],</span> <span class="n">color</span> <span class="o">=</span> <span class="s1">&#39;cyan&#39;</span><span class="p">,</span> <span class="n">marker</span> <span class="o">=</span> <span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;center of Uranus&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;example_epsilon_ring.png&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/rings-tutorial_12_0.png" src="_images/rings-tutorial_12_0.png" />
+</div>
+</div>
+</section>
+</section>
+<section id="Model-ring-system-observation">
+<h2>Model ring system observation<a class="headerlink" href="#Model-ring-system-observation" title="Link to this heading">¶</a></h2>
+<p>The RingSystemModelObservation tool makes mock observations of rings. It contains a static data table of ring properties for Jupiter, Saturn, Uranus, and Neptune. It interfaces with the Planetary Ring Node query tool and the JPL Horizons query tool to make the proper projected geometry for a given time of observation. The end result is basically a fully-editable Python version of the Planetary Ring Node. Here is an example of a simple query:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">epoch</span> <span class="o">=</span> <span class="s1">&#39;2020-01-30 00:00&#39;</span>
+<span class="n">alma_coords</span> <span class="o">=</span> <span class="p">(</span> <span class="o">-</span><span class="mf">67.755</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span> <span class="o">-</span><span class="mf">23.029</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span> <span class="mi">5000</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span> <span class="c1">#lon, lat, alt(m)</span>
+<span class="n">ringnames</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Six&#39;</span><span class="p">,</span> <span class="s1">&#39;Five&#39;</span><span class="p">,</span> <span class="s1">&#39;Four&#39;</span><span class="p">,</span> <span class="s1">&#39;Alpha&#39;</span><span class="p">,</span> <span class="s1">&#39;Beta&#39;</span><span class="p">,</span> <span class="s1">&#39;Eta&#39;</span><span class="p">,</span> <span class="s1">&#39;Gamma&#39;</span><span class="p">,</span> <span class="s1">&#39;Delta&#39;</span><span class="p">,</span> <span class="s1">&#39;Epsilon&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pylanetary.rings</span> <span class="kn">import</span> <span class="n">RingSystemModelObservation</span>
+<span class="kn">from</span> <span class="nn">pylanetary.utils</span> <span class="kn">import</span> <span class="n">Body</span>
+<span class="n">epoch_astropy</span> <span class="o">=</span> <span class="n">Time</span><span class="p">(</span><span class="n">epoch</span><span class="p">,</span> <span class="nb">format</span> <span class="o">=</span> <span class="s1">&#39;iso&#39;</span><span class="p">,</span> <span class="n">scale</span> <span class="o">=</span> <span class="s1">&#39;utc&#39;</span><span class="p">)</span>
+<span class="n">alma_coords_astropy</span> <span class="o">=</span> <span class="n">EarthLocation</span><span class="p">(</span><span class="n">alma_coords</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">alma_coords</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">alma_coords</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+<span class="n">ura</span> <span class="o">=</span> <span class="n">Body</span><span class="p">(</span><span class="s1">&#39;uranus&#39;</span><span class="p">,</span> <span class="n">epoch</span><span class="o">=</span><span class="n">epoch_astropy</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="s1">&#39;399&#39;</span><span class="p">)</span> <span class="c1">#specifying ALMA&#39;s Horizons code here</span>
+
+<span class="n">uranus_rings</span> <span class="o">=</span> <span class="n">RingSystemModelObservation</span><span class="p">(</span><span class="n">ura</span><span class="p">,</span>
+                     <span class="n">location</span> <span class="o">=</span> <span class="n">alma_coords_astropy</span><span class="p">,</span>
+                     <span class="n">ringnames</span> <span class="o">=</span> <span class="n">ringnames</span><span class="p">)</span>
+
+<span class="n">uranus_rings</span><span class="o">.</span><span class="n">ringtable</span><span class="o">.</span><span class="n">pprint_all</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+  ring  pericenter ascending node Middle Boundary (km) Width Eccentricity Inclination (deg) Optical Depth      Type      Associated Moons Footnotes                          Comments
+           deg          deg
+------- ---------- -------------- -------------------- ----- ------------ ----------------- ------------- ------------- ----------------- --------- ---------------------------------------------------------
+    Six      302.5           34.4              41838.0  1.53      0.00102            0.0607           0.3 Narrow, dense                           2
+   Five    259.372          282.6              42234.0  2.28       0.0019            0.0559           0.5 Narrow, dense                           2
+   Four     147.31          154.0              42571.0  2.33      0.00106             0.032           0.3 Narrow, dense                           2
+  Alpha      12.69           61.9              44718.0  8.46      0.00076             0.015           0.4 Narrow, dense                           2
+   Beta    357.656          224.4              45661.0  9.49     0.000442             0.005           0.3 Narrow, dense                           2
+    Eta        0.0            0.0              47176.0   1.6          0.0               0.0           0.4 Narrow, dense                           2
+  Gamma    197.409            0.0              47627.0  2.15     0.001092               0.0           0.3 Narrow, dense           Ophelia         2 Shape also contains an m=0 mode of 5.15 km amplitude [3].
+  Delta        0.0            0.0              48300.0   4.6          0.0             0.001           0.5 Narrow, dense          Cordelia         2                        Shape is dominated by an m=2 mode.
+Epsilon    330.071            0.0              51149.0  58.1      0.00794               0.0           nan Narrow, dense Cordelia, Ophelia         2                       Shepherded by Cordelia and Ophelia.
+</pre></div></div>
+</div>
+<p>The model observation has made Ring objects for each ring in ringnames. All the properties of Ring objects discussed above can be used here. Let’s go ahead and plot the full model</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">obs</span> <span class="o">=</span> <span class="n">uranus_rings</span><span class="o">.</span><span class="n">as_2d_array</span><span class="p">((</span><span class="n">imsize</span><span class="p">,</span> <span class="n">imsize</span><span class="p">),</span> <span class="n">pixscale</span><span class="p">,</span> <span class="n">beam</span> <span class="o">=</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">30</span><span class="p">))</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">9</span><span class="p">,</span><span class="mi">9</span><span class="p">))</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">origin</span> <span class="o">=</span> <span class="s1">&#39;lower&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">([</span><span class="n">imsize</span><span class="o">/</span><span class="mi">2</span><span class="p">],[</span><span class="n">imsize</span><span class="o">/</span><span class="mi">2</span><span class="p">],</span> <span class="n">color</span> <span class="o">=</span> <span class="s1">&#39;cyan&#39;</span><span class="p">,</span> <span class="n">marker</span> <span class="o">=</span> <span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;center of Uranus&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/rings-tutorial_17_0.png" src="_images/rings-tutorial_17_0.png" />
+</div>
+</div>
+<p>Notice that we do not need to specify an image size or pixel scale until we have decided to cast the system into an array. This gives us more flexibility to modify things before plotting or comparing to observations</p>
+<section id="modifying-ring-system-defaults">
+<h3>modifying ring system defaults<a class="headerlink" href="#modifying-ring-system-defaults" title="Link to this heading">¶</a></h3>
+<p>sometimes we want something other than the default values for radius, eccentricity, etc., or to play with different ephemerides. In this case, we can simply modify the Ring objects directly before plotting. Let’s make the epsilon ring larger, and the alpha ring more eccentric</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">uranus_rings</span><span class="o">.</span><span class="n">rings</span><span class="p">[</span><span class="s1">&#39;Epsilon&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">a</span> <span class="o">=</span> <span class="mi">65000</span><span class="o">*</span><span class="n">u</span><span class="o">.</span><span class="n">km</span>
+<span class="n">uranus_rings</span><span class="o">.</span><span class="n">rings</span><span class="p">[</span><span class="s1">&#39;Alpha&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">e</span> <span class="o">=</span> <span class="mf">0.7</span>
+<span class="n">uranus_rings</span><span class="o">.</span><span class="n">rings</span><span class="p">[</span><span class="s1">&#39;Alpha&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">omega</span> <span class="o">=</span> <span class="mi">120</span><span class="o">*</span><span class="n">u</span><span class="o">.</span><span class="n">deg</span>
+<span class="n">obs</span> <span class="o">=</span> <span class="n">uranus_rings</span><span class="o">.</span><span class="n">as_2d_array</span><span class="p">((</span><span class="n">imsize</span><span class="p">,</span> <span class="n">imsize</span><span class="p">),</span> <span class="n">pixscale</span><span class="p">,</span> <span class="n">beam</span> <span class="o">=</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">30</span><span class="p">))</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">9</span><span class="p">,</span><span class="mi">9</span><span class="p">))</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">origin</span> <span class="o">=</span> <span class="s1">&#39;lower&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">([</span><span class="n">imsize</span><span class="o">/</span><span class="mi">2</span><span class="p">],[</span><span class="n">imsize</span><span class="o">/</span><span class="mi">2</span><span class="p">],</span> <span class="n">color</span> <span class="o">=</span> <span class="s1">&#39;cyan&#39;</span><span class="p">,</span> <span class="n">marker</span> <span class="o">=</span> <span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;center of Uranus&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/rings-tutorial_20_0.png" src="_images/rings-tutorial_20_0.png" />
+</div>
+</div>
+</section>
+<section id="minor-rings">
+<h3>minor rings<a class="headerlink" href="#minor-rings" title="Link to this heading">¶</a></h3>
+<p>The static data tables loaded from the PDS support minor rings and dusty rings, too.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">uranus_rings_dusty</span> <span class="o">=</span> <span class="n">RingSystemModelObservation</span><span class="p">(</span><span class="n">ura</span><span class="p">,</span>
+                     <span class="n">location</span> <span class="o">=</span> <span class="n">alma_coords_astropy</span><span class="p">,</span>
+                     <span class="n">ringnames</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">uranus_rings_dusty</span><span class="o">.</span><span class="n">rings</span><span class="p">[</span><span class="s1">&#39;Zeta&#39;</span><span class="p">])</span>
+
+<span class="n">obs</span> <span class="o">=</span> <span class="n">uranus_rings_dusty</span><span class="o">.</span><span class="n">as_2d_array</span><span class="p">((</span><span class="n">imsize</span><span class="p">,</span> <span class="n">imsize</span><span class="p">),</span> <span class="n">pixscale</span><span class="p">,</span> <span class="n">beam</span> <span class="o">=</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">30</span><span class="p">))</span>
+<span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;/Users/emolter/Python/pylanetary/pylanetary/rings/tests/data/ura_system_testarr.npy&#39;</span><span class="p">,</span> <span class="n">obs</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">9</span><span class="p">,</span><span class="mi">9</span><span class="p">))</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">origin</span> <span class="o">=</span> <span class="s1">&#39;lower&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">([</span><span class="n">imsize</span><span class="o">/</span><span class="mi">2</span><span class="p">],[</span><span class="n">imsize</span><span class="o">/</span><span class="mi">2</span><span class="p">],</span> <span class="n">color</span> <span class="o">=</span> <span class="s1">&#39;cyan&#39;</span><span class="p">,</span> <span class="n">marker</span> <span class="o">=</span> <span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;center of Uranus&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Ring instance; a=39600.0 km, e=0.0, i=0.0 deg, omega=0.0 deg, w=0.0 deg, width=3500.0 km
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/rings-tutorial_22_1.png" src="_images/rings-tutorial_22_1.png" />
+</div>
+</div>
+</section>
+<section id="modifying-widths-and-fluxes">
+<h3>modifying widths and fluxes<a class="headerlink" href="#modifying-widths-and-fluxes" title="Link to this heading">¶</a></h3>
+<p>This image shows some weaknesses of the default behavior: for minor rings, the relative brightnesses and/or widths are very often incorrect due to a lack of good data. We can get around this either by modifying each Ring object after instantiating them, or by inputting a list of fluxes and/or widths as we instantiate the model. See the documentation of Ring, Ring.as_2d_array, and Ring.as_elliptical_annulus</p>
+</section>
+</section>
+<section id="Example-Analysis-with-Observational-Data">
+<h2>Example Analysis with Observational Data<a class="headerlink" href="#Example-Analysis-with-Observational-Data" title="Link to this heading">¶</a></h2>
+<p>Here, these tools are applied to real Keck K-band data. We extract the radial profiles of the ring system and the azimuthal profile of the epsilon ring.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">hdul</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;/Users/emolter/Python/pylanetary/notebooks/data/urk140.fits&#39;</span><span class="p">)</span> <span class="c1">#urh60.fits</span>
+<span class="n">pixscale_arcsec</span> <span class="o">=</span> <span class="mf">0.009942</span> <span class="c1">#arcsec, keck</span>
+<span class="n">keck_coords</span> <span class="o">=</span> <span class="p">(</span><span class="mi">360</span><span class="o">*</span><span class="n">u</span><span class="o">.</span><span class="n">deg</span> <span class="o">-</span> <span class="mf">155.4744</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span> <span class="mf">19.8264</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span> <span class="mi">4145</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span> <span class="c1">#lon (East), lat, alt(m)</span>
+
+<span class="n">header</span> <span class="o">=</span> <span class="n">hdul</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">hdul</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+<span class="n">obs_time</span> <span class="o">=</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;DATE-OBS&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;EXPSTART&#39;</span><span class="p">][:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">obs_time</span><span class="p">)</span>
+<span class="n">start_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">obs_time</span><span class="p">,</span> <span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S&#39;</span><span class="p">)</span>
+<span class="n">end_time</span> <span class="o">=</span> <span class="n">start_time</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">epochs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;start&#39;</span><span class="p">:</span><span class="n">obs_time</span><span class="p">,</span> <span class="s1">&#39;stop&#39;</span><span class="p">:</span><span class="n">end_time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S&#39;</span><span class="p">),</span> <span class="s1">&#39;step&#39;</span><span class="p">:</span><span class="s1">&#39;1m&#39;</span><span class="p">}</span>
+<span class="n">keck_coords_astropy</span> <span class="o">=</span> <span class="n">EarthLocation</span><span class="p">(</span><span class="n">keck_coords</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">keck_coords</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">keck_coords</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+
+<span class="c1"># convert pixscale from arcsec to km</span>
+<span class="n">obj</span> <span class="o">=</span> <span class="n">Horizons</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;799&#39;</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="s1">&#39;568&#39;</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="n">epochs</span><span class="p">)</span> <span class="c1">#Uranus, Keck</span>
+<span class="n">d_AU</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">ephemerides</span><span class="p">()[</span><span class="s1">&#39;delta&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">u</span><span class="o">.</span><span class="n">au</span>
+<span class="n">dist</span> <span class="o">=</span> <span class="n">d_AU</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">km</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+<span class="n">pixscale</span> <span class="o">=</span> <span class="n">dist</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="n">pixscale_arcsec</span><span class="o">/</span><span class="mf">3600.</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;pixel scale is </span><span class="si">{</span><span class="n">pixscale</span><span class="si">}</span><span class="s1"> km&#39;</span><span class="p">)</span>
+
+<span class="c1"># image size also from header</span>
+<span class="n">imsize</span> <span class="o">=</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;NAXIS1&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+2019-10-28 12:07:56
+pixel scale is 135.79696138751703 km
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># make the model observation</span>
+<span class="n">ura_keck</span> <span class="o">=</span> <span class="n">Body</span><span class="p">(</span><span class="s1">&#39;uranus&#39;</span><span class="p">,</span> <span class="n">epoch</span><span class="o">=</span><span class="n">Time</span><span class="p">(</span><span class="n">start_time</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="s1">&#39;utc&#39;</span><span class="p">),</span> <span class="n">location</span><span class="o">=</span><span class="s1">&#39;568&#39;</span><span class="p">)</span>
+<span class="n">uranus_rings</span> <span class="o">=</span> <span class="n">RingSystemModelObservation</span><span class="p">(</span><span class="n">ura_keck</span><span class="p">,</span>
+                     <span class="n">location</span> <span class="o">=</span> <span class="n">keck_coords_astropy</span><span class="p">,</span>
+                     <span class="n">ringnames</span> <span class="o">=</span> <span class="n">ringnames</span><span class="p">)</span>
+<span class="n">model_keck_obs</span> <span class="o">=</span> <span class="n">uranus_rings</span><span class="o">.</span><span class="n">as_2d_array</span><span class="p">((</span><span class="n">imsize</span><span class="p">,</span> <span class="n">imsize</span><span class="p">),</span> <span class="n">pixscale</span><span class="p">,</span> <span class="n">beam</span> <span class="o">=</span> <span class="mf">4.0</span><span class="p">)</span>
+
+<span class="n">sz</span> <span class="o">=</span> <span class="n">pixscale</span><span class="o">*</span><span class="n">imsize</span>
+<span class="n">fig</span><span class="p">,</span> <span class="p">[</span><span class="n">ax0</span><span class="p">,</span> <span class="n">ax1</span><span class="p">]</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">15</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span>
+
+<span class="n">ax0</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">model_keck_obs</span><span class="p">,</span> <span class="n">origin</span> <span class="o">=</span> <span class="s1">&#39;lower&#39;</span><span class="p">,</span> <span class="n">extent</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="n">sz</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">sz</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="n">sz</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">sz</span><span class="o">/</span><span class="mi">2</span><span class="p">])</span>
+<span class="n">ax0</span><span class="o">.</span><span class="n">scatter</span><span class="p">([</span><span class="n">imsize</span><span class="o">/</span><span class="mi">2</span><span class="p">],[</span><span class="n">imsize</span><span class="o">/</span><span class="mi">2</span><span class="p">],</span> <span class="n">color</span> <span class="o">=</span> <span class="s1">&#39;cyan&#39;</span><span class="p">,</span> <span class="n">marker</span> <span class="o">=</span> <span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;center of Uranus&#39;</span><span class="p">)</span>
+
+<span class="n">ax1</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">origin</span> <span class="o">=</span> <span class="s1">&#39;lower&#39;</span><span class="p">,</span> <span class="n">extent</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="n">sz</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">sz</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="n">sz</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">sz</span><span class="o">/</span><span class="mi">2</span><span class="p">],</span> <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vmax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">/</span><span class="mi">16</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">ax</span> <span class="ow">in</span> <span class="p">[</span><span class="n">ax0</span><span class="p">,</span> <span class="n">ax1</span><span class="p">]:</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Distance (km)&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Distance (km)&#39;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/rings-tutorial_26_0.png" src="_images/rings-tutorial_26_0.png" />
+</div>
+</div>
+<section id="Extract-total-ring-flux">
+<h3>Extract total ring flux<a class="headerlink" href="#Extract-total-ring-flux" title="Link to this heading">¶</a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># They look to compare well. Now make the epsilon ring model into a photutils annulus</span>
+<span class="n">eps</span> <span class="o">=</span> <span class="n">uranus_rings</span><span class="o">.</span><span class="n">rings</span><span class="p">[</span><span class="s1">&#39;Epsilon&#39;</span><span class="p">]</span>
+<span class="n">width</span> <span class="o">=</span> <span class="mi">4000</span><span class="o">*</span><span class="n">u</span><span class="o">.</span><span class="n">km</span>
+<span class="n">focus</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">25000</span><span class="p">,</span> <span class="o">-</span><span class="mi">1500</span><span class="p">])</span>
+<span class="n">focus</span> <span class="o">=</span> <span class="n">focus</span> <span class="o">/</span> <span class="n">pixscale</span> <span class="o">+</span> <span class="p">[</span><span class="n">imsize</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">imsize</span><span class="o">/</span><span class="mi">2</span><span class="p">]</span>
+<span class="n">ann</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">eps</span><span class="o">.</span><span class="n">as_elliptical_annulus</span><span class="p">(</span><span class="n">focus</span><span class="p">,</span> <span class="n">pixscale</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="n">width</span><span class="p">,</span> <span class="n">return_params</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+
+<span class="n">avec</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">][:</span><span class="mi">2</span><span class="p">]</span><span class="o">/</span><span class="p">(</span><span class="n">pixscale</span><span class="p">)</span>
+<span class="c1">#bvec = params[&#39;b&#39;][:2]/(pixscale)</span>
+<span class="n">peri</span> <span class="o">=</span> <span class="n">avec</span>
+
+<span class="n">vmax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="n">sz</span> <span class="o">=</span> <span class="n">pixscale</span><span class="o">*</span><span class="n">imsize</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">origin</span> <span class="o">=</span> <span class="s1">&#39;lower&#39;</span><span class="p">,</span> <span class="n">vmin</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">vmax</span> <span class="o">=</span> <span class="n">vmax</span><span class="o">/</span><span class="mi">16</span><span class="p">)</span><span class="c1">#, extent=[-sz/2, sz/2, -sz/2, sz/2])</span>
+<span class="n">ann_patches</span> <span class="o">=</span> <span class="n">ann</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;epsilon&#39;</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">quiver</span><span class="p">([</span><span class="n">focus</span><span class="p">[</span><span class="mi">0</span><span class="p">]],[</span><span class="n">focus</span><span class="p">[</span><span class="mi">1</span><span class="p">]],[</span><span class="n">peri</span><span class="p">[</span><span class="mi">0</span><span class="p">]],[</span><span class="n">peri</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="n">angles</span><span class="o">=</span><span class="s1">&#39;xy&#39;</span><span class="p">,</span> <span class="n">scale_units</span><span class="o">=</span><span class="s1">&#39;xy&#39;</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">0.005</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;argument of periapsis&#39;</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Distance (pix)&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Distance (pix)&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="c1"># extract flux from epsilon ring (arbitrary units)</span>
+<span class="kn">from</span> <span class="nn">photutils.aperture</span> <span class="kn">import</span> <span class="n">ApertureStats</span>
+<span class="n">stats</span> <span class="o">=</span> <span class="n">ApertureStats</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">ann</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">stats</span><span class="o">.</span><span class="n">to_table</span><span class="p">([</span><span class="s1">&#39;mean&#39;</span><span class="p">,</span> <span class="s1">&#39;median&#39;</span><span class="p">,</span> <span class="s1">&#39;std&#39;</span><span class="p">,</span> <span class="s1">&#39;var&#39;</span><span class="p">,</span> <span class="s1">&#39;sum&#39;</span><span class="p">]))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/rings-tutorial_28_0.png" src="_images/rings-tutorial_28_0.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+       mean             median             std                var                sum
+----------------- ----------------- ------------------ ------------------ -----------------
+36.14308731686408 25.11417579650879 31.811333204522843 1011.9609202491774 1818902.802280782
+</pre></div></div>
+</div>
+<p>It is worth noting that this measurement does not represent the “true” total flux of the epsilon ring because this aperture both (1) contains flux from other rings and (2) misses flux in the sidelobes of the PSF. Better practice would be to fit a ring model to the data in one or two dimensions.</p>
+</section>
+<section id="Radial-profile">
+<h3>Radial profile<a class="headerlink" href="#Radial-profile" title="Link to this heading">¶</a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">### Make the radial profile</span>
+<span class="n">r_in</span> <span class="o">=</span> <span class="mi">35000</span> <span class="c1">#km</span>
+<span class="n">r_out</span> <span class="o">=</span> <span class="mi">65000</span> <span class="c1">#km</span>
+<span class="n">r_step</span> <span class="o">=</span> <span class="mi">300</span> <span class="c1">#km</span>
+
+<span class="c1"># extract radial profile using params_sys and zero eccentricity</span>
+<span class="n">eps</span> <span class="o">=</span> <span class="n">uranus_rings</span><span class="o">.</span><span class="n">rings</span><span class="p">[</span><span class="s1">&#39;Epsilon&#39;</span><span class="p">]</span>
+<span class="n">zeroe_ring</span> <span class="o">=</span> <span class="n">Ring</span><span class="p">(</span><span class="n">eps</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">eps</span><span class="o">.</span><span class="n">params_sys</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">eps</span><span class="o">.</span><span class="n">params_sys</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">eps</span><span class="o">.</span><span class="n">params_sys</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+<span class="n">radii</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">r_in</span><span class="p">,</span> <span class="n">r_out</span><span class="p">,</span> <span class="n">r_step</span><span class="p">)</span>
+<span class="n">sums</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">radii</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">r</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">radii</span><span class="p">):</span>
+    <span class="n">zeroe_ring</span><span class="o">.</span><span class="n">a</span> <span class="o">=</span> <span class="n">r</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">km</span>
+    <span class="n">ann</span> <span class="o">=</span> <span class="n">zeroe_ring</span><span class="o">.</span><span class="n">as_elliptical_annulus</span><span class="p">(</span><span class="n">focus</span><span class="p">,</span> <span class="n">pixscale</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="n">r_step</span><span class="o">*</span><span class="n">u</span><span class="o">.</span><span class="n">km</span><span class="p">,</span> <span class="n">return_params</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+    <span class="c1">#if i == 10:</span>
+    <span class="c1">#    fig, ax = plt.subplots(1,1, figsize = (10,10))</span>
+    <span class="c1">#    ax.imshow(data, origin = &#39;lower&#39;, vmin = 0, vmax = vmax/16)</span>
+    <span class="c1">#    ann.plot(color=&#39;red&#39;, lw=2, label=&#39;epsilon&#39;)</span>
+    <span class="c1">#    plt.show()</span>
+    <span class="n">stats</span> <span class="o">=</span> <span class="n">ApertureStats</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">ann</span><span class="p">,</span> <span class="n">sum_method</span> <span class="o">=</span> <span class="s1">&#39;subpixel&#39;</span><span class="p">)</span>
+    <span class="n">sums</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">sum</span>
+
+
+<span class="c1"># plot it</span>
+<span class="n">fs</span> <span class="o">=</span> <span class="mi">14</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span><span class="mi">6</span><span class="p">))</span>
+<span class="n">cmap</span> <span class="o">=</span> <span class="n">cm</span><span class="o">.</span><span class="n">brg</span>
+
+<span class="c1"># get ring expected semimajor axes from static data, plot them</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ringname</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ringnames</span><span class="p">):</span>
+    <span class="n">single_ring</span> <span class="o">=</span> <span class="n">uranus_rings</span><span class="o">.</span><span class="n">rings</span><span class="p">[</span><span class="n">ringname</span><span class="p">]</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">single_ring</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">cmap</span><span class="p">(</span><span class="n">i</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">ringnames</span><span class="p">)),</span> <span class="n">linestyle</span> <span class="o">=</span> <span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="n">ringname</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">radii</span><span class="p">,</span> <span class="n">sums</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">get_xticks</span><span class="p">()</span><span class="o">/</span><span class="mi">1000</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">which</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span> <span class="n">labelsize</span> <span class="o">=</span> <span class="n">fs</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;Radius (10$^3$ km)&#39;</span><span class="p">,</span> <span class="n">fontsize</span> <span class="o">=</span> <span class="n">fs</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Flux (unconverted units)&#39;</span><span class="p">,</span> <span class="n">fontsize</span> <span class="o">=</span> <span class="n">fs</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/var/folders/g0/r491pzqx4kx0tfmpx8970ntm0000gn/T/ipykernel_49546/668933652.py:33: UserWarning: FixedFormatter should only be used together with FixedLocator
+  ax.set_xticklabels(ax.get_xticks()/1000)
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/rings-tutorial_31_1.png" src="_images/rings-tutorial_31_1.png" />
+</div>
+</div>
+</section>
+</section>
+<section id="Azimuthal-profile">
+<h2>Azimuthal profile<a class="headerlink" href="#Azimuthal-profile" title="Link to this heading">¶</a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">nwedges</span> <span class="o">=</span> <span class="mi">30</span>
+<span class="n">thetas_implane</span><span class="p">,</span> <span class="n">wedges</span> <span class="o">=</span> <span class="n">eps</span><span class="o">.</span><span class="n">as_azimuthal_wedges</span><span class="p">([</span><span class="n">imsize</span><span class="p">,</span><span class="n">imsize</span><span class="p">],</span> <span class="n">pixscale</span><span class="p">,</span> <span class="n">focus</span><span class="o">=</span><span class="n">focus</span><span class="p">,</span> <span class="n">nwedges</span><span class="o">=</span><span class="n">nwedges</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="n">width</span><span class="p">)</span>
+
+<span class="n">wedge_sums</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">data_sums</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">extraction_region</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">wedge</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">wedges</span><span class="p">):</span>
+
+    <span class="n">wedge_data</span> <span class="o">=</span> <span class="n">data</span> <span class="o">*</span> <span class="n">wedge</span>
+    <span class="n">extraction_region</span> <span class="o">+=</span> <span class="n">wedge_data</span>
+    <span class="n">data_sums</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nansum</span><span class="p">(</span><span class="n">wedge_data</span><span class="p">))</span>
+    <span class="n">wedge_sums</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nansum</span><span class="p">(</span><span class="n">wedge</span><span class="p">))</span>
+
+
+    <span class="c1">## diagnostic plot: if working right, this will show a small wedge of ring data</span>
+    <span class="c1">#if i == 5:</span>
+    <span class="c1">#    plt.imshow(wedge_data, origin=&#39;lower&#39;)</span>
+    <span class="c1">#    plt.show()</span>
+
+<span class="n">wedge_sums</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">wedge_sums</span><span class="p">)</span>
+<span class="n">data_sums</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data_sums</span><span class="p">)</span>
+
+<span class="c1">## diagnostic plot: if working right, this will show the data within the extraction region only,</span>
+<span class="c1">## i.e. the sum of all the wedges</span>
+<span class="c1"># fig, ax = plt.subplots(1,1, figsize = (12,12))</span>
+<span class="c1"># ax.imshow(extraction_region, origin = &#39;lower&#39;)</span>
+<span class="c1"># plt.show()</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">cm</span>
+<span class="n">cmap</span> <span class="o">=</span> <span class="n">cm</span><span class="o">.</span><span class="n">hot</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">15</span><span class="p">,</span><span class="mi">15</span><span class="p">))</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">origin</span> <span class="o">=</span> <span class="s1">&#39;lower&#39;</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vmax</span> <span class="o">=</span> <span class="n">vmax</span><span class="o">/</span><span class="mi">16</span><span class="p">)</span><span class="c1">#, extent=[-sz/2, sz/2, -sz/2, sz/2])</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">wedge</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">wedges</span><span class="p">):</span>
+
+    <span class="n">theta</span> <span class="o">=</span> <span class="n">thetas_implane</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="n">color</span> <span class="o">=</span> <span class="n">cmap</span><span class="p">(</span><span class="n">theta</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">))</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">contour</span><span class="p">(</span><span class="n">wedge</span><span class="p">,</span> <span class="n">levels</span><span class="o">=</span><span class="p">[</span><span class="mf">0.01</span><span class="p">],</span> <span class="n">colors</span><span class="o">=</span><span class="p">[</span><span class="n">color</span><span class="p">])</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Distance (pix)&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Distance (pix)&#39;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/rings-tutorial_34_0.png" src="_images/rings-tutorial_34_0.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># find periapsis and apoapsis angle</span>
+<span class="n">peri_angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">peri</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">peri</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">%</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+<span class="n">apo_angle</span> <span class="o">=</span> <span class="p">(</span><span class="n">peri_angle</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span><span class="o">%</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">13</span><span class="p">,</span><span class="mi">6</span><span class="p">))</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">thetas_implane</span><span class="p">,</span> <span class="n">data_sums</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">data_sums</span><span class="p">),</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Sum in Wedge&#39;</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="s1">&#39;mid&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">thetas_implane</span><span class="p">,</span> <span class="p">(</span><span class="n">data_sums</span><span class="o">/</span><span class="n">wedge_sums</span><span class="p">)</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">data_sums</span><span class="o">/</span><span class="n">wedge_sums</span><span class="p">)),</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;green&#39;</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;Density&#39;</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="s1">&#39;mid&#39;</span><span class="p">)</span>
+<span class="c1">#ax0.set_xlabel(&#39;Theta (rad)&#39;)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Normalized Intensity&#39;</span><span class="p">)</span>
+
+
+<span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">peri_angle</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="n">linestyle</span> <span class="o">=</span> <span class="s1">&#39;:&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Periapsis&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">apo_angle</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="n">linestyle</span> <span class="o">=</span> <span class="s1">&#39;:&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Apoapsis&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">])</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">([</span><span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;$\pi/2$&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;$\pi$&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;$3\pi/2$&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;$2\pi$&#39;</span><span class="p">])</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="c1">#ax2 = ax.twinx()</span>
+<span class="c1">#ax2.plot(thetas_implane, fsc, color = &#39;k&#39;, linestyle = &#39;--&#39;)</span>
+<span class="c1">#ax2.set_ylabel(&#39;Foreshortening Correction&#39;)</span>
+
+
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/rings-tutorial_35_0.png" src="_images/rings-tutorial_35_0.png" />
+</div>
+</div>
+<p>It can be seen that the flux density is roughly at a minimum at periapsis.</p>
+<section id="A-note-on-foreshortening">
+<h3>A note on foreshortening<a class="headerlink" href="#A-note-on-foreshortening" title="Link to this heading">¶</a></h3>
+<p>After <a class="reference external" href="https://doi.org/10.1016/j.icarus.2005.08.011">de Pater et al. 2006</a> and others, a geometric correction needs to be applied to a tilted ring to account for the <a class="reference external" href="https://i.ytimg.com/vi/25wSIcjY1Bw/maxresdefault.jpg">foreshortening effect</a>. However, this correction is not necessary here, because the wedges we use for extraction are themselves foreshortened, and the code calculates their “true” areas accordingly.</p>
+<p>The perfect data experiment below shows evidence that this is really true.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">foreshortening</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    from de Pater et al 2006, https://doi.org/10.1016/j.icarus.2005.08.011</span>
+
+<span class="sd">    i: degrees</span>
+<span class="sd">    theta: radians</span>
+<span class="sd">        (deal with it)</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">B</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">B</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># perfect data experiment for foreshortening</span>
+<span class="n">a</span> <span class="o">=</span> <span class="mi">51149</span> <span class="c1">#km</span>
+<span class="n">e</span> <span class="o">=</span> <span class="mf">0.6</span>
+<span class="n">i</span> <span class="o">=</span> <span class="mf">60.0</span>
+<span class="n">omega</span> <span class="o">=</span> <span class="mf">60.0</span>
+<span class="n">w</span> <span class="o">=</span> <span class="mf">30.</span>
+
+<span class="n">imsize</span> <span class="o">=</span> <span class="mi">300</span>
+<span class="n">pixscale</span> <span class="o">=</span> <span class="mi">500</span><span class="o">*</span><span class="n">u</span><span class="o">.</span><span class="n">km</span>
+<span class="n">nwedges</span> <span class="o">=</span> <span class="mi">30</span>
+<span class="n">width</span> <span class="o">=</span> <span class="mi">5000</span><span class="o">*</span><span class="n">u</span><span class="o">.</span><span class="n">km</span>
+<span class="n">focus</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">imsize</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span><span class="n">imsize</span><span class="o">/</span><span class="mi">2</span><span class="p">])</span>
+<span class="n">ringmodel</span> <span class="o">=</span> <span class="n">Ring</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">ringmodel</span><span class="o">.</span><span class="n">as_2d_array</span><span class="p">((</span><span class="n">imsize</span><span class="p">,</span> <span class="n">imsize</span><span class="p">),</span> <span class="n">pixscale</span><span class="p">,</span> <span class="n">beam</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span> <span class="c1">#shape (pixels), pixscale (km)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">thetas</span><span class="p">,</span> <span class="n">wedges</span> <span class="o">=</span> <span class="n">ringmodel</span><span class="o">.</span><span class="n">as_azimuthal_wedges</span><span class="p">((</span><span class="n">imsize</span><span class="p">,</span><span class="n">imsize</span><span class="p">),</span> <span class="n">pixscale</span><span class="p">,</span> <span class="n">focus</span><span class="o">=</span><span class="n">focus</span><span class="p">,</span> <span class="n">nwedges</span><span class="o">=</span><span class="n">nwedges</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="n">width</span><span class="p">)</span>
+<span class="n">fsc</span><span class="o">=</span> <span class="n">foreshortening</span><span class="p">(</span><span class="n">thetas</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+
+<span class="n">wedge_sums</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">data_sums</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">extraction_region</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">wedge</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">wedges</span><span class="p">):</span>
+
+    <span class="n">wedge_data</span> <span class="o">=</span> <span class="n">data</span> <span class="o">*</span> <span class="n">wedge</span>
+    <span class="n">extraction_region</span> <span class="o">+=</span> <span class="n">wedge_data</span>
+    <span class="n">data_sums</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nansum</span><span class="p">(</span><span class="n">wedge_data</span><span class="p">))</span>
+    <span class="n">wedge_sums</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nansum</span><span class="p">(</span><span class="n">wedge</span><span class="p">))</span>
+
+<span class="n">wedge_sums</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">wedge_sums</span><span class="p">)</span>
+<span class="n">data_sums</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data_sums</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cmap</span> <span class="o">=</span> <span class="n">cm</span><span class="o">.</span><span class="n">autumn</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">9</span><span class="p">,</span><span class="mi">9</span><span class="p">))</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">origin</span> <span class="o">=</span> <span class="s1">&#39;lower&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">([</span><span class="n">imsize</span><span class="o">/</span><span class="mi">2</span><span class="p">],[</span><span class="n">imsize</span><span class="o">/</span><span class="mi">2</span><span class="p">],</span> <span class="n">color</span> <span class="o">=</span> <span class="s1">&#39;cyan&#39;</span><span class="p">,</span> <span class="n">marker</span> <span class="o">=</span> <span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;center of Uranus&#39;</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">wedge</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">wedges</span><span class="p">):</span>
+
+    <span class="n">theta</span> <span class="o">=</span> <span class="n">thetas</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="n">color</span> <span class="o">=</span> <span class="n">cmap</span><span class="p">(</span><span class="n">theta</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">))</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">contour</span><span class="p">(</span><span class="n">wedge</span><span class="p">,</span> <span class="n">levels</span><span class="o">=</span><span class="p">[</span><span class="mf">0.01</span><span class="p">],</span> <span class="n">colors</span><span class="o">=</span><span class="p">[</span><span class="n">color</span><span class="p">])</span>
+
+
+
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/rings-tutorial_41_0.png" src="_images/rings-tutorial_41_0.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">13</span><span class="p">,</span><span class="mi">8</span><span class="p">),</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">thetas</span><span class="p">,</span> <span class="n">data_sums</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">data_sums</span><span class="p">),</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Data Sums&#39;</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="s1">&#39;mid&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">thetas</span><span class="p">,</span> <span class="p">(</span><span class="n">data_sums</span><span class="o">/</span><span class="n">wedge_sums</span><span class="p">)</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">data_sums</span><span class="o">/</span><span class="n">wedge_sums</span><span class="p">)),</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;green&#39;</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;Data Flux Density&#39;</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="s1">&#39;mid&#39;</span><span class="p">)</span>
+<span class="c1">#ax0.set_xlabel(&#39;Theta (rad)&#39;)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Normalized Intensity&#39;</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">])</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">([</span><span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;$\pi/2$&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;$\pi$&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;$3\pi/2$&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;$2\pi$&#39;</span><span class="p">])</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+
+<span class="n">ax2</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">twinx</span><span class="p">()</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">thetas</span><span class="p">,</span> <span class="n">fsc</span><span class="p">,</span> <span class="n">linestyle</span> <span class="o">=</span> <span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;FSC&#39;</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">thetas</span><span class="p">,</span> <span class="n">wedge_sums</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">wedge_sums</span><span class="p">),</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Wedge Areas&#39;</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Foreshortening Correction&#39;</span><span class="p">)</span>
+<span class="c1">#ax.legend()</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/rings-tutorial_42_0.png" src="_images/rings-tutorial_42_0.png" />
+</div>
+</div>
+<p>Perfect data experiment result: dividing the extracted sums within each wedge (black steps) by the area of the wedges (orange line) gives us back the uniform-brightness foreshortening-corrected data (green steps).</p>
+<p><strong>It’s very important to make the region wide enough to capture all the flux! otherwise, this geometric correction interacts with the PSF to make non-uniform behavior</strong></p>
+</section>
+</section>
+<section id="Movie-of-epsilon-ring-precession">
+<h2>Movie of epsilon ring precession<a class="headerlink" href="#Movie-of-epsilon-ring-precession" title="Link to this heading">¶</a></h2>
+<p>As a nice example, and just for fun, here is how one would make an animation of the precession of the epsilon ring. I’m bumping the eccentricity of the ring up to 0.2 so you can see it visually; otherwise, this doesn’t look like much!</p>
+<p>The way I implemented this was to first make an initial model ring at the first time step. I then run many queries to ring node tool, each time saving the argument of periapsis of the epsilon ring. I make those a simple list, and then each time I plot, I just change the value of <span class="math notranslate nohighlight">\(\omega\)</span> in the ring model and cast it into a 2-D array.</p>
+<p>Note it would be just as easy, and more accurate (but slightly slower) to make a new RingSystemModelObservation for every time step. But the way I implemented it better showcases how a pre-existing ring model can be modified.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span>
+<span class="kn">from</span> <span class="nn">astroquery.solarsystem.pds</span> <span class="kn">import</span> <span class="n">RingNode</span>
+<span class="n">node</span> <span class="o">=</span> <span class="n">RingNode</span><span class="p">()</span>
+<span class="n">epoch_0</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="s1">&#39;2022-09-23 00:00&#39;</span><span class="p">,</span> <span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M&#39;</span><span class="p">)</span>
+<span class="n">wvals</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">100</span><span class="p">):</span>
+
+    <span class="n">epoch</span> <span class="o">=</span> <span class="n">Time</span><span class="p">(</span><span class="n">epoch_0</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">5</span><span class="o">*</span><span class="n">i</span><span class="p">),</span> <span class="n">scale</span><span class="o">=</span><span class="s1">&#39;utc&#39;</span><span class="p">)</span>
+    <span class="n">bodytable</span><span class="p">,</span> <span class="n">ringtable</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">ephemeris</span><span class="p">(</span><span class="n">planet</span><span class="o">=</span><span class="s1">&#39;Uranus&#39;</span><span class="p">,</span> <span class="n">epoch</span><span class="o">=</span><span class="n">epoch</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="n">alma_coords_astropy</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">epsilon</span> <span class="o">=</span> <span class="n">ringtable</span><span class="p">[</span><span class="n">ringtable</span><span class="o">.</span><span class="n">loc_indices</span><span class="p">[</span><span class="s2">&quot;Epsilon&quot;</span><span class="p">]]</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">epsilon</span><span class="p">[</span><span class="s1">&#39;pericenter&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+    <span class="n">wvals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+
+<span class="n">wvals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">wvals</span><span class="p">)</span>
+<span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;wvals.npy&#39;</span><span class="p">,</span> <span class="n">wvals</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%capture</span>
+<span class="n">wvals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;wvals.npy&#39;</span><span class="p">)</span>
+<span class="n">beam</span> <span class="o">=</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">30</span><span class="p">)</span>
+
+<span class="c1"># set up initial state</span>
+<span class="n">model0</span> <span class="o">=</span> <span class="n">RingSystemModelObservation</span><span class="p">(</span><span class="n">ura</span><span class="p">,</span>
+                     <span class="n">location</span> <span class="o">=</span> <span class="n">alma_coords_astropy</span><span class="p">,</span>
+                     <span class="n">ringnames</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Alpha&#39;</span><span class="p">,</span><span class="s1">&#39;Epsilon&#39;</span><span class="p">])</span>
+<span class="n">epsilon</span> <span class="o">=</span> <span class="n">model0</span><span class="o">.</span><span class="n">rings</span><span class="p">[</span><span class="s1">&#39;Epsilon&#39;</span><span class="p">]</span>
+<span class="n">ringmodel</span> <span class="o">=</span> <span class="n">Ring</span><span class="p">(</span><span class="n">epsilon</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">.</span><span class="n">omega</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">.</span><span class="n">i</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">.</span><span class="n">w</span><span class="p">)</span>
+<span class="n">img0</span> <span class="o">=</span> <span class="n">ringmodel</span><span class="o">.</span><span class="n">as_2d_array</span><span class="p">((</span><span class="n">imsize</span><span class="p">,</span> <span class="n">imsize</span><span class="p">),</span> <span class="n">pixscale</span><span class="p">,</span> <span class="n">beam</span> <span class="o">=</span> <span class="n">beam</span><span class="p">)</span>
+
+
+<span class="c1"># set up the animation</span>
+<span class="kn">import</span> <span class="nn">matplotlib.animation</span> <span class="k">as</span> <span class="nn">animation</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">9</span><span class="p">,</span><span class="mi">9</span><span class="p">))</span>
+
+<span class="n">im</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">img0</span><span class="p">,</span> <span class="n">origin</span> <span class="o">=</span> <span class="s1">&#39;lower&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">([</span><span class="n">img0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span><span class="p">],[</span><span class="n">img0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span><span class="p">],</span> <span class="n">color</span> <span class="o">=</span> <span class="s1">&#39;cyan&#39;</span><span class="p">,</span> <span class="n">marker</span> <span class="o">=</span> <span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;center of Uranus&#39;</span><span class="p">)</span>
+
+<span class="c1"># animation function.  This is called sequentially</span>
+<span class="k">def</span> <span class="nf">animate</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">wvals</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;progressively increase w&#39;&#39;&#39;</span>
+    <span class="n">ringmodel</span><span class="o">.</span><span class="n">w</span> <span class="o">=</span> <span class="n">wvals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">u</span><span class="o">.</span><span class="n">deg</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">ringmodel</span><span class="o">.</span><span class="n">as_2d_array</span><span class="p">((</span><span class="n">imsize</span><span class="p">,</span> <span class="n">imsize</span><span class="p">),</span> <span class="n">pixscale</span><span class="p">,</span> <span class="n">beam</span> <span class="o">=</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">30</span><span class="p">))</span>
+    <span class="n">a</span><span class="o">=</span><span class="n">im</span><span class="o">.</span><span class="n">get_array</span><span class="p">()</span>
+    <span class="n">a</span><span class="o">=</span><span class="n">img</span>
+    <span class="n">im</span><span class="o">.</span><span class="n">set_array</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">im</span><span class="p">]</span>
+
+<span class="n">anim</span> <span class="o">=</span> <span class="n">animation</span><span class="o">.</span><span class="n">FuncAnimation</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">animate</span><span class="p">,</span> <span class="n">frames</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">wvals</span><span class="p">),</span> <span class="n">fargs</span><span class="o">=</span><span class="p">(</span><span class="n">wvals</span><span class="p">,),</span>
+                              <span class="n">interval</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">blit</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">anim</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;epsilon_precession.gif&#39;</span><span class="p">,</span> <span class="n">fps</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+<br/></pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">Image</span>
+<span class="n">Image</span><span class="p">(</span><span class="s2">&quot;epsilon_precession.gif&quot;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">600</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;IPython.core.display.Image object&gt;
+</pre></div></div>
+</div>
+</section>
+<section id="Loose-ends-/-to-do-list">
+<h2>Loose ends / to-do list<a class="headerlink" href="#Loose-ends-/-to-do-list" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>need support for apoapsis wider than periapsis</p></li>
+<li><p>optically thin vs optically thick rings will act differently when foreshortened, especially if the ring is broad. This is not currently accounted for and sort of requires radiative transfer to do properly.</p></li>
+<li><p>Ease-of-use of flux density units should be tested; still need to make final decision there</p></li>
+</ul>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">pylanetary</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="description.html">Description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nav-tutorial.html">Navigation tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nav-examples.html">Example navigation workflow</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Rings Tutorial</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#Basic-model-ring">Basic model ring</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Model-ring-system-observation">Model ring system observation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Example-Analysis-with-Observational-Data">Example Analysis with Observational Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Azimuthal-profile">Azimuthal profile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Movie-of-epsilon-ring-precession">Movie of epsilon ring precession</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Loose-ends-/-to-do-list">Loose ends / to-do list</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="utils-tutorial.html">Utils Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing to Pylanetary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citing.html">Citing this Software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="navigation_api.html">Navigation API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rings_api.html">Rings API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils_api.html">Utils API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="nav-examples.html" title="previous chapter">Example navigation workflow</a></li>
+      <li>Next: <a href="utils-tutorial.html" title="next chapter">Utils Tutorial</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2023, Edward M. Molter.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="_sources/rings-tutorial.ipynb.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

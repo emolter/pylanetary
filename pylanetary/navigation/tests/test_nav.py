@@ -41,7 +41,7 @@ def test_lat_lon(datadir):
     xcen, ycen = int(shape[0]/2), int(shape[1]/2) #pixels at center of planet
     xx = np.arange(shape[0]) - xcen
     yy = np.arange(shape[1]) - ycen
-    x,y = np.meshgrid(xx,yy)
+    x,y = np.meshgrid(yy,xx)
     lat_g, lat_c, lon_w = navigation.lat_lon(x,y,ob_lon,ob_lat,pixscale_km,np_ang,req,rpol)
     
     lat_g_expected = np.load(os.path.join(datadir, 'lat_g.npy'))
@@ -57,8 +57,8 @@ def test_surface_normal(datadir):
     lat_g = np.load(os.path.join(datadir, 'lat_g.npy'))
     lon_w = np.load(os.path.join(datadir, 'lon_w.npy'))
     surf_n = navigation.surface_normal(lat_g, lon_w, ob_lon)
-    surf_n_expected = np.load(os.path.join(datadir, 'surf_n.npy'))
-            
+
+    surf_n_expected = np.load(os.path.join(datadir, 'surf_n.npy'))  
     assert np.allclose(surf_n, surf_n_expected, rtol = 1e-5, equal_nan=True)
     
     
@@ -108,7 +108,7 @@ def test_model_planet_ellipsoid(datadir):
                 ob_lon, ob_lat, 
                 pixscale_km, 
                 np_ang, 
-                req, rpol, shape=shape)    
+                req, rpol, shape=shape)  
     
     lat_g = np.load(os.path.join(datadir, 'lat_g.npy'))
     lon_w = np.load(os.path.join(datadir, 'lon_w.npy'))
@@ -117,10 +117,4 @@ def test_model_planet_ellipsoid(datadir):
     assert np.allclose(ell.lat_g, lat_g, rtol=1e-5, equal_nan=True)
     assert np.allclose(ell.lon_w, lon_w, rtol=1e-5, equal_nan=True)
     assert np.allclose(ell.mu, mu, rtol=1e-5, equal_nan=True)
-    
-    with pytest.raises(NotImplementedError):
-        ell.write('whatever')
-    
-    
-    
     

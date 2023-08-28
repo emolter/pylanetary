@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Example navigation workflow &#8212; pylanetary 0.0.5 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=039e1c02" />
+    <link rel="stylesheet" type="text/css" href="_static/nbsphinx-code-cells.css" />
+    <script src="_static/documentation_options.js?v=282f96c0"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Rings Tutorial" href="rings-tutorial.html" />
+    <link rel="prev" title="Navigation tutorial" href="nav-tutorial.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="Example-navigation-workflow">
+<h1>Example navigation workflow<a class="headerlink" href="#Example-navigation-workflow" title="Link to this heading">¶</a></h1>
+<section id="lat-lon-grid-for-Jupiter-HST-data">
+<h2>lat-lon grid for Jupiter HST data<a class="headerlink" href="#lat-lon-grid-for-Jupiter-HST-data" title="Link to this heading">¶</a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># package imports</span>
+<span class="kn">from</span> <span class="nn">pylanetary</span> <span class="kn">import</span> <span class="n">navigation</span>
+<span class="kn">from</span> <span class="nn">pylanetary.utils</span> <span class="kn">import</span> <span class="n">Body</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">astropy.io</span> <span class="kn">import</span> <span class="n">fits</span>
+</pre></div>
+</div>
+</div>
+<section id="import-the-data-and-scrape-header">
+<h3>import the data and scrape header<a class="headerlink" href="#import-the-data-and-scrape-header" title="Link to this heading">¶</a></h3>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># hst parameters</span>
+<span class="n">hdul</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;/Users/emolter/Python/pylanetary/pylanetary/navigation/tests/data/hlsp_wfcj_hst_wfc3-uvis_jupiter-2017-pj07_f631n_v2_0711ut0947-nav.fits&#39;</span><span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">hdul</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+<span class="n">obs_time</span> <span class="o">=</span> <span class="n">hdul</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;DATE-OBS&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39; &#39;</span><span class="o">+</span><span class="n">hdul</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;TIME-OBS&#39;</span><span class="p">]</span>
+<span class="n">rotation</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">hdul</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;ORIENTAT&#39;</span><span class="p">])</span>
+<span class="n">pixscale_arcsec</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">hdul</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;PIXSCAL&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="instantiate-a-Nav-object">
+<h3>instantiate a Nav object<a class="headerlink" href="#instantiate-a-Nav-object" title="Link to this heading">¶</a></h3>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># instantiate the nav object</span>
+<span class="n">jup</span> <span class="o">=</span> <span class="n">Body</span><span class="p">(</span><span class="s1">&#39;Jupiter&#39;</span><span class="p">,</span> <span class="n">epoch</span><span class="o">=</span><span class="n">obs_time</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="s1">&#39;@hst&#39;</span><span class="p">)</span>
+
+<span class="c1">#North is not up in the image; this hack of the ephemeris data solves this problem</span>
+<span class="n">jup</span><span class="o">.</span><span class="n">ephem</span><span class="p">[</span><span class="s1">&#39;NPole_ang&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">jup</span><span class="o">.</span><span class="n">ephem</span><span class="p">[</span><span class="s1">&#39;NPole_ang&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">rotation</span>
+
+<span class="c1">#data[np.isnan(data)] = 0.0</span>
+<span class="n">nav</span> <span class="o">=</span> <span class="n">navigation</span><span class="o">.</span><span class="n">Nav</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">jup</span><span class="p">,</span> <span class="n">pixscale_arcsec</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="attempt-co-locate">
+<h3>attempt co-locate<a class="headerlink" href="#attempt-co-locate" title="Link to this heading">¶</a></h3>
+<p>Here we are using a limb-darkened disk model with an exponential darkening law. I just chose a=0.7 ad-hoc here, since I didn’t know what a good value was</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">flux</span> <span class="o">=</span> <span class="mf">1.15e4</span> <span class="c1"># surface brightness in whatever units are in the fits file</span>
+<span class="n">a</span> <span class="o">=</span> <span class="mf">0.7</span> <span class="c1"># exponential limb-darkening law exponent</span>
+<span class="n">fwhm</span> <span class="o">=</span> <span class="mi">3</span> <span class="c1"># approximate FWHM of the point-spread function in pixels</span>
+<span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">,</span> <span class="n">dxerr</span><span class="p">,</span> <span class="n">dyerr</span> <span class="o">=</span> <span class="n">nav</span><span class="o">.</span><span class="n">colocate</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;disk&#39;</span><span class="p">,</span>
+        <span class="n">tb</span> <span class="o">=</span> <span class="n">flux</span><span class="p">,</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="p">,</span>
+        <span class="n">law</span> <span class="o">=</span> <span class="s1">&#39;exp&#39;</span><span class="p">,</span>
+        <span class="n">beam</span> <span class="o">=</span> <span class="n">fwhm</span><span class="p">,</span>
+        <span class="n">diagnostic_plot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/nav-examples_7_0.png" src="_images/nav-examples_7_0.png" />
+</div>
+</div>
+</section>
+<section id="assess-fit-quality">
+<h3>assess fit quality<a class="headerlink" href="#assess-fit-quality" title="Link to this heading">¶</a></h3>
+<p>This fit doesn’t look very good. As the diagnostic plot shows, there is a bright (positive) edge to the lower left and a dark (negative) edge to the upper right, indicating that the model center is up and to the right of the true center. Let’s look at the data and limb-darkened model side by side to see how they both look.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ldmodel</span> <span class="o">=</span> <span class="n">nav</span><span class="o">.</span><span class="n">ldmodel</span><span class="p">(</span><span class="n">flux</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">beam</span><span class="o">=</span><span class="n">fwhm</span><span class="p">,</span> <span class="n">law</span><span class="o">=</span><span class="s1">&#39;exp&#39;</span><span class="p">)</span>
+<span class="n">fig</span><span class="p">,</span> <span class="p">(</span><span class="n">ax0</span><span class="p">,</span> <span class="n">ax1</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">15</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span>
+<span class="n">ax0</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">nav</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="s1">&#39;lower&#39;</span><span class="p">)</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">ldmodel</span><span class="p">,</span> <span class="n">origin</span> <span class="o">=</span> <span class="s1">&#39;lower&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/nav-examples_9_0.png" src="_images/nav-examples_9_0.png" />
+</div>
+</div>
+</section>
+<section id="re-try-with-better-model">
+<h3>re-try with better model<a class="headerlink" href="#re-try-with-better-model" title="Link to this heading">¶</a></h3>
+<p>We can see that in the real data, the sub-solar point is somewhere toward the upper right of the center of the planet, whereas in our model the brightest point on the disk is at center. Let’s try using a Minnaert law instead.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># plot the side-by-side comparison again</span>
+<span class="n">minnaert_k</span> <span class="o">=</span> <span class="mf">0.9</span>
+<span class="n">ldmodel</span> <span class="o">=</span> <span class="n">nav</span><span class="o">.</span><span class="n">ldmodel</span><span class="p">(</span><span class="n">flux</span><span class="p">,</span> <span class="n">minnaert_k</span><span class="p">,</span> <span class="n">beam</span><span class="o">=</span><span class="n">fwhm</span><span class="p">,</span> <span class="n">law</span><span class="o">=</span><span class="s1">&#39;minnaert&#39;</span><span class="p">)</span>
+<span class="n">fig</span><span class="p">,</span> <span class="p">(</span><span class="n">ax0</span><span class="p">,</span> <span class="n">ax1</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">15</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span>
+<span class="n">ax0</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">nav</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="s1">&#39;lower&#39;</span><span class="p">)</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">ldmodel</span><span class="p">,</span> <span class="n">origin</span> <span class="o">=</span> <span class="s1">&#39;lower&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="c1"># re-try colocate with those parameters</span>
+<span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">,</span> <span class="n">dxerr</span><span class="p">,</span> <span class="n">dyerr</span> <span class="o">=</span> <span class="n">nav</span><span class="o">.</span><span class="n">colocate</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;disk&#39;</span><span class="p">,</span>
+        <span class="n">tb</span> <span class="o">=</span> <span class="n">flux</span><span class="p">,</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">minnaert_k</span><span class="p">,</span>
+        <span class="n">law</span> <span class="o">=</span> <span class="s1">&#39;minnaert&#39;</span><span class="p">,</span>
+        <span class="n">beam</span> <span class="o">=</span> <span class="n">fwhm</span><span class="p">,</span>
+        <span class="n">diagnostic_plot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/nav-examples_11_0.png" src="_images/nav-examples_11_0.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/nav-examples_11_1.png" src="_images/nav-examples_11_1.png" />
+</div>
+</div>
+<p>The first plot shows that the model much more closely resembles the disk of Jupiter, and the second plot shows that the difference between data and model is indeed less; the code has found a much closer representation of the planet’s center. There now appears to be a bright halo around the entire planet, probably due to improper representation of the beam shape. This could be improved by using a standard star PSF as the beam instead, but we are happy for now. Let’s go ahead and apply this
+solution</p>
+</section>
+<section id="applying-the-shift">
+<h3>applying the shift<a class="headerlink" href="#applying-the-shift" title="Link to this heading">¶</a></h3>
+<p>Once we are happy with the values of dx and dy, we can move the model over by that amount. This will change the nav.lat_g, nav.lon_w, nav.mu, and nav.mu0 arrays to have the new center. If we want to do even better than this, we can either continue to improve the model, or manually fudge the numbers at this stage so the difference plot is visually bang-on.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">nav</span><span class="o">.</span><span class="n">xy_shift_model</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="plotting-and-writing">
+<h3>plotting and writing<a class="headerlink" href="#plotting-and-writing" title="Link to this heading">¶</a></h3>
+<p>Let’s make some nice plots of this solution, and save the solution in the same format as the HST OPAL program uses</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">isplanet</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">nav</span><span class="o">.</span><span class="n">lat_g</span><span class="p">)</span>
+<span class="n">isplanet</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">nav</span><span class="o">.</span><span class="n">lat_g</span><span class="p">)]</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="n">isplanet</span><span class="p">[</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">nav</span><span class="o">.</span><span class="n">lat_g</span><span class="p">)]</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="p">(</span><span class="n">ax0</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span><span class="mi">15</span><span class="p">))</span>
+<span class="n">ax0</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">nav</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="s1">&#39;lower&#39;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;cividis&#39;</span><span class="p">)</span>
+<span class="n">CS0</span> <span class="o">=</span> <span class="n">ax0</span><span class="o">.</span><span class="n">contour</span><span class="p">(</span><span class="n">nav</span><span class="o">.</span><span class="n">lat_g</span><span class="p">,</span> <span class="n">levels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mi">90</span><span class="p">,</span> <span class="mi">90</span><span class="p">,</span> <span class="mi">30</span><span class="p">),</span> <span class="n">colors</span><span class="o">=</span><span class="s1">&#39;white&#39;</span><span class="p">)</span>
+<span class="n">ax0</span><span class="o">.</span><span class="n">clabel</span><span class="p">(</span><span class="n">CS0</span><span class="p">,</span> <span class="n">CS0</span><span class="o">.</span><span class="n">levels</span><span class="p">,</span> <span class="n">inline</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="n">ax0</span><span class="o">.</span><span class="n">contour</span><span class="p">(</span><span class="n">isplanet</span><span class="p">,</span> <span class="n">levels</span><span class="o">=</span><span class="p">[</span><span class="mf">0.5</span><span class="p">],</span> <span class="n">colors</span><span class="o">=</span><span class="s1">&#39;white&#39;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/nav-examples_15_0.png" src="_images/nav-examples_15_0.png" />
+</div>
+</div>
+<p>Now let’s write:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">nav</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;/Users/emolter/Desktop/delete-me.fits&#39;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="n">hdul</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/Users/emolter/anaconda/envs/py39/lib/python3.9/site-packages/pylanetary/navigation/core.py:717: RuntimeWarning: invalid value encountered in arccos
+  np.rad2deg(np.arccos(self.mu)),
+/Users/emolter/anaconda/envs/py39/lib/python3.9/site-packages/pylanetary/navigation/core.py:718: RuntimeWarning: invalid value encountered in arccos
+  np.rad2deg(np.arccos(self.mu0)),]
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">pylanetary</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="description.html">Description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nav-tutorial.html">Navigation tutorial</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Example navigation workflow</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#lat-lon-grid-for-Jupiter-HST-data">lat-lon grid for Jupiter HST data</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="rings-tutorial.html">Rings Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils-tutorial.html">Utils Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing to Pylanetary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citing.html">Citing this Software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="navigation_api.html">Navigation API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rings_api.html">Rings API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils_api.html">Utils API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="nav-tutorial.html" title="previous chapter">Navigation tutorial</a></li>
+      <li>Next: <a href="rings-tutorial.html" title="next chapter">Rings Tutorial</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2023, Edward M. Molter.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="_sources/nav-examples.ipynb.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
