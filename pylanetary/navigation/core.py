@@ -256,7 +256,7 @@ def limb_darkening(mu, a, law='exp', mu0=None):
     https://www.astro.keele.ac.uk/jkt/codes/jktld.html 
     '''
     # Input check 
-    if np.any(mu <0) or np.any(mu>1): 
+    if np.any(mu <0.0) or np.any(mu>1.0): 
         raise ValueError('Cosine of emission angle range [0,1]')
 
     mu = np.array(mu) #necessary so when floats are passed in, the line mu[bad] = 0 doesnt complain about indexing a float
@@ -388,6 +388,10 @@ class ModelEllipsoid:
         self.sun_n = surface_normal(self.lat_g, self.lon_w, self.sun_lon)
         self.mu0 = emission_angle(self.ob_lat, self.sun_n)
         
+        # solve small numerical issue where mu = 1.0 + epsilon
+        self.mu[(self.mu > 1.0)*(self.mu < 1.00001)] = 1.0
+        self.mu0[(self.mu0 > 1.0)*(self.mu0 < 1.00001)] = 1.0
+        
         avg_circumference = 2*np.pi*((self.req + self.rpol)/2.0)
         self.deg_per_px = self.pixscale_km * (1/avg_circumference) * 360
         
@@ -403,7 +407,7 @@ class ModelEllipsoid:
         return f'ModelEllipsoid instance; req={self.req}, rpol={self.rpol}'
         
         
-    def ldmodel(self, tb, a, beam=None, law='exp', mu0=None):
+    def ldmodel(self, tb, a, beam=None, law='exp', mu0=None, psf_mode='gaussian'):
         '''
         Make a limb-darkened model disk convolved with the beam
         See docstring of limb_darkening() for options
@@ -424,6 +428,8 @@ class ModelEllipsoid:
             has no effect unless law=="minnaert".
             if self.mu0 undefined, law=="minnaert", and mu0=None, then
             code will fail
+        psf_mode : str, optional, default "gaussian"
+            mode to use for convolve_with_beam(), options "airy", "gaussian"
         '''
         if mu0 is None:
             mu0=getattr(self, "mu0", None)
@@ -436,7 +442,7 @@ class ModelEllipsoid:
         if beam is None:
             return ldmodel
         else:
-            return convolve_with_beam(ldmodel, beam)   
+            return convolve_with_beam(ldmodel, beam, mode=psf_mode)   
         
         
     def zonalmodel(lats, lons, tbs, a=0.0):
@@ -573,6 +579,8 @@ class Nav(ModelBody):
                         type of limb darkening model to use
                     :beam: float, tuple, or np.array, optional. default None.
                         units pixels. see utils.convolve_with_beam
+                    :psf_mode: str, optional. default "gaussian"
+                        what beam shape to use, options "airy", "gaussian"
                     :low_thresh: float, required.
                         see documentation of skimage.feature.canny
                     :high_thresh: float, required.
@@ -594,6 +602,8 @@ class Nav(ModelBody):
                         type of limb darkening model to use
                     :beam: float, tuple, or np.array, optional. default None.
                         units pixels. see utils.convolve_with_beam
+                    :psf_mode: str, optional. default "gaussian"
+                        what beam shape to use, options "airy", "gaussian"
                     :err: float
                         per-pixel error in input image
         
@@ -628,17 +638,17 @@ class Nav(ModelBody):
         -----
         * sometimes dxerr, dyerr give unrealistic or undefined behavior
         '''
-        defaultKwargs={'err':None,'beam':None,'law':'exp'}
+        defaultKwargs={'err':None,'beam':None,'law':'exp', 'psf_mode':'gaussian'}
         kwargs = { **defaultKwargs, **kwargs }
 
         if (mode == 'convolution') or (mode == 'disk'):
             model = self.ldmodel(kwargs['tb'], kwargs['a'], law=kwargs['law'])
-            model = convolve_with_beam(model, kwargs['beam'])
+            model = convolve_with_beam(model, kwargs['beam'], mode=kwargs['psf_mode'])
             data_to_compare = self.data 
         elif mode == 'canny':
             model_planet = self.ldmodel(kwargs['tb'], kwargs['a'], law=kwargs['law'])
             if kwargs['beam'] is not None:
-                model_planet = convolve_with_beam(model_planet, kwargs['beam'])
+                model_planet = convolve_with_beam(model_planet, kwargs['beam'], mode=kwargs['psf_mode'])
             
             edges = feature.canny(self.data, sigma=kwargs['sigma'], low_threshold = kwargs['low_thresh'], high_threshold = kwargs['high_thresh'])
             model = feature.canny(model_planet, sigma=kwargs['sigma'], low_threshold = kwargs['low_thresh'], high_threshold = kwargs['high_thresh'])
