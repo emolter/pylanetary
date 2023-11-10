@@ -744,8 +744,31 @@ class Nav(ModelBody):
         '''
         
         hdu0 = fits.PrimaryHDU()
-        hdu0.header = header
         
+        # turn ephem into OPAL-like header
+        # allow to be overwritten by input header dict
+        header_default = {
+            'SIMPLE':True,
+            'BITPIX':-32,
+            'NAXIS':0,
+            'EXTEND':True,
+            'NEXTEND':6,
+            'TRG_ROT':self.ephem['NPole_ang'],
+            'TRG_RA':self.ephem['RA'],
+            'TRG_DEC':self.ephem['DEC'],
+            'TRG_R_A':self.req, 
+            'TRG_R_B':self.rpol,
+            'TRG_LON':self.ephem['PDObsLon'],
+            'TRG_LAT':self.ephem['PDObsLat'],
+            'SUN_LAT':self.ephem['PDSunLat'],
+            'TRG_PHAS':self.ephem['alpha'],
+            'TRG_R':self.ephem['r'],
+            'TRG_D':self.ephem['delta'],
+        }
+        header_out = {**header_default, **header} #gives priority to input header dict
+        hdu0.header = fits.Header(header_out)
+        
+        # set up metadata for hdul[1-5]
         hdulist = [hdu0]
         data_list = [self.data, 
                     self.lat_g, 
@@ -763,6 +786,7 @@ class Nav(ModelBody):
         date.format = 'iso'
         date = date.iso[:10]
         
+        # generate hdul[1-5] headers and data
         for i in range(len(data_list)):
             
             data = data_list[i]
@@ -779,6 +803,7 @@ class Nav(ModelBody):
             hdu = fits.ImageHDU(data=data, header=hdr, name=extnames_list[i])
             hdulist.append(hdu)
         
+        # write it
         hdul = fits.HDUList(hdulist)
         hdul.writeto(outstem, overwrite=True)
         
