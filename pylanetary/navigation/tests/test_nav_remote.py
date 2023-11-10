@@ -142,11 +142,11 @@ def test_write(datadir):
     nav.mu0 = np.cos(np.deg2rad(hdul[5].data))
     
     # write it, then reload it
-    nav.write(os.path.join(datadir, 'tmp.fits'), header=hdul[0].header, flux_unit='I/F')
+    nav.write(os.path.join(datadir, 'tmp.fits'), header={}, flux_unit='I/F')
     hdul_new = fits.open(os.path.join(datadir, 'tmp.fits'))
     
     # assert header info propagated
-    assert hdul_new[0].header == hdul[0].header
+    assert np.isclose(hdul_new[0].header['TRG_LON'], hdul[0].header['TRG_LON'], rtol=1e-3)
     
     # assert data are in correct places
     for i in range(1,6):

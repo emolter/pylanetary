@@ -1,16 +1,18 @@
 # Licensed under a ??? style license - see LICENSE.rst
 import numpy as np
+from datetime import timedelta
+import importlib, yaml, importlib.resources
+from scipy.interpolate import interp1d
+from scipy import fftpack
+
 from astropy import convolution
 from astropy.coordinates import Angle
 import astropy.units as u
 from astropy.units import Quantity
-import importlib, yaml, importlib.resources
-from scipy.interpolate import interp1d
-from scipy import fftpack
-import pylanetary.utils.data as body_info
 from astropy.time import Time
 from astroquery.jplhorizons import Horizons
-from datetime import timedelta
+
+import pylanetary.utils.data as body_info
 
 '''
 To do:
@@ -363,7 +365,7 @@ def rebin(arr, z):
     return (1/z**2)*arr.reshape(shape).mean(-1).mean(1)
     
     
-def convolve_with_beam(data, beam):
+def convolve_with_beam(data, beam, mode='gaussian'):
     '''
     Convolves input 2-D image with a Gaussian beam or an input PSF image
     
@@ -371,34 +373,57 @@ def convolve_with_beam(data, beam):
     ----------
     data : np.array, required.
     beam : float/int, 3-element array-like, np.array, or None, required.
-        if float/int, circular Gaussian beam assumed, and this sets the fwhm 
-        [pixels].
-        if 3-element array-like, those are (fwhm_x, fwhm_y, theta_deg) for a 2-D Gaussian
-        [pixels, pixels, degrees].
+        If float/int, this sets the fwhm [pixels] of either Airy disk or
+        circular Gaussian beam, depending on "mode" parameter.
+        If 3-element array-like, those are (fwhm_x, fwhm_y, theta_deg) for a 2-D Gaussian
+        [pixels, pixels, degrees]. In this case, "Airy" mode not supported.
         if np.array of size > 3, assumes input PSF image
-        if None, returns original data
+        if None or 0.0, simply returns original data
+    mode : str, optional, default "gaussian"
+        options "gaussian", "airy"; what beam shape to use. Case insensitive.
+        "airy" only accepts beam of dtype float 
+        or 1-element array-like (i.e., beam must be circular).
+        this parameter has no effect if beam is a 2-D array.
     
     Returns
     -------
     np.array
         beam-convolved data
     '''
-    if beam is None:
+    # allow pass through for beam of zero size
+    if (beam is None):
         return data
-    if np.array(beam).size == 1:
+    
+    # check inputs  
+    mode = mode.lower()
+    if mode not in ['gaussian', 'airy']:
+        raise ValueError(f'mode {mode} not recognized; supported options are "gaussian", "airy"')
+    if (mode == 'airy') and (np.array(beam).size != 1):
+        raise ValueError(f'mode "airy" only accepts a single value for the "beam" parameter (distance to first null)')
+    
+    if mode == 'airy':
+        if beam == 0.0:
+            return data
+        # convert FWHM to first-null distance
+        null = 0.5 * (2.44/1.02) * beam
+        psf = convolution.AiryDisk2DKernel(radius=null)
+    elif (mode == 'gaussian') and (np.array(beam).size == 1):
+        if beam == 0.0:
+            return data
         fwhm_x = beam
         fwhm_y = beam
         theta = 0.0
         psf = convolution.Gaussian2DKernel(fwhm_x / 2.35482004503,
-                                            fwhm_y / 2.35482004503,
-                                            Angle(theta, unit=u.deg))
-    elif np.array(beam).size == 3:
+                                                fwhm_y / 2.35482004503,
+                                                Angle(theta, unit=u.deg))
+    elif (mode == 'gaussian') and (np.array(beam).size == 3):
         (fwhm_x, fwhm_y, theta) = beam
         psf = convolution.Gaussian2DKernel(fwhm_x / 2.35482004503,
-                                            fwhm_y / 2.35482004503,
-                                            Angle(theta, unit=u.deg))
+                                                fwhm_y / 2.35482004503,
+                                                Angle(theta, unit=u.deg))
     else:
         psf = beam
+        
     return convolution.convolve_fft(data, psf)
     
     

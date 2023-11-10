@@ -2,8 +2,8 @@ body:
   name: Io
   jpl_hor_id: 501
   mass: 89.3e21  # kg
-  req: 1821.  # km equatorial radius at 1 bar level
-  rpol: 1821.  # km polar radius
+  req: 1829.4  # km equatorial radius at 1 bar level
+  rpol: 1815.7  # km polar radius
   rvol: 1821.  # km volumetric mean radius
   accel_g: 1.80  # m/s^2 Gravity at 1 bar level
   num_moons: None
