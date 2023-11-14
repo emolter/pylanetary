@@ -51,6 +51,6 @@ jobs:
         file: ./coverage.xml
         fail_ci_if_error: true
     - name: Sphinx build check
-    - uses: ammaraskar/sphinx-action@master
+      uses: ammaraskar/sphinx-action@master
       with:
         docs-folder: docs
