@@ -9,7 +9,7 @@ If you are considering making a contribution, please follow the steps below. The
 
  * Open an issue `here <https://github.com/emolter/pylanetary/issues>`_ describing the problem you intend to solve or the new feature you intend to build. We are pretty lax about how issues are presented or formatted, but it still might be useful to look through `the issues quickstart <https://docs.github.com/en/issues/tracking-your-work-with-issues/quickstart>`_. 
  
- * Make a fork the main branch of the repository. See the `contributing quickstart <https://docs.github.com/en/get-started/quickstart/contributing-to-projects>`_ for the recommended workflow and git commands. See the `forking quickstart <https://docs.github.com/en/get-started/quickstart/fork-a-repo>`_ for a more detailed tutorial about forking, including setup for synchronizing with the upstream branch.
+ * Fork the main branch of the repository. See the `contributing quickstart <https://docs.github.com/en/get-started/quickstart/contributing-to-projects>`_ for the recommended workflow and git commands. See the `forking quickstart <https://docs.github.com/en/get-started/quickstart/fork-a-repo>`_ for a more detailed tutorial about forking, including setup for synchronizing with the upstream branch.
  
  * Make your changes or new development. Please see the New Features section below, and start a conversation in the comments of the issue you submitted if you have questions about how best to implement your changes.
  

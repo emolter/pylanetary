@@ -53,20 +53,38 @@ dependencies = [
   "pyyaml",
   "scikit-image>=0.18.3",
   "scipy>=1.7.0",
-  "setuptools>=57.0.0",
+  "setuptools>=68.0.0",
   "setuptools_scm>=7.0.5",
   "sphinx_astropy>=1.7.0",
-  "nbsphinx",
+  "sphinx-pyproject",
 ]
 
 [project.optional-dependencies] 
 test = ["pytest-astropy"]
-docs = ["sphinx-astropy"]
+docs = ["sphinx-astropy", "sphinx-pyproject"]
 
 [project.urls]
 "Source" = "https://github.com/emolter/pylanetary"
 "Docs" = "https://pylanetary.readthedocs.io/en/latest/"
 "Bug Reports" = "https://github.com/emolter/pylanetary/issues"
+
+[tool.sphinx-pyproject]
+github_username = "emolter"
+github_repository = "pylanetary"
+author = "Ned Molter"
+project = "pylanetary"
+language = "en"
+extensions = [
+    "sphinx.ext.autodoc",
+    "nbsphinx",
+    "sphinx.ext.napoleon",
+    "sphinx.ext.autosectionlabel",
+]
+sphinxemoji_style = "twemoji"
+html_theme = "alabaster"
+html_static_path = ['_static']
+templates_path = ['_templates']
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 [tool.setuptools]
 packages = ["pylanetary"]

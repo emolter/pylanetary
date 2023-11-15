@@ -52,16 +52,6 @@ def lat_lon(x,y,ob_lon,ob_lat,pixscale_km,np_ang,req,rpol):
     Examples
     --------
     
-    To-do list
-    ----------
-    write lots of tests to ensure all the geometry is correct
-    but what to test against?
-    this has been working reasonably well for years with real data, but there might
-    still be small bugs.
-    for example, should figure out *actually* whether longitudes are E or W when
-    passed sub-observer longitudes in each formalism.
-    should have the option to choose East or West longitudes
-    probably need to write some math in this docstring
     '''
     np_ang = -np_ang
     x1 = pixscale_km*(np.cos(np.radians(np_ang))*x - np.sin(np.radians(np_ang))*y)
@@ -545,10 +535,9 @@ class Nav(ModelBody):
         --------
         see notebooks/nav-tutorial.ipynb
         
-        To Do
+        Notes
         -----
-        - Test astropy quantity handling, ensure docstring reflects what really happens
-        - Update tests
+        - Need to test astropy quantity handling, ensure docstring reflects what really happens
         '''
         
         # TO DO: fix these all to accept Astropy quantities
@@ -634,7 +623,7 @@ class Nav(ModelBody):
         --------
         need at least one example of each mode here
         
-        To Do
+        Notes
         -----
         * sometimes dxerr, dyerr give unrealistic or undefined behavior
         '''
@@ -833,10 +822,6 @@ class Nav(ModelBody):
         np.array
             cosine of the emission angle (mu) 
             at each pixel in the projection
-        
-        To-do list
-        ----------
-        * rewrite to rely on cartopy, which enables arbitrary projections
         '''
         
         #determine the number of pixels in resampled image
