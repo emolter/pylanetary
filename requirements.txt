@@ -12,7 +12,7 @@ pytest_astropy_header==0.2.2
 pyyaml
 scikit-image==0.18.3
 scipy>=1.7.0
-setuptools==57.0.0
+setuptools>=57.0.0
 setuptools_scm==7.0.5
 sphinx_astropy==1.7.0
 nbsphinx==0.9.3
