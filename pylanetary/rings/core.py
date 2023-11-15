@@ -408,9 +408,6 @@ class Ring:
         Examples
         --------
         
-        To Do
-        -----
-        decide on default units of flux density
         '''
         # to do: write tests that pass astropy Quantities with units other than
         # km and deg
@@ -463,10 +460,6 @@ class Ring:
         photutils.EllipticalAnnulus object. 
             if return_params == True,
             also returns the dictionary from project_ellipse_double
-
-        To do
-        -----
-        * experiment with using manually-defined b_in to make epsilon-like ring
         '''
 
         # convert to simple floats instead of astropy unit quantities
@@ -566,7 +559,7 @@ class Ring:
         see ring-system-modeling-tutorial.ipynb for a more detailed
         explanation and example
 
-        To-do
+        Notes
         -----
         This is computationally expensive!
         a better implementation would be to make a photutils object
@@ -787,7 +780,7 @@ class RingSystemModelObservation():
         should be possible by just changing the ringmodel.Ring() object
         in the dict self.ring
 
-        To Do
+        Notes
         -----
         * Not yet understood why omega must equal 0 for individual rings
         relative to ring system in order to make argument of periapsis agree

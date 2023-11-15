@@ -1,16 +1,19 @@
+
 <!DOCTYPE html>
 
-<html lang="en" data-content_root="./">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Rings API &#8212; pylanetary 0.0.5 documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
-    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=039e1c02" />
-    <script src="_static/documentation_options.js?v=282f96c0"></script>
-    <script src="_static/doctools.js?v=888ff710"></script>
-    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <title>Rings API &#8212; pylanetary  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -32,15 +35,15 @@
 
           <div class="body" role="main">
             
-  <section id="rings-api">
-<h1>Rings API<a class="headerlink" href="#rings-api" title="Link to this heading">¶</a></h1>
-<dl class="py class" id="module-pylanetary.rings.core">
+  <section id="module-pylanetary.rings.core">
+<span id="rings-api"></span><h1>Rings API<a class="headerlink" href="#module-pylanetary.rings.core" title="Permalink to this heading">¶</a></h1>
+<dl class="py class">
 <dt class="sig sig-object py" id="pylanetary.rings.core.Ring">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pylanetary.rings.core.</span></span><span class="sig-name descname"><span class="pre">Ring</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">omega</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params_sys</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.Ring" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pylanetary.rings.core.</span></span><span class="sig-name descname"><span class="pre">Ring</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">omega</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params_sys</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.Ring" title="Permalink to this definition">¶</a></dt>
 <dd><p>model of a planetary ring</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="pylanetary.rings.core.Ring.as_2d_array">
-<span class="sig-name descname"><span class="pre">as_2d_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixscale</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">focus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beam</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.Ring.as_2d_array" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">as_2d_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixscale</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">focus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beam</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.Ring.as_2d_array" title="Permalink to this definition">¶</a></dt>
 <dd><p>make a 2-d array that looks like a mock observation of the ring
 with optional smearing over a beam</p>
 <dl class="field-list simple">
@@ -71,7 +74,7 @@ see docstring of utils.convolve_with_beam()</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pylanetary.rings.core.Ring.as_azimuthal_wedges">
-<span class="sig-name descname"><span class="pre">as_azimuthal_wedges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixscale</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">focus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nwedges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">60</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.Ring.as_azimuthal_wedges" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">as_azimuthal_wedges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixscale</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">focus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nwedges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">60</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.Ring.as_azimuthal_wedges" title="Permalink to this definition">¶</a></dt>
 <dd><p>return n partial elliptical annulus wedges, e.g. for computing
 azimuthal profile of ring</p>
 <dl class="field-list simple">
@@ -103,18 +106,15 @@ angles in radians from 0 to 2*pi corresponding to lower corner of wedge</p></li>
 by making the angular width of the wedges in the image plane
 see ring-system-modeling-tutorial.ipynb for a more detailed
 explanation and example</p>
-<section id="to-do">
-<h2>To-do<a class="headerlink" href="#to-do" title="Link to this heading">¶</a></h2>
 <p>This is computationally expensive!
 a better implementation would be to make a photutils object
 for wedges of an ellipse. but this requires Cython and
 a lot of geometry</p>
-</section>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pylanetary.rings.core.Ring.as_elliptical_annulus">
-<span class="sig-name descname"><span class="pre">as_elliptical_annulus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">focus</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixscale</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.Ring.as_elliptical_annulus" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">as_elliptical_annulus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">focus</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixscale</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.Ring.as_elliptical_annulus" title="Permalink to this definition">¶</a></dt>
 <dd><p>make Astropy aperture photometry elliptical annulus object
 surrounding the ring</p>
 <dl class="field-list simple">
@@ -147,14 +147,14 @@ also returns the dictionary from project_ellipse_double</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="pylanetary.rings.core.RingSystemModelObservation">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pylanetary.rings.core.</span></span><span class="sig-name descname"><span class="pre">RingSystemModelObservation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">body</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">location</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ringnames</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fluxes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'default'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.RingSystemModelObservation" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pylanetary.rings.core.</span></span><span class="sig-name descname"><span class="pre">RingSystemModelObservation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">body</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">location</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ringnames</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fluxes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'default'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.RingSystemModelObservation" title="Permalink to this definition">¶</a></dt>
 <dd><p>model ring system combining static data from
 <a class="reference external" href="https://pds-rings.seti.org/uranus/uranus_rings_table.html">https://pds-rings.seti.org/uranus/uranus_rings_table.html</a>
 with Planetary Ring Node ephemeris
 and JPL Horizons ephemeris</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="pylanetary.rings.core.RingSystemModelObservation.as_2d_array">
-<span class="sig-name descname"><span class="pre">as_2d_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixscale</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">focus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beam</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.RingSystemModelObservation.as_2d_array" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">as_2d_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixscale</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">focus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beam</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.RingSystemModelObservation.as_2d_array" title="Permalink to this definition">¶</a></dt>
 <dd><p>return a 2-d array that looks like a mock observation
 optional smearing over Gaussian beam</p>
 <dl class="field-list simple">
@@ -182,7 +182,7 @@ if no beam is specified, will make infinite-resolution</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pylanetary.rings.core.b_from_ae">
-<span class="sig-prename descclassname"><span class="pre">pylanetary.rings.core.</span></span><span class="sig-name descname"><span class="pre">b_from_ae</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.b_from_ae" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">pylanetary.rings.core.</span></span><span class="sig-name descname"><span class="pre">b_from_ae</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.b_from_ae" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -201,7 +201,7 @@ if no beam is specified, will make infinite-resolution</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pylanetary.rings.core.calc_abtheta">
-<span class="sig-prename descclassname"><span class="pre">pylanetary.rings.core.</span></span><span class="sig-name descname"><span class="pre">calc_abtheta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ell</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.calc_abtheta" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">pylanetary.rings.core.</span></span><span class="sig-name descname"><span class="pre">calc_abtheta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ell</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.calc_abtheta" title="Permalink to this definition">¶</a></dt>
 <dd><p>given vectors defining the circumference of an ellipse,
 find corresponding values of a, b, and theta
 using the fact that locations of a, b are max, min of ellipse vectors</p>
@@ -222,7 +222,7 @@ using the fact that locations of a, b are max, min of ellipse vectors</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pylanetary.rings.core.double_rotate">
-<span class="sig-prename descclassname"><span class="pre">pylanetary.rings.core.</span></span><span class="sig-name descname"><span class="pre">double_rotate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params_ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params_sys</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.double_rotate" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">pylanetary.rings.core.</span></span><span class="sig-name descname"><span class="pre">double_rotate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params_ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params_sys</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.double_rotate" title="Permalink to this definition">¶</a></dt>
 <dd><p>rotate system x rotate ring
 same convention as planetary ring node
 to agree with planetary ring node, params_sys = [90, B - 90, np_ang]
@@ -248,7 +248,7 @@ i.e. semimajor axis is [a, 0, 0] and semiminor axis is [0, b, 0]</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pylanetary.rings.core.foreshortening">
-<span class="sig-prename descclassname"><span class="pre">pylanetary.rings.core.</span></span><span class="sig-name descname"><span class="pre">foreshortening</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">theta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.foreshortening" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">pylanetary.rings.core.</span></span><span class="sig-name descname"><span class="pre">foreshortening</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">theta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.foreshortening" title="Permalink to this definition">¶</a></dt>
 <dd><p>corrects for foreshortening of inclined rings</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -273,7 +273,7 @@ angle theta to correct foreshortening.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pylanetary.rings.core.plane_project">
-<span class="sig-prename descclassname"><span class="pre">pylanetary.rings.core.</span></span><span class="sig-name descname"><span class="pre">plane_project</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.plane_project" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">pylanetary.rings.core.</span></span><span class="sig-name descname"><span class="pre">plane_project</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.plane_project" title="Permalink to this definition">¶</a></dt>
 <dd><p>projects vectors X into plane normal to vector Z</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -293,7 +293,7 @@ angle theta to correct foreshortening.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pylanetary.rings.core.project_ellipse_double">
-<span class="sig-prename descclassname"><span class="pre">pylanetary.rings.core.</span></span><span class="sig-name descname"><span class="pre">project_ellipse_double</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params_ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params_sys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([0,</span> <span class="pre">0,</span> <span class="pre">0])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proj_plane</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0,</span> <span class="pre">0,</span> <span class="pre">1]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.project_ellipse_double" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">pylanetary.rings.core.</span></span><span class="sig-name descname"><span class="pre">project_ellipse_double</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params_ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params_sys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([0,</span> <span class="pre">0,</span> <span class="pre">0])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proj_plane</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0,</span> <span class="pre">0,</span> <span class="pre">1]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.project_ellipse_double" title="Permalink to this definition">¶</a></dt>
 <dd><p>make a projection of an ellipse representing a ring
 with ring system parameters as Euler angles [w, i, omega]
 and individual ring parameters relative to the system
@@ -341,7 +341,7 @@ ell: np.array, shape (n,3), vectors along circumference of ring</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pylanetary.rings.core.ring_area">
-<span class="sig-prename descclassname"><span class="pre">pylanetary.rings.core.</span></span><span class="sig-name descname"><span class="pre">ring_area</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta_width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">B</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">90.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.ring_area" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">pylanetary.rings.core.</span></span><span class="sig-name descname"><span class="pre">ring_area</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta_width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">B</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">90.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.ring_area" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute projected area of an eccentric ring at a given opening angle
 and peri-apo width asymmetry</p>
 <dl class="field-list simple">
@@ -368,7 +368,7 @@ for an asymmetric ring, use (apoapsis_width + periapsis_width)/2</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pylanetary.rings.core.vector_ellipse">
-<span class="sig-prename descclassname"><span class="pre">pylanetary.rings.core.</span></span><span class="sig-name descname"><span class="pre">vector_ellipse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([0,</span> <span class="pre">0,</span> <span class="pre">0])</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.vector_ellipse" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">pylanetary.rings.core.</span></span><span class="sig-name descname"><span class="pre">vector_ellipse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([0,</span> <span class="pre">0,</span> <span class="pre">0])</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.vector_ellipse" title="Permalink to this definition">¶</a></dt>
 <dd><p>Vector equation of an ellipse in two dimensions</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -397,7 +397,7 @@ vectors pointing to the circumference of the ellipse</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pylanetary.rings.core.vector_magnitude">
-<span class="sig-prename descclassname"><span class="pre">pylanetary.rings.core.</span></span><span class="sig-name descname"><span class="pre">vector_magnitude</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.vector_magnitude" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">pylanetary.rings.core.</span></span><span class="sig-name descname"><span class="pre">vector_magnitude</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.vector_magnitude" title="Permalink to this definition">¶</a></dt>
 <dd><p>magnitude of a vector
 this is a bit faster than using np.linalg.norm</p>
 <dl class="field-list simple">
@@ -416,7 +416,7 @@ corresponding to n vectors</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pylanetary.rings.core.vector_normalize">
-<span class="sig-prename descclassname"><span class="pre">pylanetary.rings.core.</span></span><span class="sig-name descname"><span class="pre">vector_normalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.vector_normalize" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">pylanetary.rings.core.</span></span><span class="sig-name descname"><span class="pre">vector_normalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.vector_normalize" title="Permalink to this definition">¶</a></dt>
 <dd><p>returns the original vector if it has length zero</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -462,21 +462,7 @@ corresponding to n vectors</p>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing to Pylanetary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="citing.html">Citing this Software</a></li>
 <li class="toctree-l1"><a class="reference internal" href="navigation_api.html">Navigation API</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Rings API</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#pylanetary.rings.core.Ring"><code class="docutils literal notranslate"><span class="pre">Ring</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#pylanetary.rings.core.RingSystemModelObservation"><code class="docutils literal notranslate"><span class="pre">RingSystemModelObservation</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#pylanetary.rings.core.b_from_ae"><code class="docutils literal notranslate"><span class="pre">b_from_ae()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#pylanetary.rings.core.calc_abtheta"><code class="docutils literal notranslate"><span class="pre">calc_abtheta()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#pylanetary.rings.core.double_rotate"><code class="docutils literal notranslate"><span class="pre">double_rotate()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#pylanetary.rings.core.foreshortening"><code class="docutils literal notranslate"><span class="pre">foreshortening()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#pylanetary.rings.core.plane_project"><code class="docutils literal notranslate"><span class="pre">plane_project()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#pylanetary.rings.core.project_ellipse_double"><code class="docutils literal notranslate"><span class="pre">project_ellipse_double()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#pylanetary.rings.core.ring_area"><code class="docutils literal notranslate"><span class="pre">ring_area()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#pylanetary.rings.core.vector_ellipse"><code class="docutils literal notranslate"><span class="pre">vector_ellipse()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#pylanetary.rings.core.vector_magnitude"><code class="docutils literal notranslate"><span class="pre">vector_magnitude()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#pylanetary.rings.core.vector_normalize"><code class="docutils literal notranslate"><span class="pre">vector_normalize()</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Rings API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utils_api.html">Utils API</a></li>
 </ul>
 
@@ -512,11 +498,11 @@ corresponding to n vectors</p>
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2023, Edward M. Molter.
+      &copy;.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.3</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
       <a href="_sources/rings_api.rst.txt"
