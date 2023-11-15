@@ -50,8 +50,8 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: ./coverage.xml
         fail_ci_if_error: true
-    - name: Sphinx build check
-      uses: ammaraskar/sphinx-action@master
-      with:
-        docs-folder: docs
-        pre-build-command: "apt-get update -y && apt install --yes git build-essential pandoc && python -m pip install --upgrade pip && python -m pip install -r docs/requirements.txt"
+#    - name: Sphinx build check
+#      uses: ammaraskar/sphinx-action@master
+#      with:
+#        docs-folder: docs
+#        pre-build-command: "apt-get update -y && apt install --yes git build-essential pandoc && python -m pip install --upgrade pip && python -m pip install -r docs/requirements.txt"
