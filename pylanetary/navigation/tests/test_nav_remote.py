@@ -51,8 +51,13 @@ def test_navigation(datadir):
     shifted_lat_expected = np.load(os.path.join(datadir, 'lat_g_keck.npy'))
     assert np.allclose(nav.lat_g, shifted_lat_expected, rtol=1e-3, equal_nan=True)
     
+    # ensure no longitudes are below 0 or above 360
+    nanfree_lon = nav.lon_w[~np.isnan(nav.lon_w)]
+    assert np.all(nanfree_lon >= 0)
+    assert np.all(nanfree_lon <= 360)
+    
     # test re-projection onto lat-lon grid
-    projected, mu_projected = nav.reproject()
+    projected, mu_projected = nav.reproject(interp='cubic')
     projected_expected = np.load(os.path.join(datadir, 'projected.npy'))
     mu_projected_expected = np.load(os.path.join(datadir, 'mu_projected.npy'))
     assert np.allclose(projected, projected_expected, rtol = 1e-2, equal_nan=True)
