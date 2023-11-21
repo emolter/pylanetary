@@ -1,9 +1,23 @@
 
 import pytest
+from pytest import fixture
+import os
 from ... import utils
 import numpy as np
 import astropy.units as u
+from astropy.io import fits
 
+@fixture
+def datadir(request,tmpdir):
+    rootdir = request.config.rootdir
+    path = os.path.join(rootdir, 'pylanetary', 'navigation', 'tests', 'data')
+    return path
+
+@fixture
+def expecteddir(request,tmpdir):
+    rootdir = request.config.rootdir
+    path = os.path.join(rootdir, 'pylanetary', 'utils', 'tests', 'data')
+    return path
 
 def test_jybm_to_jysr_and_back():
     jybm = 99.
@@ -71,11 +85,51 @@ def test_rebin():
     assert np.allclose(utils.rebin(z, 1/5), expected_result, rtol=1e-8)
     assert np.isclose(np.sum(utils.rebin(z, 1/5)), np.sum(z))
     
-def test_convolve_with_beam():
+def test_convolve_with_beam(datadir, expecteddir):
     
-    assert True
+    data = fits.open(os.path.join(datadir, 'nepk99_IF.fits'))[0].data
     
-def test_fourier_deconvolve():
+    # Test case 1: no beam
+    assert np.allclose(utils.convolve_with_beam(data, None), data, rtol = 1e-5)
+    assert np.allclose(utils.convolve_with_beam(data, 0), data, rtol = 1e-5)
     
-    assert True
+    # Test case 2: Airy
+    beam = 20.0
+    result = utils.convolve_with_beam(data, beam, 'airy')
+    expected_result = np.load(os.path.join(expecteddir, 'nepk99_IF_airy.npy'))
+    assert np.allclose(result, expected_result, rtol = 1e-5)
     
+    # Test case 3: circular Gaussian
+    beam = 20.0
+    result = utils.convolve_with_beam(data, beam, 'gaussian')
+    expected_result = np.load(os.path.join(expecteddir, 'nepk99_IF_gauss.npy'))
+    assert np.allclose(result, expected_result, rtol = 1e-5)
+    
+    # Test case 4: ellipsoidal Gaussian
+    beam = (20.0, 20.0, 30.0)
+    result = utils.convolve_with_beam(data, beam, 'gaussian')
+    expected_result = np.load(os.path.join(expecteddir, 'nepk99_IF_gauss.npy'))
+    assert np.allclose(result, expected_result, rtol = 1e-5)
+    
+    # Test case 5: custom 2-D beam
+    beam = np.ones((20,20))
+    result = utils.convolve_with_beam(data, beam)
+    expected_result = np.load(os.path.join(expecteddir, 'nepk99_IF_custom.npy'))
+    assert np.allclose(result, expected_result, rtol = 1e-5)
+    
+    # Test raises
+    with pytest.raises(ValueError) as e:
+        utils.convolve_with_beam(data, 1.0, 'badinput')
+    with pytest.raises(ValueError) as e:
+        utils.convolve_with_beam(data, (1.0, 1.0, 30.), 'airy')
+    
+def test_fourier_deconvolve(datadir, expecteddir):
+    
+    data = np.load(os.path.join(expecteddir, 'nepk99_IF_custom.npy'))
+    data = data[:, 200:669] #must be square
+    psf = np.ones((21,21))
+    psf_desired = np.pad(np.ones((5,5)), 8, mode='constant') #must have same size as psf
+    result = utils.fourier_deconvolve(data, psf, psf_desired, gamma=3e-4)
+    expected_result = np.load(os.path.join(expecteddir, 'nepk99_IF_deconvolved.npy'))
+    
+    assert np.allclose(result, expected_result, rtol = 1e-5)

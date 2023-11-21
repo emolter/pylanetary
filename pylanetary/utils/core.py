@@ -393,6 +393,9 @@ def convolve_with_beam(data, beam, mode='gaussian'):
     # allow pass through for beam of zero size
     if (beam is None):
         return data
+    if np.array(beam).size == 1:
+        if beam == 0.0:
+            return data
     
     # check inputs  
     mode = mode.lower()
@@ -402,14 +405,10 @@ def convolve_with_beam(data, beam, mode='gaussian'):
         raise ValueError(f'mode "airy" only accepts a single value for the "beam" parameter (distance to first null)')
     
     if mode == 'airy':
-        if beam == 0.0:
-            return data
         # convert FWHM to first-null distance
         null = 0.5 * (2.44/1.02) * beam
         psf = convolution.AiryDisk2DKernel(radius=null)
     elif (mode == 'gaussian') and (np.array(beam).size == 1):
-        if beam == 0.0:
-            return data
         fwhm_x = beam
         fwhm_y = beam
         theta = 0.0
