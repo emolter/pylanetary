@@ -4,7 +4,7 @@ import warnings
 import astropy.units as u
 from astropy.io import fits
 from image_registration.chi2_shifts import chi2_shift
-from image_registration.fft_tools.shift import shiftnd, shift2d
+from image_registration.fft_tools.shift import shift2d
 from scipy import ndimage
 from skimage import feature
 from scipy.interpolate import griddata
@@ -670,34 +670,37 @@ class Nav(ModelBody):
             [pixels] shift in y
         '''
         self.data = shift2d(self.data,dx,dy)
-
-
+        
+    
     def xy_shift_model(self, dx, dy):
         '''
-        FFTshift model (i.e., lat_g, lon_w, mu, and mu0) 
-        by a user-defined amount.
-        for example, to apply the suggested shift from colocate()
+        shift model (i.e., lat_g, lon_w, mu, and mu0) 
+        by recalculating the model with a different center
+        as defined by user-defined dx, dy shift
         
         Parameters
         ----------
-        dx : float, required 
+        dx : float, required
             [pixels] shift in x
         dy : float, required
             [pixels] shift in y
         '''
+        shape = self.data.shape
+        xcen, ycen = int(shape[0]/2), int(shape[1]/2) #pixels at center of planet
+        yy = np.arange(shape[0]) - xcen - dy
+        xx = np.arange(shape[1]) - ycen - dx
+        x,y = np.meshgrid(xx,yy) 
+        self.lat_g, self.lat_c, self.lon_w = lat_lon(x,y,self.ob_lon,self.ob_lat,self.pixscale_km,self.np_ang,self.req,self.rpol)
+        self.surf_n = surface_normal(self.lat_g, self.lon_w, self.ob_lon)
+        self.mu = emission_angle(self.ob_lat, self.surf_n)
         
-        good = ~np.isnan(self.mu)
-        good_shifted = shift2d(good,dx,dy)
-        bad_shifted = good_shifted < 0.1
-        outputs = []
-        for arr in [self.mu, self.lon_w, self.lat_g, self.mu0]:
-            
-            arr[~good] = 0.0
-            arr_shifted = shift2d(arr,dx,dy)
-            arr_shifted[bad_shifted] = np.nan
-            outputs.append(arr_shifted)
-            
-        self.mu, self.lon_w, self.lat_g, self.mu0 = outputs 
+        # sun geometry
+        self.sun_n = surface_normal(self.lat_g, self.lon_w, self.sun_lon)
+        self.mu0 = emission_angle(self.ob_lat, self.sun_n)
+        
+        # solve small numerical issue where mu = 1.0 + epsilon
+        self.mu[(self.mu > 1.0)*(self.mu < 1.00001)] = 1.0
+        self.mu0[(self.mu0 > 1.0)*(self.mu0 < 1.00001)] = 1.0
         
         
     def write(self, outstem, header={}, flux_unit=''):
