@@ -28,6 +28,12 @@ def test_body():
     assert jup.ephem['r'] == 5.432247809300
     assert jup.ephem['delta'] == 5.95806215806774
     
+def test_body_print(capsys):
     
+    epoch = Time('2018-01-01T00:00:00', format='isot', scale='utc')
+    jup = utils.Body('Jupiter', epoch=epoch, location='T17') #Keck 2
+    print(jup)
+    out, err = capsys.readouterr()
+    assert out == 'pylantary.utils.Body instance; Jupiter, Horizons ID 599\n'
     
     
