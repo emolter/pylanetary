@@ -6,7 +6,6 @@ body:
   rpol: 1815.7  # km polar radius
   rvol: 1821.  # km volumetric mean radius
   accel_g: 1.80  # m/s^2 Gravity at 1 bar level
-  num_moons: None
 orbit:
   semi_major_axis: 422e3  # km
   t_rot: 42.5  # length of sideral rotation period in hours in system III

@@ -303,7 +303,7 @@ def I_over_F(observed_flux, bp, target_sun_dist, target_omega):
         [erg s-1 cm-2 um-1] flux of target
     bp : np.array, required
          ([wls, trans])
-        [[um], [-]] the filter transmission function
+        [[um], [-]] the filter transmission function. does not matter if normalized or not.
     target_sun_dist : float, required. 
         [AU] distance between sun and target
     target_omega : float, required. 
@@ -393,6 +393,9 @@ def convolve_with_beam(data, beam, mode='gaussian'):
     # allow pass through for beam of zero size
     if (beam is None):
         return data
+    if np.array(beam).size == 1:
+        if beam == 0.0:
+            return data
     
     # check inputs  
     mode = mode.lower()
@@ -402,14 +405,10 @@ def convolve_with_beam(data, beam, mode='gaussian'):
         raise ValueError(f'mode "airy" only accepts a single value for the "beam" parameter (distance to first null)')
     
     if mode == 'airy':
-        if beam == 0.0:
-            return data
         # convert FWHM to first-null distance
         null = 0.5 * (2.44/1.02) * beam
         psf = convolution.AiryDisk2DKernel(radius=null)
     elif (mode == 'gaussian') and (np.array(beam).size == 1):
-        if beam == 0.0:
-            return data
         fwhm_x = beam
         fwhm_y = beam
         theta = 0.0
@@ -531,11 +530,10 @@ class Body:
         self.ravg = (self.req + self.rpol) / 2
         self.rvol = Quantity(data['body']['rvol'], unit=u.km)
         self.accel_g = Quantity(data['body']['accel_g'], unit=u.m / u.s**2)
-        self.num_moons = data['body']['num_moons']
 
         # orbital information
-        self.semi_major_axis = Quantity(data['orbit']['semi_major_axis'], unit=u.au)
-        self.t_rot_hrs = Quantity(data['orbit']['t_rot'], unit=u.hr)
+        self.semi_major_axis = Quantity(data['orbit']['semi_major_axis'], unit=u.km).to(u.AU)
+        self.t_rot = Quantity(data['orbit']['t_rot'], unit=u.hr)
 
         # static observational information
         self.app_dia_max = Quantity(data['observational']['app_dia_max'], unit=u.arcsec)
@@ -559,12 +557,6 @@ class Body:
         obj = Horizons(id=self.jpl_hor_id, location=location, epochs=epochs)
 
         self.ephem = obj.ephemerides()[0]
-        # see self.ephem.columns for all columns available in astropy table
-        # dynamic observational information
-        self.ra = self.ephem['RA'] * u.deg
-        self.dec = self.ephem['DEC'] * u.deg
-        self.distance = self.ephem['delta'] * u.au
-        self.app_dia = self.ephem['ang_width'] * u.arcsec
         
     def __str__(self):
         return f'pylantary.utils.Body instance; {self.name}, Horizons ID {self.jpl_hor_id}'
