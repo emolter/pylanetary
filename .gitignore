@@ -67,3 +67,4 @@ pip-wheel-metadata/
 
 # custom
 to-do.txt
+pylanetary/rings/data/build_ring_tables.py
