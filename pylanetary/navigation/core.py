@@ -31,13 +31,13 @@ To implement
 
 # New class for the projection 
 class TiltedPerspective(ccrs.Projection):
-    def __init__(self, np_ang, central_longitude=0, central_latitude=0, h=1e12, globe=None):
+    def __init__(self, north_polar_angle=0, central_longitude=0, central_latitude=0, h=1e12, globe=None):
 
         proj4_params = [('proj', 'tpers'),
-                        ('lon_0', central_longitude), 
+                        ('lon_0', 180-central_longitude), 
                         ('lat_0', central_latitude), 
                         ('h', h), 
-                        ('azi', np_ang), 
+                        ('azi', north_polar_angle), 
                         ('tilt', 0)]
 
         super(TiltedPerspective, self).__init__(proj4_params, globe=globe)
@@ -99,34 +99,34 @@ def lat_lon(shape, ob_lon, ob_lat, pixscale_km, np_ang, r_e, r_p, dx_shift=0, dy
     --------
     
     '''
-    print('running lat_lon')
     # Define ellipse based on the planets shape 
     img_globe = ccrs.Globe(semimajor_axis=r_e , semiminor_axis=r_p, ellipse=None)
     # Equilateral grid for the latitude and longitude grid centered on the sub observing longitude 
     source_proj = ccrs.PlateCarree(central_longitude=ob_lon, globe=img_globe) 
     # Project onto planet 
-    target_proj = TiltedPerspective(np_ang, central_longitude=ob_lon, central_latitude=ob_lat, globe=img_globe) 
+    target_proj = TiltedPerspective(north_polar_angle=np_ang, central_longitude=ob_lon, central_latitude=ob_lat, globe=img_globe) 
 
     # Define the coordinates for input and ouput 
     # Source coordinates output is in kilometer
     input_nx, input_ny = shape[0],shape[1]
-    target_x_points, target_y_points = np.meshgrid((np.arange(input_nx)-input_nx//2+dx_shift)*pixscale_km, (np.arange(input_ny)-input_ny//2+dy_shift)*pixscale_km) 
+    target_x_points, target_y_points = np.meshgrid((np.arange(input_nx)-input_nx/2-dx_shift)*pixscale_km, (np.arange(input_ny)-input_ny/2-dy_shift)*pixscale_km) 
+
 
     # Source is lat-long grid 
-    source_nx = 360
-    source_ny = 180
-    source_x_coords, source_y_coords, extent = mesh_projection(source_proj, source_nx, source_ny)
+    source_nx = 3600
+    source_ny = 1800
+    source_x_coords, source_y_coords, extent = mesh_projection(source_proj, source_nx, source_ny,x_extents=(0,360), y_extents=(-90,90))
 
     # Project the longitude grid 
-    lon_grid   = regrid(source_x_coords, source_x_coords, source_y_coords, source_proj, target_proj, target_x_points,  target_y_points, mask_extrapolated=False)
+    lon_grid   = regrid(360 - source_x_coords, source_x_coords, source_y_coords, source_proj, target_proj, target_x_points,  target_y_points, mask_extrapolated=True)
     
     # Project the geodetic latitude grid 
-    lat_grid_g = regrid(source_y_coords, source_x_coords, source_y_coords, source_proj, target_proj, target_x_points,  target_y_points, mask_extrapolated=False)
+    lat_grid_g = regrid(source_y_coords, source_x_coords, source_y_coords, source_proj, target_proj, target_x_points,  target_y_points, mask_extrapolated=True)
 
     # No information available, but Globe should use geodetic 
     lat_grid_c = np.arctan((1-(r_e-r_p)/r_e)**2*np.tan(lat_grid_g))
 
-    return lat_grid_g, lat_grid_c, lon_grid
+    return lat_grid_g.filled(np.nan), lat_grid_c.filled(np.nan), lon_grid.filled(np.nan)
 
 def surface_normal(lat_g, lon_w, ob_lon):
     '''
@@ -143,6 +143,7 @@ def surface_normal(lat_g, lon_w, ob_lon):
     nx = np.cos(np.radians(lat_g))*np.cos(np.radians(lon_w-ob_lon))
     ny = np.cos(np.radians(lat_g))*np.sin(np.radians(lon_w-ob_lon))
     nz = np.sin(np.radians(lat_g))
+
     return np.asarray([nx,ny,nz])
     
 
@@ -233,6 +234,7 @@ def emission_angle(ob_lat, surf_n):
     surf_n /= np.linalg.norm(surf_n, axis=0) # normalize to magnitude 1
     ob = np.asarray([np.cos(np.radians(ob_lat)),0,np.sin(np.radians(ob_lat))])
     mu = np.dot(surf_n.T, ob).T
+    mu[mu<0] = 0 
     return mu
     
         
@@ -708,7 +710,7 @@ class Nav(ModelBody):
             [pixels] shift in y
         '''
         shape = self.data.shape
-        self.lat_g, self.lat_c, self.lon_w = lat_lon(shape,self.ob_lon,self.ob_lat,self.pixscale_km,self.np_ang,self.req,self.rpol,dx_shift=dx,dy_shfit=dy)
+        self.lat_g, self.lat_c, self.lon_w = lat_lon(shape,self.ob_lon,self.ob_lat,self.pixscale_km,self.np_ang,self.req,self.rpol,dx_shift=dx,dy_shift=dy)
         self.surf_n = surface_normal(self.lat_g, self.lon_w, self.ob_lon)
         self.mu = emission_angle(self.ob_lat, self.surf_n)
         
@@ -818,7 +820,7 @@ class Nav(ModelBody):
         hdul.writeto(outstem, overwrite=True)
       
 
-    def reproject(self, target_proj='equirectangular', pixscale_deg = None, target_shape = None,  **kwargs):
+    def reproject(self, target_proj='equirectangular', pixscale_deg = None, target_shape = None, dx_shift=0, dy_shift=0,  **kwargs):
         '''
         Projects the data onto a flat x-y grid according to self.lat_g, self.lon_w
         This function only works properly if self.lat_g and self.lon_w 
@@ -849,46 +851,45 @@ class Nav(ModelBody):
         # Projection of planet onto the sky 
         source_proj = TiltedPerspective(self.np_ang, central_longitude=self.ob_lon, central_latitude=self.ob_lat, globe=img_globe) 
       
-        # Source coordinates output is in kilometer
-        input_nx, input_ny = (self.data).shape
-        source_x_points, source_y_points = np.meshgrid((np.arange(input_nx)-input_nx//2)*self.pixscale_km, (np.arange(input_ny)-input_ny//2)*self.pixscale_km) 
-
-
         # Source coordinates in kilometer
+        input_nx, input_ny = self.data.shape
+        source_x_coords, source_y_coords = np.meshgrid((np.arange(input_nx)-input_nx/2-dx_shift)*self.pixscale_km, (np.arange(input_ny)-input_ny/2-dy_shift)*self.pixscale_km) 
 
-        input_nx, input_ny = data.shape
-        source_x_coords, source_y_coords = np.meshgrid((np.arange(input_nx)-input_nx//2)*nav.pixscale_km, (np.arange(input_ny)-input_ny//2)*nav.pixscale_km)
 
-        if target_proj.lower() == equirectangular: 
+        if target_proj.lower() == 'equirectangular': 
             # Target grid
             if pixscale_deg is None: 
-                target_nx = np.round(360*self.deg_per_px)
-                target_ny = np.round(180*self.deg_per_px) 
+                target_nx = int(360/self.deg_per_px)
+                target_ny = int(180/self.deg_per_px) 
             else: 
                 target_nx = np.round(360*pixscale_deg)
                 target_ny = np.round(180*pixscale_deg) 
 
-            target_proj = ccrs.PlateCarree(central_longitude=nav.ob_lon, globe=img_globe) 
+            target_proj = ccrs.PlateCarree(central_longitude = 180 - self.ob_lon, globe=img_globe) 
+            #target_x_points, target_y_points, extent = mesh_projection(target_proj, target_nx, target_ny, x_extents=(0,360), y_extents=(-90,90))
             target_x_points, target_y_points, extent = mesh_projection(target_proj, target_nx, target_ny)
 
-            projected   = regrid(self.data, source_x_coords, source_y_coords, source_proj, target_proj, target_x_points, target_y_points, mask_extrapolated=False)
-            mu_projected= regrid(self.mu,   source_x_coords, source_y_coords, source_proj, target_proj, target_x_points, target_y_points, mask_extrapolated=False)
+            projected   = regrid(self.data, source_x_coords, source_y_coords, source_proj, target_proj, target_x_points*-1, target_y_points, mask_extrapolated=False)
+            mu_projected= regrid(self.mu,   source_x_coords, source_y_coords, source_proj, target_proj, target_x_points*-1, target_y_points, mask_extrapolated=False)
         
+            target_x_points += 180 
+
         elif target_proj.lower() == 'polar': 
             # Target grid
-            target_nx = nav.data.shape[0]
-            target_ny = nav.data.shape[1]
+            target_nx = self.data.shape[0]
+            target_ny = self.data.shape[1]
 
-            target_proj = ccrs.Orthographic(central_longitude=self.ob_lon, central_latitude = np.sign(self.ob_lat)*90, globe=img_globe)
+            target_proj = ccrs.Orthographic(central_longitude= 180 - self.ob_lon, central_latitude = np.sign(self.ob_lat)*90, globe=img_globe)
             target_x_points, target_y_points, extent = mesh_projection(target_proj, target_nx, target_ny)
+
 
             projected   = regrid(self.data, source_x_coords, source_y_coords, source_proj, target_proj, target_x_points, target_y_points, mask_extrapolated=False)
             mu_projected= regrid(self.mu,   source_x_coords, source_y_coords, source_proj, target_proj, target_x_points, target_y_points, mask_extrapolated=False)
         
         else: 
             if target_shape is None: 
-                target_nx = nav.data.shape[0]
-                target_ny = nav.data.shape[1]
+                target_nx = self.data.shape[0]
+                target_ny = self.data.shape[1]
             else: 
                 target_nx = target_shape[0]
                 target_ny = target_shape[1]
