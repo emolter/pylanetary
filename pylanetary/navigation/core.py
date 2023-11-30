@@ -72,7 +72,7 @@ class TiltedPerspective(ccrs.Projection):
         return self._ylim
 
 
-def lat_lon(shape, ob_lon, ob_lat, pixscale_km, np_ang, r_e, r_p, dx_shift=0, dy_shift=0):
+def lat_lon(shape, ob_lon, ob_lat, pixscale_km, deg_per_pix, np_ang, r_e, r_p, dx=0, dy=0):
     '''
     Projetiong latitude and longitude grid onto an ellipsoid 
     
@@ -109,19 +109,19 @@ def lat_lon(shape, ob_lon, ob_lat, pixscale_km, np_ang, r_e, r_p, dx_shift=0, dy
     # Define the coordinates for input and ouput 
     # Source coordinates output is in kilometer
     input_nx, input_ny = shape[0],shape[1]
-    target_x_points, target_y_points = np.meshgrid((np.arange(input_nx)-input_nx/2-dx_shift)*pixscale_km, (np.arange(input_ny)-input_ny/2-dy_shift)*pixscale_km) 
+    target_x_points, target_y_points = np.meshgrid((np.arange(input_nx)-input_nx/2-dx)*pixscale_km, (np.arange(input_ny)-input_ny/2-dy)*pixscale_km) 
 
 
     # Source is lat-long grid 
-    source_nx = 3600
-    source_ny = 1800
+    source_nx = int(360/deg_per_pix)
+    source_ny = int(180/deg_per_pix)
     source_x_coords, source_y_coords, extent = mesh_projection(source_proj, source_nx, source_ny,x_extents=(0,360), y_extents=(-90,90))
 
     # Project the longitude grid 
-    lon_grid   = regrid(360 - source_x_coords, source_x_coords, source_y_coords, source_proj, target_proj, target_x_points,  target_y_points, mask_extrapolated=True)
+    lon_grid   = regrid(360 - source_x_coords, source_x_coords, source_y_coords, source_proj, target_proj, target_x_points,  target_y_points, mask_extrapolated=False)
     
     # Project the geodetic latitude grid 
-    lat_grid_g = regrid(source_y_coords, source_x_coords, source_y_coords, source_proj, target_proj, target_x_points,  target_y_points, mask_extrapolated=True)
+    lat_grid_g = regrid(source_y_coords, source_x_coords, source_y_coords, source_proj, target_proj, target_x_points,  target_y_points, mask_extrapolated=False)
 
     # No information available, but Globe should use geodetic 
     lat_grid_c = np.arctan((1-(r_e-r_p)/r_e)**2*np.tan(lat_grid_g))
@@ -235,6 +235,7 @@ def emission_angle(ob_lat, surf_n):
     ob = np.asarray([np.cos(np.radians(ob_lat)),0,np.sin(np.radians(ob_lat))])
     mu = np.dot(surf_n.T, ob).T
     mu[mu<0] = 0 
+    mu[~np.isfinite(mu)] = 0 
     return mu
     
         
@@ -393,8 +394,10 @@ class ModelEllipsoid:
         else:
             self.sun_lat = sun_lat
         
+        avg_circumference = 2*np.pi*((self.req + self.rpol)/2.0)
+        self.deg_per_px = self.pixscale_km * (1/avg_circumference) * 360
 
-        self.lat_g, self.lat_c, self.lon_w = lat_lon(shape,ob_lon,ob_lat,pixscale_km,np_ang,req,rpol)
+        self.lat_g, self.lat_c, self.lon_w = lat_lon(shape,ob_lon,ob_lat,pixscale_km,self.deg_per_px,np_ang,req,rpol)
         self.surf_n = surface_normal(self.lat_g, self.lon_w, self.ob_lon)
         self.mu = emission_angle(self.ob_lat, self.surf_n)
         
@@ -406,8 +409,7 @@ class ModelEllipsoid:
         self.mu[(self.mu > 1.0)*(self.mu < 1.00001)] = 1.0
         self.mu0[(self.mu0 > 1.0)*(self.mu0 < 1.00001)] = 1.0
         
-        avg_circumference = 2*np.pi*((self.req + self.rpol)/2.0)
-        self.deg_per_px = self.pixscale_km * (1/avg_circumference) * 360
+
         
         # TO DO: test lon_e vs lon_w for different planets!
         # different systems are default for different planets!
@@ -710,7 +712,7 @@ class Nav(ModelBody):
             [pixels] shift in y
         '''
         shape = self.data.shape
-        self.lat_g, self.lat_c, self.lon_w = lat_lon(shape,self.ob_lon,self.ob_lat,self.pixscale_km,self.np_ang,self.req,self.rpol,dx_shift=dx,dy_shift=dy)
+        self.lat_g, self.lat_c, self.lon_w = lat_lon(shape,self.ob_lon,self.ob_lat,self.pixscale_km,self.deg_per_px,self.np_ang,self.req,self.rpol,dx=dx,dy=dy)
         self.surf_n = surface_normal(self.lat_g, self.lon_w, self.ob_lon)
         self.mu = emission_angle(self.ob_lat, self.surf_n)
         
