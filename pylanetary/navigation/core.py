@@ -97,9 +97,9 @@ def lat_lon(shape, pixscale_km, ob_lon, ob_lat, np_ang, r_e, r_p, dx=0, dy=0):
         [deg] sub-observer planetographic latitude
     np_ang : float, required
         [deg] north polar angle
-    req : float, required
+    r_e : float, required
         [km] equatorial radius of planet
-    rpol : float, required
+    r_p : float, required
         [km] polar radius of planet
     dx : float, optional, default 0
         [px] offset in x from the center of the image
@@ -115,14 +115,14 @@ def lat_lon(shape, pixscale_km, ob_lon, ob_lat, np_ang, r_e, r_p, dx=0, dy=0):
     np.array
         West longitudes
     '''
-    deg_per_px = pixscale_km / (np.pi*(r_e+r_p)/2.0) * 360.0
+    deg_per_pix = pixscale_km / (np.pi*(r_e+r_p)/2.0) * 360.0
     
     img_globe = ccrs.Globe(semimajor_axis=r_e , semiminor_axis=r_p, ellipse=None)
     source_proj = ccrs.PlateCarree(central_longitude=ob_lon, globe=img_globe)  
     target_proj = TiltedPerspective(north_polar_angle=np_ang, central_longitude=ob_lon, central_latitude=ob_lat, globe=img_globe) 
 
     # Define the input and output grids. source is in lat/lon, target is in km
-    target_nx, target_ny = shape[0], shape[1]
+    target_nx, target_ny = int(shape[0]), int(shape[1])
     xx, yy = np.arange(target_nx)-target_nx/2-dx, np.arange(target_ny)-target_ny/2-dy
     target_x_points, target_y_points = np.meshgrid(xx*pixscale_km, yy*pixscale_km) 
 
@@ -705,7 +705,7 @@ class Nav(ModelBody):
             [pixels] shift in y
         '''
         shape = self.data.shape
-        self.lat_g, self.lat_c, self.lon_w, self.image_grid_km_x, self.image_grid_km_y = lat_lon(shape,self.ob_lon,self.ob_lat,self.pixscale_km,self.deg_per_px,self.np_ang,self.req,self.rpol,dx=dx,dy=dy)
+        self.lat_g, self.lat_c, self.lon_w, self.image_grid_km_x, self.image_grid_km_y = lat_lon(shape,self.pixscale_km,self.ob_lon,self.ob_lat,self.np_ang,self.req,self.rpol,dx=dx,dy=dy)
         self.surf_n = surface_normal(self.lat_g, self.lon_w, self.ob_lon)
         self.mu = emission_angle(self.ob_lat, self.surf_n)
         
@@ -843,8 +843,8 @@ class Nav(ModelBody):
             at each pixel in the projection
         '''
         if target_shape is not None:
-            target_nx = target_shape[0]
-            target_ny = target_shape[1]
+            target_nx = int(target_shape[0])
+            target_ny = int(target_shape[1])
         
         # compute source coordinates in kilometer and specify projection type
         img_globe = ccrs.Globe(semimajor_axis=self.req , semiminor_axis=self.rpol, ellipse=None)
@@ -854,16 +854,16 @@ class Nav(ModelBody):
             
         if target_projection.lower() == 'equirectangular': 
             if target_shape is None:
-                target_nx = np.round(360*self.deg_per_px)
-                target_ny = np.round(180*self.deg_per_px) 
+                target_nx = int(np.round(360*self.deg_per_px))
+                target_ny = int(np.round(180*self.deg_per_px))
             target_proj = ccrs.PlateCarree(central_longitude = 180 - self.ob_lon, globe=img_globe, **kwargs) 
             #target_x_points += 180 
             #target_x_points *= -1
 
         elif target_projection.lower() == 'polar': 
             if target_shape is None:
-                target_nx = np.round(180*self.deg_per_px)
-                target_ny = np.round(180*self.deg_per_px)
+                target_nx = int(np.round(180*self.deg_per_px))
+                target_ny = int(np.round(180*self.deg_per_px))
             target_proj = ccrs.Orthographic(central_longitude= 180 - self.ob_lon, central_latitude = np.sign(self.ob_lat)*90, globe=img_globe)
         
         else: 
@@ -874,6 +874,7 @@ class Nav(ModelBody):
         target_x_points, target_y_points, extent = mesh_projection(target_proj, target_nx, target_ny)
         projected = regrid(self.data, source_x_coords, source_y_coords, source_proj, target_proj, target_x_points, target_y_points, mask_extrapolated=False)
         mu_projected = regrid(self.mu, source_x_coords, source_y_coords, source_proj, target_proj, target_x_points, target_y_points, mask_extrapolated=False)
+        mu0_projected = regrid(self.mu0, source_x_coords, source_y_coords, source_proj, target_proj, target_x_points, target_y_points, mask_extrapolated=False)
         
-        return projected, mu_projected, target_x_points, target_y_points
+        return projected, mu_projected, mu0_projected, target_x_points, target_y_points
 
