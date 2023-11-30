@@ -123,7 +123,7 @@ def lat_lon(shape, pixscale_km, ob_lon, ob_lat, np_ang, r_e, r_p, dx=0, dy=0):
 
     # Define the input and output grids. source is in lat/lon, target is in km
     target_nx, target_ny = shape[0], shape[1]
-    xx, yy = np.arange(target_nx)-target_nx/2, np.arange(target_ny)-target_ny/2
+    xx, yy = np.arange(target_nx)-target_nx/2-dx, np.arange(target_ny)-target_ny/2-dy
     target_x_points, target_y_points = np.meshgrid(xx*pixscale_km, yy*pixscale_km) 
 
     source_nx, source_ny = int(360/deg_per_pix), int(180/deg_per_pix)
@@ -134,7 +134,7 @@ def lat_lon(shape, pixscale_km, ob_lon, ob_lat, np_ang, r_e, r_p, dx=0, dy=0):
     lat_grid_g = regrid(source_y_coords, source_x_coords, source_y_coords, source_proj, target_proj, target_x_points,  target_y_points, mask_extrapolated=False)
     lat_grid_c = np.arctan((1-(r_e-r_p)/r_e)**2*np.tan(lat_grid_g))
 
-    return lat_grid_g.filled(np.nan), lat_grid_c.filled(np.nan), lon_grid.filled(np.nan)
+    return lat_grid_g.filled(np.nan), lat_grid_c.filled(np.nan), lon_grid.filled(np.nan), target_x_points, target_y_points
 
 
 def surface_normal(lat_g, lon_w, ob_lon):
@@ -364,6 +364,10 @@ class ModelEllipsoid:
             shape (3,x,y), solar normal vectors
         mu0 : np.array
             shape (x,y), cosine of solar incidence angle at each pixel
+        image_grid_km_x : np.array
+            shape (x,y), x-coordinates of image grid in km, where 0 is center of planet
+        image_grid_km_y : np.array
+            shape (x,y), y-coordinates of image grid in km, where 0 is center of planet
         
         Examples
         --------
@@ -388,7 +392,7 @@ class ModelEllipsoid:
         else:
             self.sun_lat = sun_lat
         
-        self.lat_g, self.lat_c, self.lon_w = lat_lon(shape,ob_lon,ob_lat,pixscale_km,np_ang,req,rpol)
+        self.lat_g, self.lat_c, self.lon_w, self.image_grid_km_x, self.image_grid_km_y = lat_lon(shape,pixscale_km,ob_lon,ob_lat,np_ang,req,rpol)
         self.surf_n = surface_normal(self.lat_g, self.lon_w, self.ob_lon)
         self.mu = emission_angle(self.ob_lat, self.surf_n)
         
@@ -701,7 +705,7 @@ class Nav(ModelBody):
             [pixels] shift in y
         '''
         shape = self.data.shape
-        self.lat_g, self.lat_c, self.lon_w = lat_lon(shape,self.ob_lon,self.ob_lat,self.pixscale_km,self.deg_per_px,self.np_ang,self.req,self.rpol,dx=dx,dy=dy)
+        self.lat_g, self.lat_c, self.lon_w, self.image_grid_km_x, self.image_grid_km_y = lat_lon(shape,self.ob_lon,self.ob_lat,self.pixscale_km,self.deg_per_px,self.np_ang,self.req,self.rpol,dx=dx,dy=dy)
         self.surf_n = surface_normal(self.lat_g, self.lon_w, self.ob_lon)
         self.mu = emission_angle(self.ob_lat, self.surf_n)
         
@@ -811,7 +815,7 @@ class Nav(ModelBody):
         hdul.writeto(outstem, overwrite=True)
       
 
-    def reproject(self, target_projection='equirectangular', target_shape = None, dx=0, dy=0):
+    def reproject(self, target_projection='equirectangular', target_shape = None):
         '''
         Projects the navigated data into the target projection
         This function only works properly if self.lat_g and self.lon_w 
@@ -829,10 +833,6 @@ class Nav(ModelBody):
         target_shape : tuple, optional. default None
             shape of output arrays.
             if None, shape is guessed from pixel scale of input image
-        dx : float, optional. default 0
-            [pixels] shift in x as determined by e.g. colocate()
-        dy : float, optional. default 0
-            [pixels] shift in y as determined by e.g. colocate()
             
         Returns
         -------
@@ -850,7 +850,7 @@ class Nav(ModelBody):
         img_globe = ccrs.Globe(semimajor_axis=self.req , semiminor_axis=self.rpol, ellipse=None)
         source_proj = TiltedPerspective(self.np_ang, central_longitude=self.ob_lon, central_latitude=self.ob_lat, globe=img_globe) 
         input_nx, input_ny = self.data.shape[0], self.data.shape[1]
-        source_x_coords, source_y_coords = np.meshgrid((np.arange(input_nx)-input_nx/2-dx)*self.pixscale_km, (np.arange(input_ny)-input_ny/2-dy)*self.pixscale_km) 
+        source_x_coords, source_y_coords = self.image_grid_km_x, self.image_grid_km_y
             
         if target_projection.lower() == 'equirectangular': 
             if target_shape is None:
@@ -868,7 +868,7 @@ class Nav(ModelBody):
         
         else: 
             if target_shape is None: 
-                raise ValueError('target_shape must be specified if target_proj is not equirectangular or polar')
+                raise ValueError('target_shape must be specified if target_projection is not equirectangular or polar')
             target_proj = target_projection
         
         target_x_points, target_y_points, extent = mesh_projection(target_proj, target_nx, target_ny)
