@@ -14,76 +14,40 @@ from astropy.time import Time
 
 from cartopy.img_transform import mesh_projection, regrid 
 import cartopy.crs as ccrs 
-import shapely.geometry as sgeom
 
 from ..utils import *
 
 
-
-class TiltedPerspective(ccrs.Projection):
+def rotate_about_pivot(img, angle, pivot):
     '''
-    Custom cartopy projection for the TiltedPerspective projection
-    defined by proj. This is the typical geometry of a telescope or spacecraft
-    observation.
+    Parameters
+    ----------
+    img : np.array, required
+        image to rotate
+    angle : float, required
+        [deg] angle to rotate image (counterclockwise)
+    pivot : tuple, required
+        [px] (x,y) coordinates of pivot point about which to rotate image
+        
+    Returns
+    -------
+    np.array
+        rotated image
     '''
-    
-    def __init__(self, north_polar_angle=0, central_longitude=0, central_latitude=0, h=1e12, globe=None):
-        '''
-        Parameters
-        ----------
-        north_polar_angle : float, optional, default 0
-            [deg] angle of the north pole of the planet wrt the observer
-        central_longitude : float, optional, default 0
-            [deg] longitude of the center of the planet
-        central_latitude : float, optional, default 0
-            [deg] latitude of the center of the planet
-        h : float, optional, default 1e12, i.e., far-field approximation
-            [km] height of the observer above the planet
-        globe : cartopy.crs.Globe, optional, default None
-            globe to use for the projection. if None, use WGS84
-        '''
-
-        proj4_params = [('proj', 'tpers'),
-                        ('lon_0', 180-central_longitude), 
-                        ('lat_0', central_latitude), 
-                        ('h', h), 
-                        ('azi', north_polar_angle), 
-                        ('tilt', 0)]
-
-        super(TiltedPerspective, self).__init__(proj4_params, globe=globe)
-
-        a = float(self.globe.semimajor_axis)
-        b = float(self.globe.semiminor_axis)
-
-        # To stabilise the projection of geometries, we reduce the boundary by
-        # a tiny fraction at the cost of the extreme edges.
-        coords = ccrs._ellipse_boundary(a * 0.99999, b * 0.99999, n=61)
-        self._boundary = sgeom.polygon.LinearRing(coords.T)
-        self._xlim = self._boundary.bounds[::2]
-        self._ylim = self._boundary.bounds[1::2]
-        self._threshold = np.diff(self._xlim)[0] * 0.02
-
-    @property
-    def boundary(self):
-        return self._boundary
-
-    @property
-    def threshold(self):
-        return self._threshold
-
-    @property
-    def x_limits(self):
-        return self._xlim
-
-    @property
-    def y_limits(self):
-        return self._ylim
+    padX = [img.shape[1] - pivot[0], pivot[0]]
+    padY = [img.shape[0] - pivot[1], pivot[1]]
+    imgP = np.pad(img, [padY, padX], 'edge')
+    imgR = ndimage.rotate(imgP, angle, reshape=False, order=0, mode='nearest')
+    return imgR[padY[0] : -padY[1], padX[0] : -padX[1]]
 
 
-def lat_lon(shape, pixscale_km, ob_lon, ob_lat, np_ang, r_e, r_p, dx=0, dy=0):
+def lat_lon(shape, pixscale_km, ob_lon, ob_lat, np_ang, r_e, r_p, dx=0, dy=0, longitude_convention='w'):
     '''
     Computes the planetographic and planetocentric latitudes and west longitudes
     of an ellipsoidal planet as viewed from a tilted perspective, i.e., on the sky
+    For now, this relies on manually de-rotating the planet and using Cartopy's
+    orthographic projection, because pyproj TiltedPerspective cannot handle
+    ellipsoidal planets, only spheres.
     
     Parameters
     ----------
@@ -105,6 +69,8 @@ def lat_lon(shape, pixscale_km, ob_lon, ob_lat, np_ang, r_e, r_p, dx=0, dy=0):
         [px] offset in x from the center of the image
     dy : float, optional, default 0
         [px] offset in y from the center of the image
+    longitude_convention : str, optional, default 'w'
+        east or west longitude convention
     
     Returns
     -------
@@ -116,25 +82,37 @@ def lat_lon(shape, pixscale_km, ob_lon, ob_lat, np_ang, r_e, r_p, dx=0, dy=0):
         West longitudes
     '''
     deg_per_pix = pixscale_km / (np.pi*(r_e+r_p)/2.0) * 360.0
+    if longitude_convention.lower() == 'w' or longitude_convention.lower() == 'west':
+        ob_lon = 360 - ob_lon
+    elif longitude_convention.lower() == 'e' or longitude_convention.lower() == 'east':
+        pass
+    else:
+        raise ValueError('longitude_convention must be one of "w" or "e"')
     
-    img_globe = ccrs.Globe(semimajor_axis=r_e , semiminor_axis=r_p, ellipse=None)
-    source_proj = ccrs.PlateCarree(central_longitude=ob_lon, globe=img_globe)  
-    target_proj = TiltedPerspective(north_polar_angle=np_ang, central_longitude=ob_lon, central_latitude=ob_lat, globe=img_globe) 
+    img_globe = ccrs.Globe(semimajor_axis=r_e, semiminor_axis=r_p, ellipse=None)
+    source_proj = ccrs.PlateCarree(central_longitude=0, globe=img_globe)  
+    target_proj = ccrs.Orthographic(central_longitude=ob_lon, central_latitude=ob_lat, globe=img_globe) 
 
     # Define the input and output grids. source is in lat/lon, target is in km
     target_nx, target_ny = int(shape[0]), int(shape[1])
     xx, yy = np.arange(target_nx)-target_nx/2-dx, np.arange(target_ny)-target_ny/2-dy
     target_x_points, target_y_points = np.meshgrid(xx*pixscale_km, yy*pixscale_km) 
 
-    source_nx, source_ny = int(360/deg_per_pix), int(180/deg_per_pix)
-    source_x_coords, source_y_coords, extent = mesh_projection(source_proj, source_nx, source_ny,x_extents=(0,360), y_extents=(-90,90))
-
     # Project the longitude and latitude grids
-    lon_grid   = regrid(360 - source_x_coords, source_x_coords, source_y_coords, source_proj, target_proj, target_x_points,  target_y_points, mask_extrapolated=False)
+    source_nx, source_ny = int(360/deg_per_pix), int(180/deg_per_pix)
+    source_x_coords, source_y_coords, extent = mesh_projection(source_proj, source_nx, source_ny, x_extents=(0,360), y_extents=(-90,90))
+    lon_grid = regrid(source_x_coords, source_x_coords, source_y_coords, source_proj, target_proj, target_x_points,  target_y_points, mask_extrapolated=False)
     lat_grid_g = regrid(source_y_coords, source_x_coords, source_y_coords, source_proj, target_proj, target_x_points,  target_y_points, mask_extrapolated=False)
-    lat_grid_c = np.arctan((1-(r_e-r_p)/r_e)**2*np.tan(lat_grid_g))
 
-    return lat_grid_g.filled(np.nan), lat_grid_c.filled(np.nan), lon_grid.filled(np.nan), target_x_points, target_y_points
+    # rotate about new image center
+    lon_grid = rotate_about_pivot(lon_grid.filled(np.nan), -np_ang, (int(np.round(target_nx/2 + dx)), int(np.round(target_ny/2 + dy))))
+    lat_grid_g = rotate_about_pivot(lat_grid_g.filled(np.nan), -np_ang, (int(np.round(target_nx/2 + dx)), int(np.round(target_ny/2 + dy))))
+    lat_grid_c = np.arctan((1-(r_e-r_p)/r_e)**2*np.tan(lat_grid_g))
+    
+    if longitude_convention.lower() == 'w' or longitude_convention.lower() == 'west':
+        lon_grid = 360 - lon_grid
+
+    return lat_grid_g, lat_grid_c, lon_grid, target_y_points, target_x_points
 
 
 def surface_normal(lat_g, lon_w, ob_lon):
@@ -304,7 +282,7 @@ class ModelEllipsoid:
     Projection of an ellipsoid onto a 2-D array with latitude and longitude grid
     '''
     
-    def __init__(self, ob_lon, ob_lat, pixscale_km, np_ang, req, rpol, center=(0.0, 0.0), shape=None, sun_lon = None, sun_lat = None):
+    def __init__(self, ob_lon, ob_lat, pixscale_km, np_ang, req, rpol, center=(0.0, 0.0), shape=None, sun_lon = None, sun_lat = None, longitude_convention='w'):
         '''
         Parameters
         ----------
@@ -322,8 +300,8 @@ class ModelEllipsoid:
             [km] equatorial radius
         rpol : float, required. 
             [km] polar radius
-        center : 2-element array-like, optional. default (0,0). 
-            pixel location of center of planet
+        center : 2-element array-like, optional, default (0,0). 
+            pixel offset of center of planet from center of image
         shape : 2-element tuple, optional. 
             shape of output arrays.
             if None, shape is just larger than diameter / pixscale
@@ -331,6 +309,8 @@ class ModelEllipsoid:
             sub-solar longitude. if None, assume same as ob_lon
         sun_lat : float, optional, default None
             sub_solar latitude. if None, assume same as ob_lat
+        longitude_convention : str, optional, default 'w'
+            east or west longitude convention
         
         Attributes
         ----------
@@ -381,7 +361,10 @@ class ModelEllipsoid:
         self.np_ang = np_ang
         
         if shape is None:
-            sz = int(2*np.ceil(np.max([req, rpol]) / pixscale_km) + 1)
+            # arbitrary 10-px pad. must be a few pixels because rotate_about_pivot()
+            # uses nearest-neighbor extrapolation at the edges
+            pad_width = 10
+            sz = int(2*np.ceil(np.max([req, rpol]) / pixscale_km) + pad_width)
             shape = (sz, sz)
         if sun_lon is None:
             self.sun_lon = ob_lon
@@ -392,24 +375,18 @@ class ModelEllipsoid:
         else:
             self.sun_lat = sun_lat
         
-        self.lat_g, self.lat_c, self.lon_w, self.image_grid_km_x, self.image_grid_km_y = lat_lon(shape,pixscale_km,ob_lon,ob_lat,np_ang,req,rpol)
+        self.lat_g, self.lat_c, self.lon_w, self.image_grid_km_x, self.image_grid_km_y = lat_lon(shape,pixscale_km,ob_lon,ob_lat,np_ang,req,rpol,dx=center[0], dy=center[1], longitude_convention=longitude_convention)
         self.surf_n = surface_normal(self.lat_g, self.lon_w, self.ob_lon)
         self.mu = emission_angle(self.ob_lat, self.surf_n)
+        self.mu[np.isnan(self.lat_g)] = np.nan
         
         # sun geometry
         self.sun_n = surface_normal(self.lat_g, self.lon_w, self.sun_lon)
-        self.mu0 = emission_angle(self.ob_lat, self.sun_n)
-        
-        # solve small numerical issue where mu = 1.0 + epsilon
-        self.mu[(self.mu > 1.0)*(self.mu < 1.00001)] = 1.0
-        self.mu0[(self.mu0 > 1.0)*(self.mu0 < 1.00001)] = 1.0
+        self.mu0 = emission_angle(self.sun_lat, self.sun_n)
+        self.mu0[np.isnan(self.lat_g)] = np.nan
         
         avg_circumference = 2*np.pi*((self.req + self.rpol)/2.0)
         self.deg_per_px = self.pixscale_km * (1/avg_circumference) * 360
-        
-        # TO DO: offset model by center() parameter
-        if (center[0] != 0) or (center[1] != 0):
-            raise NotImplementedError
         
         
     def __str__(self):
@@ -680,6 +657,8 @@ class Nav(ModelBody):
         '''
         FFTshift data by a user-defined amount
         for example, to apply the suggested shift from colocate()
+        it is preferred to use xy_shift_model() instead, which avoids
+        touching the data
         
         Parameters
         ----------
@@ -815,7 +794,7 @@ class Nav(ModelBody):
         hdul.writeto(outstem, overwrite=True)
       
 
-    def reproject(self, target_projection='equirectangular', target_shape = None):
+    def reproject(self, projection='equirectangular', shape = None):
         '''
         Projects the navigated data into the target projection
         This function only works properly if self.lat_g and self.lon_w 
@@ -825,12 +804,11 @@ class Nav(ModelBody):
         
         Parameters
         ----------
-        target_projection : str or cartopy.proj.Projection instance, optional. default 'equirectangular'
-            what projection to use for the output. options are:
-            'equirectangular' : Equirectangular projection
-            'polar' : Polar projection
-            any other input will be passed to ccrs.<input>
-        target_shape : tuple, optional. default None
+        projection : str or cartopy.proj.Projection instance, optional. default 'equirectangular'
+            string options are ['equirectangular', 'polar']
+            any cartopy Projection object is also accepted, but in this case shape must be specified
+            see `cartopy projection list <https://scitools.org.uk/cartopy/docs/v0.15/crs/projections.html>`_.
+        shape : tuple, optional. default None
             shape of output arrays.
             if None, shape is guessed from pixel scale of input image
             
@@ -842,39 +820,45 @@ class Nav(ModelBody):
             cosine of the emission angle (mu) 
             at each pixel in the projection
         '''
-        if target_shape is not None:
-            target_nx = int(target_shape[0])
-            target_ny = int(target_shape[1])
+        if shape is not None:
+            target_nx = int(shape[0])
+            target_ny = int(shape[1])
+        if type(projection) == str:
+            projection = projection.lower()
         
         # compute source coordinates in kilometer and specify projection type
         img_globe = ccrs.Globe(semimajor_axis=self.req , semiminor_axis=self.rpol, ellipse=None)
-        source_proj = TiltedPerspective(self.np_ang, central_longitude=self.ob_lon, central_latitude=self.ob_lat, globe=img_globe) 
+        source_proj = ccrs.Orthographic(central_longitude=self.ob_lon, central_latitude=self.ob_lat, globe=img_globe) 
         input_nx, input_ny = self.data.shape[0], self.data.shape[1]
-        source_x_coords, source_y_coords = self.image_grid_km_x, self.image_grid_km_y
             
-        if target_projection.lower() == 'equirectangular': 
-            if target_shape is None:
+        if projection == 'equirectangular': 
+            if shape is None:
                 target_nx = int(np.round(360*self.deg_per_px))
                 target_ny = int(np.round(180*self.deg_per_px))
-            target_proj = ccrs.PlateCarree(central_longitude = 180 - self.ob_lon, globe=img_globe, **kwargs) 
-            #target_x_points += 180 
-            #target_x_points *= -1
+            target_proj = ccrs.PlateCarree(central_longitude = 180 - self.ob_lon, globe=img_globe) 
 
-        elif target_projection.lower() == 'polar': 
-            if target_shape is None:
+        elif projection == 'polar': 
+            if shape is None:
                 target_nx = int(np.round(180*self.deg_per_px))
                 target_ny = int(np.round(180*self.deg_per_px))
             target_proj = ccrs.Orthographic(central_longitude= 180 - self.ob_lon, central_latitude = np.sign(self.ob_lat)*90, globe=img_globe)
         
         else: 
-            if target_shape is None: 
-                raise ValueError('target_shape must be specified if target_projection is not equirectangular or polar')
-            target_proj = target_projection
+            if shape is None: 
+                raise ValueError('shape must be specified if target_projection is not equirectangular or polar')
+            target_proj = projection
+            
+        # de-rotate the data, mu, and mu0 grids to work with orthographic projection
+        # all of this is required because pyproj TiltedPerspective projection does not
+        # support elliptical transformations, only circular. see docstring of lat_lon()
+        yc, xc = np.unravel_index(np.argmin(self.image_grid_km_x**2 + self.image_grid_km_y**2), self.image_grid_km_x.shape)
+        data_rot = rotate_about_pivot(self.data, self.np_ang, (xc, yc))
+        mu_rot = rotate_about_pivot(self.mu, self.np_ang, (xc, yc))
+        mu0_rot = rotate_about_pivot(self.mu0, self.np_ang, (xc, yc))
         
         target_x_points, target_y_points, extent = mesh_projection(target_proj, target_nx, target_ny)
-        projected = regrid(self.data, source_x_coords, source_y_coords, source_proj, target_proj, target_x_points, target_y_points, mask_extrapolated=False)
-        mu_projected = regrid(self.mu, source_x_coords, source_y_coords, source_proj, target_proj, target_x_points, target_y_points, mask_extrapolated=False)
-        mu0_projected = regrid(self.mu0, source_x_coords, source_y_coords, source_proj, target_proj, target_x_points, target_y_points, mask_extrapolated=False)
+        projected = regrid(data_rot, self.image_grid_km_y, self.image_grid_km_x, source_proj, target_proj, target_x_points, target_y_points, mask_extrapolated=False)
+        mu_projected = regrid(mu_rot, self.image_grid_km_y, self.image_grid_km_x, source_proj, target_proj, target_x_points, target_y_points, mask_extrapolated=False)
+        mu0_projected = regrid(mu0_rot, self.image_grid_km_y, self.image_grid_km_x, source_proj, target_proj, target_x_points, target_y_points, mask_extrapolated=False)
         
         return projected, mu_projected, mu0_projected, target_x_points, target_y_points
-
