@@ -80,8 +80,12 @@ def lat_lon(shape, pixscale_km, ob_lon, ob_lat, np_ang, r_e, r_p, dx=0, dy=0, lo
         planetocentric latitudes
     np.array
         West longitudes
+    np.array
+        x-coordinates of image grid in km, where 0 is center of planet
+    np.array
+        y-coordinates of image grid in km, where 0 is center of planet
     '''
-    deg_per_pix = pixscale_km / (np.pi*(r_e+r_p)/2.0) * 360.0
+    deg_per_px = pixscale_km / (np.pi*(r_e+r_p)/2.0) * 360.0
     if longitude_convention.lower() == 'w' or longitude_convention.lower() == 'west':
         ob_lon = 360 - ob_lon
     elif longitude_convention.lower() == 'e' or longitude_convention.lower() == 'east':
@@ -94,12 +98,12 @@ def lat_lon(shape, pixscale_km, ob_lon, ob_lat, np_ang, r_e, r_p, dx=0, dy=0, lo
     target_proj = ccrs.Orthographic(central_longitude=ob_lon, central_latitude=ob_lat, globe=img_globe) 
 
     # Define the input and output grids. source is in lat/lon, target is in km
-    target_nx, target_ny = int(shape[0]), int(shape[1])
+    target_ny, target_nx = int(shape[0]), int(shape[1])
     xx, yy = np.arange(target_nx)-target_nx/2-dx, np.arange(target_ny)-target_ny/2-dy
     target_x_points, target_y_points = np.meshgrid(xx*pixscale_km, yy*pixscale_km) 
 
     # Project the longitude and latitude grids
-    source_nx, source_ny = int(360/deg_per_pix), int(180/deg_per_pix)
+    source_nx, source_ny = int(360/deg_per_px), int(180/deg_per_px)
     source_x_coords, source_y_coords, extent = mesh_projection(source_proj, source_nx, source_ny, x_extents=(0,360), y_extents=(-90,90))
     lon_grid = regrid(source_x_coords, source_x_coords, source_y_coords, source_proj, target_proj, target_x_points,  target_y_points, mask_extrapolated=False)
     lat_grid_g = regrid(source_y_coords, source_x_coords, source_y_coords, source_proj, target_proj, target_x_points,  target_y_points, mask_extrapolated=False)
@@ -107,7 +111,7 @@ def lat_lon(shape, pixscale_km, ob_lon, ob_lat, np_ang, r_e, r_p, dx=0, dy=0, lo
     # rotate about new image center
     lon_grid = rotate_about_pivot(lon_grid.filled(np.nan), -np_ang, (int(np.round(target_nx/2 + dx)), int(np.round(target_ny/2 + dy))))
     lat_grid_g = rotate_about_pivot(lat_grid_g.filled(np.nan), -np_ang, (int(np.round(target_nx/2 + dx)), int(np.round(target_ny/2 + dy))))
-    lat_grid_c = np.arctan((1-(r_e-r_p)/r_e)**2*np.tan(lat_grid_g))
+    lat_grid_c = np.rad2deg(np.arctan((1-(r_e-r_p)/r_e)**2*np.tan(np.deg2rad(lat_grid_g))))
     
     if longitude_convention.lower() == 'w' or longitude_convention.lower() == 'west':
         lon_grid = 360 - lon_grid
@@ -156,7 +160,8 @@ def colocate_diagnostic_plot(model, data, mode):
     
     Returns
     -------
-    matplotlib figure
+    fig, ax
+        matplotlib figure and axis objects
     '''
     aspect_ratio = data.shape[0] / data.shape[1]
     if aspect_ratio >= 1:
@@ -206,8 +211,8 @@ def emission_angle(ob_lat, surf_n):
     surf_n /= np.linalg.norm(surf_n, axis=0) # normalize to magnitude 1
     ob = np.asarray([np.cos(np.radians(ob_lat)),0,np.sin(np.radians(ob_lat))])
     mu = np.dot(surf_n.T, ob).T
-    mu[mu<0] = 0 
-    mu[~np.isfinite(mu)] = 0 
+    mu[mu<0] = np.nan
+    mu[~np.isfinite(mu)] = np.nan
     return mu
     
         
@@ -496,7 +501,8 @@ class ModelBody(ModelEllipsoid):
                     self.ephem['NPole_ang'],
                     self.req,self.rpol, shape=shape,
                     sun_lon = self.ephem['PDSunLon'], 
-                    sun_lat = self.ephem['PDSunLat'])
+                    sun_lat = self.ephem['PDSunLat'],
+                    longitude_convention = body.longitude_convention)
         
         
     def __str__(self):
@@ -833,14 +839,14 @@ class Nav(ModelBody):
             
         if projection == 'equirectangular': 
             if shape is None:
-                target_nx = int(np.round(360*self.deg_per_px))
-                target_ny = int(np.round(180*self.deg_per_px))
+                target_nx = int(np.round(360/self.deg_per_px))
+                target_ny = int(np.round(180/self.deg_per_px))
             target_proj = ccrs.PlateCarree(central_longitude = 180 - self.ob_lon, globe=img_globe) 
 
         elif projection == 'polar': 
             if shape is None:
-                target_nx = int(np.round(180*self.deg_per_px))
-                target_ny = int(np.round(180*self.deg_per_px))
+                target_nx = int(np.round(180/self.deg_per_px))
+                target_ny = int(np.round(180/self.deg_per_px))
             target_proj = ccrs.Orthographic(central_longitude= 180 - self.ob_lon, central_latitude = np.sign(self.ob_lat)*90, globe=img_globe)
         
         else: 
@@ -861,4 +867,4 @@ class Nav(ModelBody):
         mu_projected = regrid(mu_rot, self.image_grid_km_y, self.image_grid_km_x, source_proj, target_proj, target_x_points, target_y_points, mask_extrapolated=False)
         mu0_projected = regrid(mu0_rot, self.image_grid_km_y, self.image_grid_km_x, source_proj, target_proj, target_x_points, target_y_points, mask_extrapolated=False)
         
-        return projected, mu_projected, mu0_projected, target_x_points, target_y_points
+        return projected.filled(np.nan), mu_projected.filled(np.nan), mu0_projected.filled(np.nan), target_x_points, target_y_points

@@ -30,9 +30,8 @@ def test_navigation(datadir):
     ura = Body('Uranus', epoch=obs_time, location=obs_code)
     nav = navigation.Nav(keck_uranus, ura, pixscale_arcsec)
        
-    ldmodel_expected = np.load(os.path.join(datadir, 'ldmodel.npy'))
     ldmodel = nav.ldmodel(flux, a, beam = beam, law='exp')
-    
+    ldmodel_expected = np.load(os.path.join(datadir, 'ldmodel.npy'))
     assert np.allclose(ldmodel, ldmodel_expected, rtol=1e-5, equal_nan=True)
     
     # test co-location algorithms
@@ -42,9 +41,9 @@ def test_navigation(datadir):
                         mode='convolution', 
                         diagnostic_plot=False,
                         beam=beam)
-    assert np.allclose([dx, dy], [137.794921875, -10.744140625], atol = 1.0) #absolute 1-pixel tolerance
+    assert np.allclose([dx, dy], [133.455078125, -8.943359375], atol = 1.0) #absolute 1-pixel tolerance
     (dx_canny, dy_canny, dxerr_canny, dyerr_canny) = nav.colocate(mode='canny', diagnostic_plot=False, tb=flux, a=a, low_thresh=1e-5, high_thresh=0.01, sigma=5)
-    assert np.allclose([dx_canny, dy_canny], [130.048828125, -9.201171875], atol = 1.0) #absolute 1-pixel tolerance
+    assert np.allclose([dx_canny, dy_canny], [126.830078125, -8.416015625], atol = 1.0) #absolute 1-pixel tolerance
     
     # test shifting of model to same loc as data
     nav.xy_shift_model(dx, dy)
@@ -57,11 +56,13 @@ def test_navigation(datadir):
     assert np.all(nanfree_lon <= 360)
     
     # test re-projection onto lat-lon grid
-    projected, mu_projected = nav.reproject(interp='cubic')
+    projected, mu_projected, mu0_projected, _, _ = nav.reproject()
     projected_expected = np.load(os.path.join(datadir, 'projected.npy'))
     mu_projected_expected = np.load(os.path.join(datadir, 'mu_projected.npy'))
+    mu0_projected_expected = np.load(os.path.join(datadir, 'mu0_projected.npy'))
     assert np.allclose(projected, projected_expected, rtol = 1e-2, equal_nan=True)
     assert np.allclose(mu_projected, mu_projected_expected, rtol = 1e-2, equal_nan=True)
+    assert np.allclose(mu0_projected, mu0_projected_expected, rtol = 1e-2, equal_nan=True)
     
     # test diagnostic plot
     import matplotlib
@@ -91,7 +92,7 @@ def test_nav_nonsquare(datadir):
                         beam=0.5)
     
     assert dx == -1.5
-    assert dy == 6.5
+    assert dy == 7.5
     
     
 def test_nav_jupiter_minnaert(datadir):
@@ -123,8 +124,9 @@ def test_nav_jupiter_minnaert(datadir):
             beam = fwhm, 
             diagnostic_plot=False,
             )
-    assert np.isclose(dx, 8.107421875, rtol=1e-1)
-    assert np.isclose(dy, -10.697265625, rtol=1e-1)
+    print(dx, dy)
+    assert np.isclose(dx, 6.048828125, rtol=1e-1)
+    assert np.isclose(dy, -8.791015625, rtol=1e-1)
     
     
 def test_write(datadir):

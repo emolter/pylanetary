@@ -9,7 +9,6 @@ import os, shutil
 
 '''
 to do:
-- refactor lat-lon to be more easily chunked into small tests
 - test what happens with different lat-lon coordinate reference systems
 - make tests with other/different ephemerides
 '''
@@ -38,11 +37,7 @@ def test_lat_lon(datadir):
     req = 25560 #km
     rpol = 24970 #km
     
-    xcen, ycen = int(shape[0]/2), int(shape[1]/2) #pixels at center of planet
-    xx = np.arange(shape[0]) - xcen
-    yy = np.arange(shape[1]) - ycen
-    x,y = np.meshgrid(yy,xx)
-    lat_g, lat_c, lon_w = navigation.lat_lon(x,y,ob_lon,ob_lat,pixscale_km,np_ang,req,rpol)
+    lat_g, lat_c, lon_w, _, _ = navigation.lat_lon(shape, pixscale_km, ob_lon, ob_lat, np_ang, req, rpol)
     
     lat_g_expected = np.load(os.path.join(datadir, 'lat_g.npy'))
     assert np.allclose(lat_g, lat_g_expected, rtol = 1e-5, equal_nan=True)
@@ -72,6 +67,7 @@ def test_emission_angle(datadir):
     ob_lat = -65 #degrees
     surf_n= np.load(os.path.join(datadir, 'surf_n.npy'))
     mu = navigation.emission_angle(ob_lat, surf_n)
+    
     mu_expected = np.load(os.path.join(datadir, 'mu.npy')) 
     assert np.allclose(mu, mu_expected, rtol=1e-5, equal_nan=True)
     

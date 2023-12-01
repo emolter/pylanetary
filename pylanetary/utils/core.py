@@ -530,6 +530,7 @@ class Body:
         self.ravg = (self.req + self.rpol) / 2
         self.rvol = Quantity(data['body']['rvol'], unit=u.km)
         self.accel_g = Quantity(data['body']['accel_g'], unit=u.m / u.s**2)
+        self.longitude_convention = data['body']['longitude_convention']
 
         # orbital information
         self.semi_major_axis = Quantity(data['orbit']['semi_major_axis'], unit=u.km).to(u.AU)
