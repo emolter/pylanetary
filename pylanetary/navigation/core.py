@@ -260,8 +260,8 @@ def limb_darkening(mu, a, law='exp', mu0=None):
 
     law = law.lower()
     if law == 'disc' or law == 'disk': 
-        ld = mu[mu>0] = 1  
-    if law == 'exp' or law == 'exponential':
+        ld = mu[mu>0] = 1.0
+    elif law == 'exp' or law == 'exponential':
         ld = mu**a
     elif law == 'linear':
         ld = 1 - a * (1 - mu)

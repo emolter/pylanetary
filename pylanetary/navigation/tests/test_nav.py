@@ -45,6 +45,10 @@ def test_lat_lon(datadir):
     lon_w_expected = np.load(os.path.join(datadir, 'lon_w.npy'))      
     assert np.allclose(lon_w, lon_w_expected, rtol = 1e-5, equal_nan=True)
     
+    # test raises with wrong longitude convention
+    with pytest.raises(ValueError):
+        navigation.lat_lon(shape, pixscale_km, ob_lon, ob_lat, np_ang, req, rpol, longitude_convention='wrong')
+    
     
 def test_surface_normal(datadir):
     
@@ -84,11 +88,21 @@ def test_ld():
     
     ld_quadratic = navigation.limb_darkening(mu, [a, a], law='quadratic')
     assert np.isclose(ld_quadratic, np.array([0.883]), rtol=1e-3)
+    
+    ld_disk = navigation.limb_darkening(mu, a, law='disk')
+    assert np.isclose(ld_disk, np.array([1.0]), rtol=1e-5)
         
     mu0 = 0.95
     ld_minnaert = navigation.limb_darkening(mu, a, law='minnaert', mu0=mu0)
     assert np.isclose(ld_minnaert, np.array([1.2640040153756316]), rtol=1e-5)
     
+    with pytest.raises(ValueError):
+        navigation.limb_darkening(mu, a, law='wrong')
+    
+    mu = -1.0
+    with pytest.raises(ValueError):
+        navigation.limb_darkening(mu, a, law='linear')
+        
     
 def test_model_planet_ellipsoid(datadir):
     
