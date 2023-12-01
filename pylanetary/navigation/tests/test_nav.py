@@ -114,3 +114,11 @@ def test_model_planet_ellipsoid(datadir):
     assert np.allclose(ell.lon_w, lon_w, rtol=1e-5, equal_nan=True)
     assert np.allclose(ell.mu, mu, rtol=1e-5, equal_nan=True)
     
+    # test that proper shape is used when shape is not specified
+    ell = navigation.ModelEllipsoid( 
+                ob_lon, ob_lat, 
+                pixscale_km, 
+                np_ang, 
+                req, rpol)
+    assert ell.lat_g.shape == (96,96)
+    

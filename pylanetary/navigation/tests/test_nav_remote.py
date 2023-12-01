@@ -7,6 +7,7 @@ from distutils import dir_util
 import os, shutil
 from ...utils import Body
 from astropy.io import fits
+import cartopy.crs as ccrs
 
 
 @fixture
@@ -63,6 +64,23 @@ def test_navigation(datadir):
     assert np.allclose(projected, projected_expected, rtol = 1e-2, equal_nan=True)
     assert np.allclose(mu_projected, mu_projected_expected, rtol = 1e-2, equal_nan=True)
     assert np.allclose(mu0_projected, mu0_projected_expected, rtol = 1e-2, equal_nan=True)
+    
+    # test re-projection to polar
+    projected_polar, _, _, _, _ = nav.reproject('polar')
+    projected_expected = np.load(os.path.join(datadir, 'projected_polar.npy'))
+    assert np.allclose(projected_polar, projected_expected, rtol = 1e-2, equal_nan=True)
+    
+    # test custom re-projection
+    img_globe = ccrs.Globe(semimajor_axis=nav.req , semiminor_axis=nav.rpol, ellipse=None)
+    custom_projection = ccrs.Robinson(central_longitude=0, globe=img_globe)
+    custom_shape = (600, 300)
+    projected_custom, _, _, _, _ = nav.reproject(projection=custom_projection, shape=custom_shape)
+    projected_expected = np.load(os.path.join(datadir, 'projected_custom.npy'))
+    assert np.allclose(projected_custom, projected_expected, rtol = 1e-2, equal_nan=True)
+    
+    # ensure raise if custom projection and shape are not specified together
+    with pytest.raises(ValueError):
+        nav.reproject(projection=custom_projection)
     
     # test diagnostic plot
     import matplotlib
