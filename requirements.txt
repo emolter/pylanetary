@@ -1,8 +1,9 @@
 astropy>=4.3.0
-git+https://github.com/astropy/astroquery.git
+astroquery>=0.4.7.dev8893
 beautifulsoup4==4.11.1
+cartopy
 extension_helpers==1.0.0
-git+https://github.com/keflavich/image_registration.git
+image_registration>=0.2.8
 h5py>=3.0.0
 matplotlib>=3.5.1
 numpy>=1.21.0

@@ -6,7 +6,7 @@ body:
   rpol: 24341.  # km polar radius
   rvol: 24622.  # km volumetric mean radius
   accel_g: 11.27  # m/s^2 Gravity at 1 bar level
-  num_moons: 14  # number of natural satellites
+  longitude_convention: west
 orbit:
   semi_major_axis: 4.514e9  # km
   t_rot: 16.11  # length of sideral rotation period in hours in system III
