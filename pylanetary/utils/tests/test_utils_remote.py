@@ -4,11 +4,12 @@ import numpy as np
 import astropy.units as u
 from astropy.time import Time
 
+
 def test_body():
-    
+
     epoch = Time('2018-01-01T00:00:00', format='isot', scale='utc')
-    jup = utils.Body('Jupiter', epoch=epoch, location='T17') #Keck 2
-    
+    jup = utils.Body('Jupiter', epoch=epoch, location='T17')  # Keck 2
+
     # basic data
     assert jup.name == 'Jupiter'
     assert jup.mass == 1.89813e27 * u.kg
@@ -23,17 +24,16 @@ def test_body():
     assert jup.app_dia_min == 30.5 * u.arcsec
     assert jup.location == 'T17'
     assert jup.epoch == epoch
-    
+
     # ephemeris
     assert jup.ephem['r'] == 5.432247809300
     assert jup.ephem['delta'] == 5.95806215806774
-    
+
+
 def test_body_print(capsys):
-    
+
     epoch = Time('2018-01-01T00:00:00', format='isot', scale='utc')
-    jup = utils.Body('Jupiter', epoch=epoch, location='T17') #Keck 2
+    jup = utils.Body('Jupiter', epoch=epoch, location='T17')  # Keck 2
     print(jup)
     out, err = capsys.readouterr()
     assert out == 'pylantary.utils.Body instance; Jupiter, Horizons ID 599\n'
-    
-    

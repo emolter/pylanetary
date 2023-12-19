@@ -70,7 +70,7 @@
 </section>
 <section id="instantiate-a-Nav-object">
 <h3>instantiate a Nav object<a class="headerlink" href="#instantiate-a-Nav-object" title="Link to this heading">¶</a></h3>
-<div class="nbinput nblast docutils container">
+<div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
@@ -82,7 +82,37 @@
 
 <span class="c1">#data[np.isnan(data)] = 0.0</span>
 <span class="n">nav</span> <span class="o">=</span> <span class="n">navigation</span><span class="o">.</span><span class="n">Nav</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">jup</span><span class="p">,</span> <span class="n">pixscale_arcsec</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">mpl_toolkits.axes_grid1</span> <span class="kn">import</span> <span class="n">make_axes_locatable</span>
+<span class="n">fig</span><span class="p">,</span> <span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">ax1</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">5</span><span class="p">))</span>
+<span class="n">cim</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">nav</span><span class="o">.</span><span class="n">lon_w</span><span class="p">,</span> <span class="n">origin</span> <span class="o">=</span> <span class="s1">&#39;lower&#39;</span><span class="p">)</span>
+<span class="n">divider</span> <span class="o">=</span> <span class="n">make_axes_locatable</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+<span class="n">cax</span> <span class="o">=</span> <span class="n">divider</span><span class="o">.</span><span class="n">append_axes</span><span class="p">(</span><span class="s1">&#39;right&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="s1">&#39;5%&#39;</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">cim</span><span class="p">,</span> <span class="n">cax</span><span class="o">=</span><span class="n">cax</span><span class="p">,</span> <span class="n">orientation</span><span class="o">=</span><span class="s1">&#39;vertical&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;West longitude (deg)&#39;</span><span class="p">)</span>
+
+<span class="n">cim1</span> <span class="o">=</span> <span class="n">ax1</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">nav</span><span class="o">.</span><span class="n">lat_g</span><span class="p">,</span> <span class="n">origin</span> <span class="o">=</span> <span class="s1">&#39;lower&#39;</span><span class="p">)</span>
+<span class="n">divider</span> <span class="o">=</span> <span class="n">make_axes_locatable</span><span class="p">(</span><span class="n">ax1</span><span class="p">)</span>
+<span class="n">cax1</span> <span class="o">=</span> <span class="n">divider</span><span class="o">.</span><span class="n">append_axes</span><span class="p">(</span><span class="s1">&#39;right&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="s1">&#39;5%&#39;</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">cim1</span><span class="p">,</span> <span class="n">cax</span><span class="o">=</span><span class="n">cax1</span><span class="p">,</span> <span class="n">orientation</span><span class="o">=</span><span class="s1">&#39;vertical&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Planetographic latitude (deg)&#39;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/Users/emolter/anaconda3/lib/python3.11/site-packages/cartopy/crs.py:176: UserWarning: The &#39;Orthographic&#39; projection does not handle elliptical globes.
+  warnings.warn(f&#39;The {self.__class__.__name__!r} projection &#39;
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/nav-examples_5_1.png" src="_images/nav-examples_5_1.png" />
 </div>
 </div>
 </section>
@@ -183,13 +213,22 @@ solution</p>
 <section id="applying-the-shift">
 <h3>applying the shift<a class="headerlink" href="#applying-the-shift" title="Link to this heading">¶</a></h3>
 <p>Once we are happy with the values of dx and dy, we can move the model over by that amount. This will change the nav.lat_g, nav.lon_w, nav.mu, and nav.mu0 arrays to have the new center. If we want to do even better than this, we can either continue to improve the model, or manually fudge the numbers at this stage so the difference plot is visually bang-on.</p>
-<div class="nbinput nblast docutils container">
+<div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">nav</span><span class="o">.</span><span class="n">xy_shift_model</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">)</span>
 </pre></div>
 </div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/Users/emolter/anaconda3/lib/python3.11/site-packages/cartopy/crs.py:176: UserWarning: The &#39;Orthographic&#39; projection does not handle elliptical globes.
+  warnings.warn(f&#39;The {self.__class__.__name__!r} projection &#39;
+</pre></div></div>
 </div>
 </section>
 <section id="plotting-and-writing">
@@ -222,7 +261,7 @@ solution</p>
 </div>
 <p>Now let’s write:</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">#nav.write(&#39;/Users/emolter/Desktop/delete-me.fits&#39;, header=hdul[0].header)</span>

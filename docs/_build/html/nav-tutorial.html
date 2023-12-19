@@ -61,14 +61,14 @@
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">## user-defined inputs</span>
-<span class="n">ob_lon</span> <span class="o">=</span> <span class="mf">37.1</span> <span class="c1">#degrees</span>
-<span class="n">ob_lat</span> <span class="o">=</span> <span class="o">-</span><span class="mi">65</span> <span class="c1">#degrees</span>
-<span class="n">pixscale_km</span> <span class="o">=</span> <span class="mi">600</span>
+<span class="n">ob_lon</span> <span class="o">=</span> <span class="mi">200</span> <span class="c1">#degrees</span>
+<span class="n">ob_lat</span> <span class="o">=</span> <span class="o">-</span><span class="mi">25</span> <span class="c1">#degrees</span>
+<span class="n">pixscale_km</span> <span class="o">=</span> <span class="mi">251</span>
 <span class="n">np_ang</span> <span class="o">=</span> <span class="mi">285</span> <span class="c1">#degrees</span>
 <span class="n">req</span> <span class="o">=</span> <span class="mi">25560</span> <span class="c1">#km</span>
 <span class="n">rpol</span> <span class="o">=</span> <span class="mi">24970</span> <span class="c1">#km</span>
-<span class="n">sun_lon</span> <span class="o">=</span> <span class="mf">60.</span>
-<span class="n">sun_lat</span> <span class="o">=</span> <span class="mf">10.</span>
+<span class="n">sun_lon</span> <span class="o">=</span> <span class="mf">200.</span>
+<span class="n">sun_lat</span> <span class="o">=</span> <span class="mf">25.</span>
 
 <span class="c1"># instantiate a ModelEllipsoid</span>
 <span class="n">ellipsoid</span> <span class="o">=</span> <span class="n">ModelEllipsoid</span><span class="p">(</span><span class="n">ob_lon</span><span class="p">,</span> <span class="n">ob_lat</span><span class="p">,</span> <span class="n">pixscale_km</span><span class="p">,</span> <span class="n">np_ang</span><span class="p">,</span> <span class="n">req</span><span class="p">,</span> <span class="n">rpol</span><span class="p">,</span> <span class="n">sun_lon</span><span class="o">=</span><span class="n">sun_lon</span><span class="p">,</span> <span class="n">sun_lat</span><span class="o">=</span><span class="n">sun_lat</span><span class="p">)</span>
@@ -109,16 +109,25 @@
 <div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/Users/emolter/anaconda3/lib/python3.11/site-packages/cartopy/crs.py:176: UserWarning: The &#39;Orthographic&#39; projection does not handle elliptical globes.
+  warnings.warn(f&#39;The {self.__class__.__name__!r} projection &#39;
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-One pixel corresponds to approximately 1.4 degrees lat/lon at the sub-observer point
+One pixel corresponds to approximately 0.6 degrees lat/lon at the sub-observer point
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="_images/nav-tutorial_3_1.png" src="_images/nav-tutorial_3_1.png" />
+<img alt="_images/nav-tutorial_3_2.png" src="_images/nav-tutorial_3_2.png" />
 </div>
 </div>
 <section id="Beam-convolved-limb-darkened-disk-model">
@@ -177,14 +186,23 @@ One pixel corresponds to approximately 1.4 degrees lat/lon at the sub-observer p
 </pre></div>
 </div>
 </div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/Users/emolter/anaconda3/lib/python3.11/site-packages/cartopy/crs.py:176: UserWarning: The &#39;Orthographic&#39; projection does not handle elliptical globes.
+  warnings.warn(f&#39;The {self.__class__.__name__!r} projection &#39;
+</pre></div></div>
+</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 ModelBody class for target Uranus with equatorial and polar radii (25559.0, 24973.0) km
-ModelBody computed geometry on a grid of shape (377, 377)
-Cosine of solar incidence angle at a random location is 0.96
+ModelBody computed geometry on a grid of shape (386, 386)
+Cosine of solar incidence angle at a random location is 0.97
 North polar angle w.r.t. sky North at time of observation is 261.0522
 Pixel scale is 136.2 km/px
 </pre></div></div>
@@ -193,7 +211,7 @@ Pixel scale is 136.2 km/px
 <section id="The-Nav-class">
 <h3>The Nav class<a class="headerlink" href="#The-Nav-class" title="Link to this heading">¶</a></h3>
 <p>The Nav class inherits from ModelBody, so it has all the same attributes and functionality as ModelBody which, in turn, has the same attributes and functionality as ModelEllipsoid! The difference is that Nav contains additional functions to compare our models with real observed data. Here is how to instantiate it:</p>
-<div class="nbinput nblast docutils container">
+<div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
@@ -204,9 +222,19 @@ Pixel scale is 136.2 km/px
 <span class="n">obs_time</span> <span class="o">=</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;DATE-OBS&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;EXPSTART&#39;</span><span class="p">][:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span>
 
 <span class="n">ura</span> <span class="o">=</span> <span class="n">Body</span><span class="p">(</span><span class="s1">&#39;Uranus&#39;</span><span class="p">,</span> <span class="n">epoch</span><span class="o">=</span><span class="n">obs_time</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="s1">&#39;568&#39;</span><span class="p">)</span> <span class="c1">#Maunakea keyword is 568</span>
+<span class="c1">#ura.ephem[&#39;NPole_ang&#39;] = 100. #degrees, for test</span>
 <span class="n">nav</span> <span class="o">=</span> <span class="n">Nav</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">ura</span><span class="p">,</span> <span class="n">pixscale_arcsec</span><span class="p">)</span>
 </pre></div>
 </div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/Users/emolter/anaconda3/lib/python3.11/site-packages/cartopy/crs.py:176: UserWarning: The &#39;Orthographic&#39; projection does not handle elliptical globes.
+  warnings.warn(f&#39;The {self.__class__.__name__!r} projection &#39;
+</pre></div></div>
 </div>
 <p>Note: because ModelBody and Nav are called from a Body instance, we can easily change the default ephemeris information before instantiating them, if desired. For example, to rotate the model so that North is up, you would do this:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>ura = Body(&#39;Uranus&#39;, epoch=obs_time, location=&#39;568&#39;) #Keck
@@ -252,7 +280,7 @@ nav = Nav(ura, pixscale_arcsec)
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-suggested x,y shift is  137.591796875 -10.681640625
+suggested x,y shift is  133.455078125 -8.943359375
 x,y uncertainty is  0.005859375 0.00390625
 </pre></div></div>
 </div>
@@ -279,13 +307,13 @@ x,y uncertainty is  0.005859375 0.00390625
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Canny x,y shift is 130.974609375 -10.126953125
+Canny x,y shift is 126.830078125 -8.416015625
 </pre></div></div>
 </div>
 <p>The model edges align reasonably well with the data edges, so this looks like a somewhat reasonable solution, too.</p>
 <p>Note here that simply running colocate() does NOT apply the solution; that is, it does not actually shift the model such that the nav.lat_g, nav.lon_w, nav.mu, and nav.mu0 arrays align properly with the planet. This choice is intentional, as it allows the user to try co-locating with different input models and parameters until they are happy with the solution. It also means that manual x,y shifts are supported.</p>
 <p>To apply our x,y shift if we are happy with it, we do the following:</p>
-<div class="nbinput nblast docutils container">
+<div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
@@ -294,6 +322,15 @@ Canny x,y shift is 130.974609375 -10.126953125
 <span class="c1"># nav.xy_shift_data(-dx, -dy)</span>
 </pre></div>
 </div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/Users/emolter/anaconda3/lib/python3.11/site-packages/cartopy/crs.py:176: UserWarning: The &#39;Orthographic&#39; projection does not handle elliptical globes.
+  warnings.warn(f&#39;The {self.__class__.__name__!r} projection &#39;
+</pre></div></div>
 </div>
 <p>Finally, let’s plot the solution:</p>
 <div class="nbinput docutils container">
@@ -357,17 +394,17 @@ field-of-view (e.g., Proteus). The surface brightness of the limb-darkened disk 
 <h2>Reproject data onto rectilinear grid<a class="headerlink" href="#Reproject-data-onto-rectilinear-grid" title="Link to this heading">¶</a></h2>
 <p>Basic support exists for projection onto a rectilinear grid, as follows</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">projected</span><span class="p">,</span> <span class="n">mu_projected</span> <span class="o">=</span> <span class="n">nav</span><span class="o">.</span><span class="n">reproject</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">projected</span><span class="p">,</span> <span class="n">mu_projected</span><span class="p">,</span> <span class="n">mu0_projected</span><span class="p">,</span> <span class="n">target_x_points</span><span class="p">,</span> <span class="n">target_y_points</span> <span class="o">=</span> <span class="n">nav</span><span class="o">.</span><span class="n">reproject</span><span class="p">()</span>
 
 <span class="kn">from</span> <span class="nn">mpl_toolkits.axes_grid1.axes_divider</span> <span class="kn">import</span> <span class="n">make_axes_locatable</span>
 
 <span class="n">extent</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">360</span><span class="p">,</span> <span class="o">-</span><span class="mi">90</span><span class="p">,</span> <span class="mi">90</span><span class="p">)</span>
 <span class="n">fig</span><span class="p">,</span> <span class="p">(</span><span class="n">ax0</span><span class="p">,</span> <span class="n">ax1</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span><span class="p">))</span>
 
-<span class="n">im0</span> <span class="o">=</span> <span class="n">ax0</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">projected</span><span class="p">,</span> <span class="n">origin</span> <span class="o">=</span> <span class="s1">&#39;lower&#39;</span><span class="p">,</span> <span class="n">extent</span><span class="o">=</span><span class="n">extent</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vmax</span> <span class="o">=</span> <span class="mi">3500</span><span class="p">)</span>
+<span class="n">im0</span> <span class="o">=</span> <span class="n">ax0</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">projected</span><span class="p">,</span> <span class="n">origin</span> <span class="o">=</span> <span class="s1">&#39;lower&#39;</span><span class="p">,</span> <span class="n">extent</span><span class="o">=</span><span class="n">extent</span><span class="p">)</span>
 <span class="n">ax0_divider</span> <span class="o">=</span> <span class="n">make_axes_locatable</span><span class="p">(</span><span class="n">ax0</span><span class="p">)</span>
 <span class="n">cax0</span> <span class="o">=</span> <span class="n">ax0_divider</span><span class="o">.</span><span class="n">append_axes</span><span class="p">(</span><span class="s2">&quot;right&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="s2">&quot;7%&quot;</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="s2">&quot;2%&quot;</span><span class="p">)</span>
 <span class="n">cb0</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">im0</span><span class="p">,</span> <span class="n">cax</span><span class="o">=</span><span class="n">cax0</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Counts&#39;</span><span class="p">)</span>
@@ -393,10 +430,10 @@ field-of-view (e.g., Proteus). The surface brightness of the limb-darkened disk 
 <div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
-<div class="output_area docutils container">
+<div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-New image will be 1167 by 583 pixels
-Pixel scale 136.192868 km = 3.237871 pixels per degree
+/Users/emolter/anaconda3/lib/python3.11/site-packages/cartopy/crs.py:176: UserWarning: The &#39;Orthographic&#39; projection does not handle elliptical globes.
+  warnings.warn(f&#39;The {self.__class__.__name__!r} projection &#39;
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -407,8 +444,120 @@ Pixel scale 136.192868 km = 3.237871 pixels per degree
 </div>
 </div>
 <p>For planets with banded structure, it is easy to check the quality of the co-location based on whether or not the bands appear straight in these images. If the centroid is incorrect, then the bands are curved!</p>
-<p>Note here that by default, reproject() will keep the same pixel scale as the original data at the sub-observer point. This means that at every other location, the projected image is oversampled as compared with the original data. This oversampling of the original pixel grid can cause unusual-looking artifacts near the limbs of the planet. To change this default behavior, simply use: reproject(pixscale_arcsec=whatever)</p>
-<p>We plan to support re-projection to arbitrary geometries (e.g., polar) in the near future, so stay tuned.</p>
+<p>Note here that by default, reproject() will keep the same pixel scale as the original data at the sub-observer point. This means that at every other location, the projected image is oversampled as compared with the original data. This oversampling of the original pixel grid can cause unusual-looking artifacts near the limbs of the planet. On the other hand, the nearest-neighbor interpolation used py Cartopy means oversampling might be desired to make things appear smoother. To change this
+default behavior, simply use: reproject(shape=tuple)</p>
+</section>
+<section id="Polar-projection">
+<h2>Polar projection<a class="headerlink" href="#Polar-projection" title="Link to this heading">¶</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">projected</span><span class="p">,</span> <span class="n">mu_projected</span><span class="p">,</span> <span class="n">mu0_projected</span><span class="p">,</span> <span class="n">target_x_points</span><span class="p">,</span> <span class="n">target_y_points</span> <span class="o">=</span> <span class="n">nav</span><span class="o">.</span><span class="n">reproject</span><span class="p">(</span><span class="n">projection</span><span class="o">=</span><span class="s1">&#39;polar&#39;</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">300</span><span class="p">,</span><span class="mi">300</span><span class="p">))</span>
+
+<span class="kn">from</span> <span class="nn">mpl_toolkits.axes_grid1.axes_divider</span> <span class="kn">import</span> <span class="n">make_axes_locatable</span>
+
+<span class="n">extent</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">90</span><span class="p">,</span> <span class="mi">90</span><span class="p">,</span> <span class="o">-</span><span class="mi">90</span><span class="p">,</span> <span class="mi">90</span><span class="p">)</span>
+<span class="n">fig</span><span class="p">,</span> <span class="p">(</span><span class="n">ax0</span><span class="p">,</span> <span class="n">ax1</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span><span class="p">))</span>
+
+<span class="n">im0</span> <span class="o">=</span> <span class="n">ax0</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">projected</span><span class="p">,</span> <span class="n">origin</span> <span class="o">=</span> <span class="s1">&#39;lower&#39;</span><span class="p">,</span> <span class="n">extent</span><span class="o">=</span><span class="n">extent</span><span class="p">)</span>
+<span class="n">ax0_divider</span> <span class="o">=</span> <span class="n">make_axes_locatable</span><span class="p">(</span><span class="n">ax0</span><span class="p">)</span>
+<span class="n">cax0</span> <span class="o">=</span> <span class="n">ax0_divider</span><span class="o">.</span><span class="n">append_axes</span><span class="p">(</span><span class="s2">&quot;right&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="s2">&quot;7%&quot;</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="s2">&quot;2%&quot;</span><span class="p">)</span>
+<span class="n">cb0</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">im0</span><span class="p">,</span> <span class="n">cax</span><span class="o">=</span><span class="n">cax0</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Counts&#39;</span><span class="p">)</span>
+
+<span class="n">im1</span> <span class="o">=</span> <span class="n">ax1</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">mu0_projected</span><span class="p">,</span> <span class="n">origin</span> <span class="o">=</span> <span class="s1">&#39;lower&#39;</span><span class="p">,</span> <span class="n">extent</span><span class="o">=</span><span class="n">extent</span><span class="p">)</span>
+<span class="n">ax1_divider</span> <span class="o">=</span> <span class="n">make_axes_locatable</span><span class="p">(</span><span class="n">ax1</span><span class="p">)</span>
+<span class="n">cax1</span> <span class="o">=</span> <span class="n">ax1_divider</span><span class="o">.</span><span class="n">append_axes</span><span class="p">(</span><span class="s2">&quot;right&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="s2">&quot;7%&quot;</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="s2">&quot;2%&quot;</span><span class="p">)</span>
+<span class="n">cb1</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">im1</span><span class="p">,</span> <span class="n">cax</span><span class="o">=</span><span class="n">cax1</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Solar Incidence Angle&#39;</span><span class="p">)</span>
+
+<span class="n">ax0</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Planetographic Latitude&#39;</span><span class="p">)</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Planetographic Latitude&#39;</span><span class="p">)</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;West Longitude&#39;</span><span class="p">)</span>
+<span class="n">ax0</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([])</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/Users/emolter/anaconda3/lib/python3.11/site-packages/cartopy/crs.py:176: UserWarning: The &#39;Orthographic&#39; projection does not handle elliptical globes.
+  warnings.warn(f&#39;The {self.__class__.__name__!r} projection &#39;
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/nav-tutorial_25_1.png" src="_images/nav-tutorial_25_1.png" />
+</div>
+</div>
+</section>
+<section id="Custom-Cartopy-projection">
+<h2>Custom Cartopy projection<a class="headerlink" href="#Custom-Cartopy-projection" title="Link to this heading">¶</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">cartopy.crs</span> <span class="k">as</span> <span class="nn">ccrs</span>
+<span class="n">img_globe</span> <span class="o">=</span> <span class="n">ccrs</span><span class="o">.</span><span class="n">Globe</span><span class="p">(</span><span class="n">semimajor_axis</span><span class="o">=</span><span class="n">nav</span><span class="o">.</span><span class="n">req</span> <span class="p">,</span> <span class="n">semiminor_axis</span><span class="o">=</span><span class="n">nav</span><span class="o">.</span><span class="n">rpol</span><span class="p">,</span> <span class="n">ellipse</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<span class="n">custom_projection</span> <span class="o">=</span> <span class="n">ccrs</span><span class="o">.</span><span class="n">Robinson</span><span class="p">(</span><span class="n">central_longitude</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">globe</span><span class="o">=</span><span class="n">img_globe</span><span class="p">)</span>
+<span class="n">custom_shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">600</span><span class="p">,</span> <span class="mi">300</span><span class="p">)</span>
+<span class="n">projected</span><span class="p">,</span> <span class="n">mu_projected</span><span class="p">,</span> <span class="n">mu0_projected</span><span class="p">,</span> <span class="n">target_x_points</span><span class="p">,</span> <span class="n">target_y_points</span> <span class="o">=</span> <span class="n">nav</span><span class="o">.</span><span class="n">reproject</span><span class="p">(</span><span class="n">projection</span><span class="o">=</span><span class="n">custom_projection</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">custom_shape</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">mpl_toolkits.axes_grid1.axes_divider</span> <span class="kn">import</span> <span class="n">make_axes_locatable</span>
+
+<span class="n">extent</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">360</span><span class="p">,</span> <span class="o">-</span><span class="mi">90</span><span class="p">,</span> <span class="mi">90</span><span class="p">)</span>
+<span class="n">fig</span><span class="p">,</span> <span class="p">(</span><span class="n">ax0</span><span class="p">,</span> <span class="n">ax1</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span><span class="p">))</span>
+
+<span class="n">im0</span> <span class="o">=</span> <span class="n">ax0</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">projected</span><span class="p">,</span> <span class="n">origin</span> <span class="o">=</span> <span class="s1">&#39;lower&#39;</span><span class="p">,</span> <span class="n">extent</span><span class="o">=</span><span class="n">extent</span><span class="p">)</span>
+<span class="n">ax0_divider</span> <span class="o">=</span> <span class="n">make_axes_locatable</span><span class="p">(</span><span class="n">ax0</span><span class="p">)</span>
+<span class="n">cax0</span> <span class="o">=</span> <span class="n">ax0_divider</span><span class="o">.</span><span class="n">append_axes</span><span class="p">(</span><span class="s2">&quot;right&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="s2">&quot;7%&quot;</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="s2">&quot;2%&quot;</span><span class="p">)</span>
+<span class="n">cb0</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">im0</span><span class="p">,</span> <span class="n">cax</span><span class="o">=</span><span class="n">cax0</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Counts&#39;</span><span class="p">)</span>
+
+<span class="n">im1</span> <span class="o">=</span> <span class="n">ax1</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">mu0_projected</span><span class="p">,</span> <span class="n">origin</span> <span class="o">=</span> <span class="s1">&#39;lower&#39;</span><span class="p">,</span> <span class="n">extent</span><span class="o">=</span><span class="n">extent</span><span class="p">)</span>
+<span class="n">ax1_divider</span> <span class="o">=</span> <span class="n">make_axes_locatable</span><span class="p">(</span><span class="n">ax1</span><span class="p">)</span>
+<span class="n">cax1</span> <span class="o">=</span> <span class="n">ax1_divider</span><span class="o">.</span><span class="n">append_axes</span><span class="p">(</span><span class="s2">&quot;right&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="s2">&quot;7%&quot;</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="s2">&quot;2%&quot;</span><span class="p">)</span>
+<span class="n">cb1</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">im1</span><span class="p">,</span> <span class="n">cax</span><span class="o">=</span><span class="n">cax1</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Solar Incidence Angle&#39;</span><span class="p">)</span>
+
+<span class="n">ax0</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Planetographic Latitude&#39;</span><span class="p">)</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Planetographic Latitude&#39;</span><span class="p">)</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;West Longitude&#39;</span><span class="p">)</span>
+<span class="n">ax0</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([])</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/Users/emolter/anaconda3/lib/python3.11/site-packages/cartopy/crs.py:176: UserWarning: The &#39;Robinson&#39; projection does not handle elliptical globes.
+  warnings.warn(f&#39;The {self.__class__.__name__!r} projection &#39;
+/Users/emolter/anaconda3/lib/python3.11/site-packages/cartopy/crs.py:176: UserWarning: The &#39;Orthographic&#39; projection does not handle elliptical globes.
+  warnings.warn(f&#39;The {self.__class__.__name__!r} projection &#39;
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/nav-tutorial_27_1.png" src="_images/nav-tutorial_27_1.png" />
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
 </section>
 </section>
 
@@ -439,6 +588,8 @@ Pixel scale 136.192868 km = 3.237871 pixels per degree
 <li class="toctree-l2"><a class="reference internal" href="#Comparing-models-with-data">Comparing models with data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#Save-as-fits">Save as fits</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#Reproject-data-onto-rectilinear-grid">Reproject data onto rectilinear grid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Polar-projection">Polar projection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Custom-Cartopy-projection">Custom Cartopy projection</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="nav-examples.html">Example navigation workflow</a></li>
