@@ -42,7 +42,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="pylanetary.navigation.core.ModelEllipsoid">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pylanetary.navigation.core.</span></span><span class="sig-name descname"><span class="pre">ModelEllipsoid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ob_lon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ob_lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixscale_km</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">np_ang</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">req</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rpol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">center</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.0,</span> <span class="pre">0.0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sun_lon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sun_lat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.navigation.core.ModelEllipsoid" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pylanetary.navigation.core.</span></span><span class="sig-name descname"><span class="pre">ModelEllipsoid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ob_lon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ob_lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixscale_km</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">np_ang</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">req</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rpol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">center</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.0,</span> <span class="pre">0.0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sun_lon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sun_lat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">longitude_convention</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'w'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.navigation.core.ModelEllipsoid" title="Link to this definition">¶</a></dt>
 <dd><p>Projection of an ellipsoid onto a 2-D array with latitude and longitude grid</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="pylanetary.navigation.core.ModelEllipsoid.ldmodel">
@@ -197,8 +197,8 @@ noise, and are being used for non-identical images (model and data)</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pylanetary.navigation.core.Nav.reproject">
-<span class="sig-name descname"><span class="pre">reproject</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pixscale_arcsec</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cubic'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.navigation.core.Nav.reproject" title="Link to this definition">¶</a></dt>
-<dd><p>Projects the data onto a flat x-y grid according to self.lat_g, self.lon_w
+<span class="sig-name descname"><span class="pre">reproject</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">projection</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'equirectangular'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.navigation.core.Nav.reproject" title="Link to this definition">¶</a></dt>
+<dd><p>Projects the navigated data into the target projection
 This function only works properly if self.lat_g and self.lon_w
 are centered with respect to self.data; for instance,
 if ONE of xy_shift_data or xy_shift_model has been applied
@@ -206,11 +206,13 @@ using the dx, dy output of colocate()</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>pixscale_arcsec</strong> (<em>float</em><em>, </em><em>optional. default self.pixscale_arcsec</em>) – [arcsec] Pixel scale of output
-If not set, output data will have the same pixel scale as the input data
-at the sub-observer point.
-Note that everywhere else will be super-sampled.</p></li>
-<li><p><strong>interp</strong> (<em>str</em><em>, </em><em>optional. default 'cubic'</em>) – type of interpolation to do between pixels in the projection.</p></li>
+<li><p><strong>projection</strong> (<em>str</em><em> or </em><em>cartopy.proj.Projection instance</em><em>, </em><em>optional. default 'equirectangular'</em>) – string options are [‘equirectangular’, ‘polar’]
+Equirectangular, AKA rectilinear, projection results in pixels equally spaced in latitude and longitude
+Polar projection will be applied on whichever pole is closest to the sub-observer latitude
+any cartopy Projection object is also accepted, but in this case shape must be specified
+see <a class="reference external" href="https://scitools.org.uk/cartopy/docs/v0.15/crs/projections.html">cartopy projection list</a>.</p></li>
+<li><p><strong>shape</strong> (<em>tuple</em><em>, </em><em>optional. default None</em>) – shape of output arrays.
+if None, shape is guessed from pixel scale of input image</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -256,7 +258,9 @@ e.g. <a class="reference external" href="https://doi.org/10.3847/1538-4365/ab775
 <dt class="sig sig-object py" id="pylanetary.navigation.core.Nav.xy_shift_data">
 <span class="sig-name descname"><span class="pre">xy_shift_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dy</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.navigation.core.Nav.xy_shift_data" title="Link to this definition">¶</a></dt>
 <dd><p>FFTshift data by a user-defined amount
-for example, to apply the suggested shift from colocate()</p>
+for example, to apply the suggested shift from colocate()
+it is preferred to use xy_shift_model() instead, which avoids
+touching the data</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -297,8 +301,11 @@ as defined by user-defined dx, dy shift</p>
 <li><p><strong>mode</strong> (<em>str</em><em>, </em><em>required</em>) – method of co-location, one of [“canny”, “convolution”, or “disk”]</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>matplotlib figure</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>matplotlib figure and axis objects</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>fig, ax</p>
 </dd>
 </dl>
 </dd></dl>
@@ -325,31 +332,38 @@ as defined by user-defined dx, dy shift</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pylanetary.navigation.core.lat_lon">
-<span class="sig-prename descclassname"><span class="pre">pylanetary.navigation.core.</span></span><span class="sig-name descname"><span class="pre">lat_lon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ob_lon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ob_lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixscale_km</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">np_ang</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">req</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rpol</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.navigation.core.lat_lon" title="Link to this definition">¶</a></dt>
-<dd><p>Projection of an ellipsoid onto a 2-D array with latitude and longitude grid</p>
+<span class="sig-prename descclassname"><span class="pre">pylanetary.navigation.core.</span></span><span class="sig-name descname"><span class="pre">lat_lon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixscale_km</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ob_lon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ob_lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">np_ang</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_e</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">longitude_convention</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'w'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.navigation.core.lat_lon" title="Link to this definition">¶</a></dt>
+<dd><p>Computes the planetographic and planetocentric latitudes and west longitudes
+of an ellipsoidal planet as viewed from a tilted perspective, i.e., on the sky
+For now, this relies on manually de-rotating the planet and using Cartopy’s
+orthographic projection, because pyproj TiltedPerspective cannot handle
+ellipsoidal planets, only spheres.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>x</strong> – </p></li>
-<li><p><strong>y</strong> – </p></li>
-<li><p><strong>ob_lon</strong> – </p></li>
-<li><p><strong>ob_lat</strong> – </p></li>
-<li><p><strong>pixscale_km</strong> – </p></li>
-<li><p><strong>np_ang</strong> – </p></li>
-<li><p><strong>req</strong> – </p></li>
-<li><p><strong>rpol</strong> – </p></li>
+<li><p><strong>shape</strong> (<em>tuple</em><em>, </em><em>required</em>) – shape of output arrays</p></li>
+<li><p><strong>pixscale_km</strong> (<em>float</em><em>, </em><em>required</em>) – [km/px] pixel scale of image</p></li>
+<li><p><strong>ob_lon</strong> (<em>float</em><em>, </em><em>required</em>) – [deg] sub-observer planetographic longitude</p></li>
+<li><p><strong>ob_lat</strong> (<em>float</em><em>, </em><em>required</em>) – [deg] sub-observer planetographic latitude</p></li>
+<li><p><strong>np_ang</strong> (<em>float</em><em>, </em><em>required</em>) – [deg] north polar angle</p></li>
+<li><p><strong>r_e</strong> (<em>float</em><em>, </em><em>required</em>) – [km] equatorial radius of planet</p></li>
+<li><p><strong>r_p</strong> (<em>float</em><em>, </em><em>required</em>) – [km] polar radius of planet</p></li>
+<li><p><strong>dx</strong> (<em>float</em><em>, </em><em>optional</em><em>, </em><em>default 0</em>) – [px] offset in x from the center of the image</p></li>
+<li><p><strong>dy</strong> (<em>float</em><em>, </em><em>optional</em><em>, </em><em>default 0</em>) – [px] offset in y from the center of the image</p></li>
+<li><p><strong>longitude_convention</strong> (<em>str</em><em>, </em><em>optional</em><em>, </em><em>default 'w'</em>) – east or west longitude convention</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
-<li><p><em>np.array</em> – planetographic latitudes, shape ???</p></li>
-<li><p><em>np.array</em> – planetocentric latitudes, shape ???</p></li>
-<li><p><em>np.array</em> – West longitudes, shape ???</p></li>
+<li><p><em>np.array</em> – planetographic latitudes</p></li>
+<li><p><em>np.array</em> – planetocentric latitudes</p></li>
+<li><p><em>np.array</em> – West longitudes</p></li>
+<li><p><em>np.array</em> – x-coordinates of image grid in km, where 0 is center of planet</p></li>
+<li><p><em>np.array</em> – y-coordinates of image grid in km, where 0 is center of planet</p></li>
 </ul>
 </p>
 </dd>
 </dl>
-<p class="rubric">Examples</p>
 </dd></dl>
 
 <dl class="py function">
@@ -388,10 +402,45 @@ has no effect unless law==”minnaert”, in which case it is required.</p></li>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="pylanetary.navigation.core.rotate_about_pivot">
+<span class="sig-prename descclassname"><span class="pre">pylanetary.navigation.core.</span></span><span class="sig-name descname"><span class="pre">rotate_about_pivot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angle</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pivot</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.navigation.core.rotate_about_pivot" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>img</strong> (<em>np.array</em><em>, </em><em>required</em>) – image to rotate</p></li>
+<li><p><strong>angle</strong> (<em>float</em><em>, </em><em>required</em>) – [deg] angle to rotate image (counterclockwise)</p></li>
+<li><p><strong>pivot</strong> (<em>tuple</em><em>, </em><em>required</em>) – [px] (x,y) coordinates of pivot point about which to rotate image</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>rotated image</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="pylanetary.navigation.core.surface_normal">
 <span class="sig-prename descclassname"><span class="pre">pylanetary.navigation.core.</span></span><span class="sig-name descname"><span class="pre">surface_normal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lat_g</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon_w</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ob_lon</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.navigation.core.surface_normal" title="Link to this definition">¶</a></dt>
 <dd><p>Computes the normal vector to the surface of the planet.
 Take dot product with sub-obs or sub-sun vector to find cosine of emission angle</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lat_g</strong> (<em>np.array</em><em>, </em><em>required</em>) – [deg] planetographic latitude</p></li>
+<li><p><strong>lon_w</strong> (<em>np.array</em><em>, </em><em>required</em>) – [deg] west longitude</p></li>
+<li><p><strong>ob_lon</strong> (<em>float</em><em>, </em><em>required</em>) – [deg] sub-observer (or sub-sun) planetographic longitude</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>[x,y,z] normal vector to the surface of the planet</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
 </dd></dl>
 
 </section>
@@ -403,6 +452,9 @@ Take dot product with sub-obs or sub-sun vector to find cosine of emission angle
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
 <h1 class="logo"><a href="index.html">pylanetary</a></h1>
 
 
@@ -431,6 +483,7 @@ Take dot product with sub-obs or sub-sun vector to find cosine of emission angle
 <li class="toctree-l2"><a class="reference internal" href="#pylanetary.navigation.core.emission_angle"><code class="docutils literal notranslate"><span class="pre">emission_angle()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#pylanetary.navigation.core.lat_lon"><code class="docutils literal notranslate"><span class="pre">lat_lon()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#pylanetary.navigation.core.limb_darkening"><code class="docutils literal notranslate"><span class="pre">limb_darkening()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pylanetary.navigation.core.rotate_about_pivot"><code class="docutils literal notranslate"><span class="pre">rotate_about_pivot()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#pylanetary.navigation.core.surface_normal"><code class="docutils literal notranslate"><span class="pre">surface_normal()</span></code></a></li>
 </ul>
 </li>

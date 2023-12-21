@@ -85,6 +85,7 @@ extensions = [
 sphinxemoji_style = "twemoji"
 html_theme = "alabaster"
 html_static_path = ['_static']
+html_logo = "logo.png"
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
