@@ -24,14 +24,19 @@ data processing and modeling tools for ring, moon, and planet observations
 Installation
 ------------
 
-``pip install python`` (any Python 3.9 to 3.12)
+``pip install python`` (Python 3.9 to 3.12)
 
 Features
 --------
-* Navigation and re-projection for solar system imaging observations (makes use of Cartopy); `Tutorial <link>`_.
-* Read/write navigated solar system images in the xx multi-extension fits format, originally developed for the HST OPAL program; `Tutorial <link>`_.
-* Utilities for solar-system-specific unit conversions like I/F; `Tutorial <link>`_.
-* Ring-moon system modeling and model-data comparison; `Tutorial <link>`_.
+* Navigation and re-projection for solar system imaging observations (makes use of Cartopy); 
+`Tutorial <https://pylanetary.readthedocs.io/en/latest/nav-tutorial.html>`_ 
+and `example workflow <https://pylanetary.readthedocs.io/en/latest/nav-examples.html>`_.
+* Read/write navigated solar system images and backplanes in the NAV multi-extension fits format, 
+originally developed for the HST OPAL program
+* Utilities for solar-system-specific unit conversions like I/F; 
+`Tutorial <https://pylanetary.readthedocs.io/en/latest/utils-tutorial.html#I/F-calculation>`_.
+* Ring-moon system modeling and model-data comparison; 
+`Tutorial <https://pylanetary.readthedocs.io/en/latest/rings-tutorial.html>`_.
 * (coming soon) Compute Doppler winds from image cubes and compare with simulation output (e.g. EPIC)
 
 Usage
