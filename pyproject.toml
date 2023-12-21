@@ -81,6 +81,7 @@ extensions = [
     "nbsphinx",
     "sphinx.ext.napoleon",
     "sphinx.ext.autosectionlabel",
+    "sphinx_copybutton",
 ]
 sphinxemoji_style = "twemoji"
 html_theme = "furo"

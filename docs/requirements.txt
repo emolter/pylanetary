@@ -3,6 +3,7 @@ sphinx>=7.0.0
 nbsphinx
 sphinx_astropy>=1.9.0
 sphinx-pyproject
+sphinx-copybutton
 furo
 docutils>=0.18.
 markupsafe==2.0.1

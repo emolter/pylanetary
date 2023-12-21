@@ -3,28 +3,29 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to pylanetary's documentation!
-======================================
+pylanetary
+==========
+
+Open-source solar system science research tools.
+
+* Navigation and re-projection for solar system imaging observations
+
+* Read/write navigated solar system images and backplanes in the NAV multi-extension fits format
+
+* Utilities for solar-system-specific unit conversions
+
+* Ring-moon system modeling and model-data comparison
+
+* (coming soon) Doppler winds from image cubes and compare with simulation output
+
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
+   :hidden:
 
    installation
-   description
-   nav-tutorial
-   nav-examples
-   rings-tutorial
-   utils-tutorial
+   tutorials/index
    contributing
    citing
-   navigation_api
-   rings_api
-   utils_api
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   api/index

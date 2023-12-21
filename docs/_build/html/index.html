@@ -9,6 +9,7 @@
         <title>pylanetary documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=36a5483c" />
     
     
@@ -160,16 +161,21 @@
   <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="description.html">Description</a></li>
-<li class="toctree-l1"><a class="reference internal" href="nav-tutorial.html">Navigation tutorial</a></li>
-<li class="toctree-l1"><a class="reference internal" href="nav-examples.html">Example navigation workflow</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rings-tutorial.html">Rings Tutorial</a></li>
-<li class="toctree-l1"><a class="reference internal" href="utils-tutorial.html">Utils Tutorial</a></li>
-<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing to Pylanetary</a></li>
-<li class="toctree-l1"><a class="reference internal" href="citing.html">Citing this Software</a></li>
-<li class="toctree-l1"><a class="reference internal" href="navigation_api.html">Navigation API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rings_api.html">Rings API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="utils_api.html">Utils API</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="tutorials/index.html">Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/nav-tutorial.html">Navigation Basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/nav-examples.html">Navigation Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/rings-tutorial.html">Rings Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/utils-tutorial.html">Utils Tutorial</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citing.html">Citing</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="api/index.html">pylanetary API</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of pylanetary API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/navigation_api.html">Navigation API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/rings_api.html">Rings API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/utils_api.html">Utils API</a></li>
+</ul>
+</li>
 </ul>
 
 </div>
@@ -204,111 +210,18 @@
           </label>
         </div>
         <article role="main">
-          <section id="welcome-to-pylanetary-s-documentation">
-<h1>Welcome to pylanetary’s documentation!<a class="headerlink" href="#welcome-to-pylanetary-s-documentation" title="Link to this heading">#</a></h1>
-<div class="toctree-wrapper compound">
-<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#troubleshooting">Troubleshooting</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="description.html">Description</a></li>
-<li class="toctree-l1"><a class="reference internal" href="nav-tutorial.html">Navigation tutorial</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="nav-tutorial.html#Basic-planet-disk-model">Basic planet disk model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="nav-tutorial.html#Model-corresponding-to-real-observations">Model corresponding to real observations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="nav-tutorial.html#Comparing-models-with-data">Comparing models with data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="nav-tutorial.html#Save-as-fits">Save as fits</a></li>
-<li class="toctree-l2"><a class="reference internal" href="nav-tutorial.html#Reproject-data-onto-rectilinear-grid">Reproject data onto rectilinear grid</a></li>
-<li class="toctree-l2"><a class="reference internal" href="nav-tutorial.html#Polar-projection">Polar projection</a></li>
-<li class="toctree-l2"><a class="reference internal" href="nav-tutorial.html#Custom-Cartopy-projection">Custom Cartopy projection</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="nav-examples.html">Example navigation workflow</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="nav-examples.html#lat-lon-grid-for-Jupiter-HST-data">lat-lon grid for Jupiter HST data</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="rings-tutorial.html">Rings Tutorial</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="rings-tutorial.html#Basic-model-ring">Basic model ring</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rings-tutorial.html#Model-ring-system-observation">Model ring system observation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rings-tutorial.html#Example-Analysis-with-Observational-Data">Example Analysis with Observational Data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rings-tutorial.html#Azimuthal-profile">Azimuthal profile</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rings-tutorial.html#Movie-of-epsilon-ring-precession">Movie of epsilon ring precession</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rings-tutorial.html#Loose-ends-/-to-do-list">Loose ends / to-do list</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="utils-tutorial.html">Utils Tutorial</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="utils-tutorial.html#unit-conversions">unit conversions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="utils-tutorial.html#I/F-calculation">I/F calculation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="utils-tutorial.html#The-Body-utility-for-planet/moon-attributes">The Body utility for planet/moon attributes</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing to Pylanetary</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="contributing.html#contribution-workflow">Contribution Workflow</a></li>
-<li class="toctree-l2"><a class="reference internal" href="contributing.html#new-features">New Features</a></li>
-<li class="toctree-l2"><a class="reference internal" href="contributing.html#important-guidelines">Important Guidelines</a></li>
-<li class="toctree-l2"><a class="reference internal" href="contributing.html#dependencies">Dependencies</a></li>
-<li class="toctree-l2"><a class="reference internal" href="contributing.html#imposter-syndrome-disclaimer">Imposter syndrome disclaimer</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="citing.html">Citing this Software</a></li>
-<li class="toctree-l1"><a class="reference internal" href="navigation_api.html">Navigation API</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="navigation_api.html#pylanetary.navigation.core.ModelBody"><code class="docutils literal notranslate"><span class="pre">ModelBody</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="navigation_api.html#pylanetary.navigation.core.ModelEllipsoid"><code class="docutils literal notranslate"><span class="pre">ModelEllipsoid</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="navigation_api.html#pylanetary.navigation.core.Nav"><code class="docutils literal notranslate"><span class="pre">Nav</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="navigation_api.html#pylanetary.navigation.core.colocate_diagnostic_plot"><code class="docutils literal notranslate"><span class="pre">colocate_diagnostic_plot()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="navigation_api.html#pylanetary.navigation.core.emission_angle"><code class="docutils literal notranslate"><span class="pre">emission_angle()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="navigation_api.html#pylanetary.navigation.core.lat_lon"><code class="docutils literal notranslate"><span class="pre">lat_lon()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="navigation_api.html#pylanetary.navigation.core.limb_darkening"><code class="docutils literal notranslate"><span class="pre">limb_darkening()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="navigation_api.html#pylanetary.navigation.core.rotate_about_pivot"><code class="docutils literal notranslate"><span class="pre">rotate_about_pivot()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="navigation_api.html#pylanetary.navigation.core.surface_normal"><code class="docutils literal notranslate"><span class="pre">surface_normal()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="rings_api.html">Rings API</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="rings_api.html#pylanetary.rings.core.Ring"><code class="docutils literal notranslate"><span class="pre">Ring</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="rings_api.html#pylanetary.rings.core.RingSystemModelObservation"><code class="docutils literal notranslate"><span class="pre">RingSystemModelObservation</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="rings_api.html#pylanetary.rings.core.b_from_ae"><code class="docutils literal notranslate"><span class="pre">b_from_ae()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="rings_api.html#pylanetary.rings.core.calc_abtheta"><code class="docutils literal notranslate"><span class="pre">calc_abtheta()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="rings_api.html#pylanetary.rings.core.double_rotate"><code class="docutils literal notranslate"><span class="pre">double_rotate()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="rings_api.html#pylanetary.rings.core.foreshortening"><code class="docutils literal notranslate"><span class="pre">foreshortening()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="rings_api.html#pylanetary.rings.core.plane_project"><code class="docutils literal notranslate"><span class="pre">plane_project()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="rings_api.html#pylanetary.rings.core.project_ellipse_double"><code class="docutils literal notranslate"><span class="pre">project_ellipse_double()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="rings_api.html#pylanetary.rings.core.ring_area"><code class="docutils literal notranslate"><span class="pre">ring_area()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="rings_api.html#pylanetary.rings.core.vector_ellipse"><code class="docutils literal notranslate"><span class="pre">vector_ellipse()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="rings_api.html#pylanetary.rings.core.vector_magnitude"><code class="docutils literal notranslate"><span class="pre">vector_magnitude()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="rings_api.html#pylanetary.rings.core.vector_normalize"><code class="docutils literal notranslate"><span class="pre">vector_normalize()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="utils_api.html">Utils API</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="utils_api.html#pylanetary.utils.core.Body"><code class="docutils literal notranslate"><span class="pre">Body</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="utils_api.html#pylanetary.utils.core.I_over_F"><code class="docutils literal notranslate"><span class="pre">I_over_F()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="utils_api.html#pylanetary.utils.core.beam_area"><code class="docutils literal notranslate"><span class="pre">beam_area()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="utils_api.html#pylanetary.utils.core.convolve_with_beam"><code class="docutils literal notranslate"><span class="pre">convolve_with_beam()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="utils_api.html#pylanetary.utils.core.fourier_deconvolve"><code class="docutils literal notranslate"><span class="pre">fourier_deconvolve()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="utils_api.html#pylanetary.utils.core.inverse_planck"><code class="docutils literal notranslate"><span class="pre">inverse_planck()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="utils_api.html#pylanetary.utils.core.inverse_rayleigh_jeans"><code class="docutils literal notranslate"><span class="pre">inverse_rayleigh_jeans()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="utils_api.html#pylanetary.utils.core.jybm_to_jysr"><code class="docutils literal notranslate"><span class="pre">jybm_to_jysr()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="utils_api.html#pylanetary.utils.core.jybm_to_tb"><code class="docutils literal notranslate"><span class="pre">jybm_to_tb()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="utils_api.html#pylanetary.utils.core.jysr_to_jybm"><code class="docutils literal notranslate"><span class="pre">jysr_to_jybm()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="utils_api.html#pylanetary.utils.core.planck"><code class="docutils literal notranslate"><span class="pre">planck()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="utils_api.html#pylanetary.utils.core.rayleigh_criterion"><code class="docutils literal notranslate"><span class="pre">rayleigh_criterion()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="utils_api.html#pylanetary.utils.core.rayleigh_jeans"><code class="docutils literal notranslate"><span class="pre">rayleigh_jeans()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="utils_api.html#pylanetary.utils.core.rebin"><code class="docutils literal notranslate"><span class="pre">rebin()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="utils_api.html#pylanetary.utils.core.solar_spectrum"><code class="docutils literal notranslate"><span class="pre">solar_spectrum()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="utils_api.html#pylanetary.utils.core.solid_angle"><code class="docutils literal notranslate"><span class="pre">solid_angle()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="utils_api.html#pylanetary.utils.core.tb_to_jybm"><code class="docutils literal notranslate"><span class="pre">tb_to_jybm()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</div>
-</section>
-<section id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Link to this heading">#</a></h1>
+          <section id="pylanetary">
+<h1>pylanetary<a class="headerlink" href="#pylanetary" title="Link to this heading">#</a></h1>
+<p>Open-source solar system science research tools.</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
-<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
-<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+<li><p>Navigation and re-projection for solar system imaging observations</p></li>
+<li><p>Read/write navigated solar system images and backplanes in the NAV multi-extension fits format</p></li>
+<li><p>Utilities for solar-system-specific unit conversions</p></li>
+<li><p>Ring-moon system modeling and model-data comparison</p></li>
+<li><p>(coming soon) Doppler winds from image cubes and compare with simulation output</p></li>
 </ul>
+<div class="toctree-wrapper compound">
+</div>
 </section>
 
         </article>
@@ -354,6 +267,8 @@
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     </body>
 </html>
