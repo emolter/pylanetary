@@ -253,11 +253,6 @@ class Spectrum:
   
 class SpectralCube:
   '''
-  Parameters
-  ----------
-  imagepath = path to FITS image file, string (required)
-  
-  
   Examples
   --------
   Initilaize the class:
@@ -283,10 +278,157 @@ class SpectralCube:
   '''
   ###############################################################################
   
-  def __init__(self, imagepath): # stuff that is run when an object is defined
-    self.imagepath = imagepath # attribute, path to the location of the FITS image file
+  def __init__(self, imagepath, x_space):
+    '''
+    Parameters
+    ----------
+    imagepath - path to FITS image file, string (required)
+    x_space - identifier for choosing wavelength or frequency space for the model fit, string. Input 'F' or 'f' for frequency space, 'W' or 'w' for wavelength space.
     
+    Attributes
+    ----------
+    chan_num - number of frequency channels
+    i0 - reference pixel
+    df - channel width (Hz)
+    f0 - rest frequency (Hz)
+    xpixmax - x-dimension size
+    ypixmax - y-dimension size
+    data - spectral data
+    freqspec - frequency grid around the rest frequency
+    wl_spec - wavelength grid around the rest wavelength
+    
+    '''  
+    self.imagepath = imagepath
+    
+    fits_file = fits.open(self.imagepath)
+    hdr = fits_file[0].header
+    
+    # Pull necessary info from the FITS header
+    self.chan_num = hdr['NAXIS3'] 
+    self.i0 = hdr['CRPIX3'] 
+    self.df = hdr['CDELT3'] 
+    self.f0 = hdr['CRVAL3']
+    self.xpixmax = hdr['NAXIS1'] 
+    self.ypixmax = hdr['NAXIS2']
+    self.data = fits_file[0].data
+    fits_file.close()
+    
+    print('Number of pixels: '+str(self.xpixmax)+','+str(self.ypixmax))
+    # Correct for FITS 1-indexing scheme
+    if self.i0 < 0: 
+      self.i0 = self.i0 - 1
+    else:
+      self.i0 = self.i0 + 1
+    
+    self.freqspec = ((np.arange(self.chan_num) - self.i0) * self.df + self.f0)/1e9
+    self.wl_spec = c/self.freqspec
+      
+    if x_space == 'F' or x_space == 'f':
+      xaxis = self.freqspec
+    elif x_space == 'W' or x_space == 'w':
+      xaxis = self.wl_spec
+    else:
+      raise ValueError('You did not choose frequency or wavelength space. Please input F/f for frequency, W/w for wavelength.')
+      
   ###############################################################################
+  
+  def extract_pixel(self, pixel):
+    '''
+    Extract the spectral axis for a single pixel
+    
+    Parameters
+    ----------
+    pixel - indexes of the pixel to be fitted, list.
+    
+    Returns
+    -------
+    datas - numpy array containing spectral axis
+    
+    '''
+    print('Fitting pixel ['+str(pixel[0])+','+str(pixel[1])+']')
+    datas = np.empty((1,1),dtype=np.ndarray)
+    
+    print('Extracting spectrum at pixel '+str(pixel[0])+','+str(pixel[1]))
+    datas = self.data[0,:,pixel[1],pixel[0]]
+    
+    return datas
+  
+  ###############################################################################
+    
+  def extract_image(self):
+    '''
+    Extract the spectral axis for the entire image cube
+    
+    Returns
+    -------
+    datas - 3D numpy array containing the spectral axis
+    '''
+    
+    print('Fitting the entire image')
+    datas = np.empty((self.xpixmax,self.ypixmax),dtype=np.ndarray)
+    
+    for xpix in range (0,self.xpixmax,1):
+      for ypix in range (0,self.ypixmax,1):
+        print('Extracting spectrum at pixel '+str(xpix)+','+str(ypix))
+        datas[xpix,ypix] = self.data[0,:,ypix,xpix]
+    
+    return datas
+ 
+  ###############################################################################
+  
+  def make_mask(self,pixels):
+    '''
+    Make a boolean array to act as a mask for extracting pixels
+    
+    Parameters
+    ----------
+    pixels - tuple of pixel values to include in the mask. These pixels will be given a value of True.
+    
+    Returns
+    -------
+    mask - the boolean array mask
+    
+    '''
+    
+    mask = np.full((self.xpixmax,self.ypixmax), 0)
+    for i in pixels:
+      #breakpoint()
+      print(i)
+      mask[i[0],i[1]] = 1
+    
+    mask = np.array(mask,dtype='bool')
+      
+    return mask
+    
+  ###############################################################################  
+    
+  def extract_mask_region(self,mask):
+    '''
+    Extract pixels defined in a boolean array
+    
+    Parameters
+    ----------
+    mask - 2D boolean array of the size [xpixmax,ypixmax]. Pixels with a value of True are extracted for fitting.
+    
+    Returns
+    -------
+    datas - 3D numpy array containing the spectral axis. Masked pixels are NAN. 
+    
+    '''
+    datas = np.empty((self.xpixmax,self.ypixmax),dtype=np.ndarray)
+    
+    for xpix in range (0,self.xpixmax,1):
+      for ypix in range (0,self.ypixmax,1):
+        if mask[xpix,ypix] is True:
+          datas[xpix,ypix] = self.data[0,:,ypix,xpix]
+        else:
+          datas[xpix,ypix] = np.NAN
+    
+    return datas
+  
+  
+  ###############################################################################
+  
   
   def load_data(self, pixels, x_space): # Load and extract the necessary data and header information
   
@@ -296,37 +438,6 @@ class SpectralCube:
     pixels = integers used to determine which pixels to fit, list. Positive integers designate a specific row/column. Negative numbers designate fitting the whole image/row/column.
     x_space = identifier for choosing wavelength or frequency space for the model fit, string. Input 'F' or 'f' for frequency space, 'W' or 'w' for wavelength space.
     '''
-    
-    # Open the FITS file and header
-    fits_file = fits.open(self.imagepath)
-    hdr = fits_file[0].header
-    
-    # Pull necessary info from the header
-    chan_num = hdr['NAXIS3'] # number of frequency channels
-    i0 = hdr['CRPIX3'] # Reference pixel frequency (?)
-    df = hdr['CDELT3'] # channel width (Hz)
-    f0 = hdr['CRVAL3'] # rest frequency (Hz)
-    xpixmax = hdr['NAXIS1'] # x-dimension size
-    ypixmax = hdr['NAXIS2'] # y-dimensions size
-    data = fits_file[0].data
-    fits_file.close() # Close the FITS file
-    
-    print('Number of pixels: '+str(xpixmax)+','+str(ypixmax))
-    # Correct for FITS 1-indexing scheme
-    if i0 < 0: 
-      i0 = i0 - 1
-    else:
-      i0 = i0 + 1
-      
-    freqspec = ((np.arange(chan_num) - i0) * df + f0)/1e9 # Frequency grid around the rest frequency
-    wl_spec = c/freqspec # Wavelength grid arounf the rest frequency
-    # Choose frequency or wavelength space
-    if x_space == 'F' or x_space == 'f':
-      xaxis = freqspec
-    elif x_space == 'W' or x_space == 'w':
-      xaxis = wl_spec
-    else:
-      raise ValueError('You did not choose frequency or wavelength space. Please input F/f for frequency, W/w for wavelength.')
     
     # Extract pixel information
     xpixstart, ypixstart = pixels[0], pixels[1]
@@ -695,17 +806,23 @@ class SpectralCube:
   ###############################################################################
     
 # Testing case for image cube analysis
-'''
+
 if __name__=="__main__":
   image = '/homes/metogra/skathryn/Research/Data/ContSub/CO/CS20/Neptune_Pri_X50a4_CS20_narrow_square_2.fits'
   #image = '/homes/metogra/skathryn/Research/Data/ContSub/HCN/CS12/Neptune_Pri_X50a4_HCN_CS12_narrow_square_2.fits'
-  test_cube = SpectralCube(image)
-  test_axis, test_data, chan_num = test_cube.load_data(pixels = [-10,-25], x_space = 'f')
-  #print(test_axis)
-  #print('\n')
-  #print(test_data)
-  test_cube.fit_cube(datas = test_data, fit_type = 'Moffat', xaxis = test_axis, outfile = 'development_testing_wind', RMS = 0.017530593, initial_fit_guess = '/homes/metogra/skathryn/Research/Scripts/co_moffat_modelresult.sav',SN = 6)
-  #test_cube.fit_cube(datas = test_data, fit_type = 'All', xaxis = test_axis, outfile = 'hcn_poster_figure', RMS = 0.017530593, initial_fit_guess = '/homes/metogra/skathryn/Research/Scripts/hcn_moffat_modelresult.sav')
-  test_cube.wind_calc(picklefile = '/homes/metogra/skathryn/pylanetary_dev/pylanetary/pylanetary/spectral/development_testing_wind.pickle', restfreq = 345.79598990, outfile = 'development_testing_wind')
-  test_cube.plot_data(picklefile = 'development_testing_wind.pickle', platescale = 0.1, spatial = 4e4, dist = 30.4627707075422, planetrad = 24622., subobslat = -26.167088, ccw = -34., bmaj = 0.4416242241859436, bmin = 0.3885720372200012, bpa = 81.32388305664062, title = 'CO Doppler Velocity Map (4/30/16)', cont_label = 'Radial Velocity (m/s)', limits = [-2000,2000], contours = [21,200])
-'''  
+  test_cube = SpectralCube(image,x_space = 'f')
+  #datas = test_cube.extract_pixel([8,25])
+  #datas = test_cube.extract_image()
+  mask_pix = ([15,17],[16,17],[17,17],[15,16],[16,16],[17,16],[15,15],[16,15],[17,15])
+  mask = test_cube.make_mask(mask_pix)
+  datas = test_cube.extract_mask_region(mask)
+  print(datas[0,0],datas[16,16])
+  
+  #test_axis, test_data, chan_num = test_cube.load_data(pixels = [-10,-25], x_space = 'f')
+  
+  #test_cube.fit_cube(datas = test_data, fit_type = 'Moffat', xaxis = test_axis, outfile = 'development_testing_wind', RMS = 0.017530593, initial_fit_guess = '/homes/metogra/skathryn/Research/Scripts/co_moffat_modelresult.sav',SN = 6)
+  
+  #test_cube.wind_calc(picklefile = '/homes/metogra/skathryn/pylanetary_dev/pylanetary/pylanetary/spectral/development_testing_wind.pickle', restfreq = 345.79598990, outfile = 'development_testing_wind')
+  
+  #test_cube.plot_data(picklefile = 'development_testing_wind.pickle', platescale = 0.1, spatial = 4e4, dist = 30.4627707075422, planetrad = 24622., subobslat = -26.167088, ccw = -34., bmaj = 0.4416242241859436, bmin = 0.3885720372200012, bpa = 81.32388305664062, title = 'CO Doppler Velocity Map (4/30/16)', cont_label = 'Radial Velocity (m/s)', limits = [-2000,2000], contours = [21,200])
+  
