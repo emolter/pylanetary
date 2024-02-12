@@ -13,7 +13,7 @@ import scipy.io
 from astropy.io import fits
 from astropy.stats import sigma_clipped_stats
 from astropy.constants import c
-#import pdb
+import pdb
 
 def centered_list(n):
     if n % 2 == 0: # If n is even, we adjust it to the next odd number
@@ -259,21 +259,13 @@ class SpectralCube:
   cube = SpectralCube(your_image_path)
   
   Load an entire image cube in frequency space:
-  your_data = cube.load_data(pixels = [-1,-1], x_space = 'F')
   
   Load a single row in wavelength space:
-  your_data = cube.load_data(pixels = [-1,16], x_space = 'w')
   
   Load a single pixel in frequency space:
-  your_data = cube.load_data(pixels = [16,16], x_space = 'f')
   
   Example Workflow
   ----------------
-  image = 'imagepath'
-  cube = SpectralCube(image)
-  x_axis, spec_data, chan_num = test_cube.load_data(pixels = [-1,-1], x_space = 'f')
-  test_cube.fit_cube(datas = test_data, fit_type = 'Moffat', xaxis = test_axis, outfile = 'development_testing', RMS = 0.017530593, initial_fit_guess = 'file_path')
-  test_cube.wind_calc(picklefile = 'file path', restfreq = 345.79598990, outfile = 'development_testing_wind')
   
   '''
   ###############################################################################
@@ -392,10 +384,9 @@ class SpectralCube:
     
     mask = np.full((self.xpixmax,self.ypixmax), 0)
     for i in pixels:
-      #breakpoint()
-      print(i)
-      mask[i[0],i[1]] = 1
-    
+      ix = i[0]
+      iy = i[1]
+      mask[ix,iy] = 1
     mask = np.array(mask,dtype='bool')
       
     return mask
@@ -419,11 +410,12 @@ class SpectralCube:
     
     for xpix in range (0,self.xpixmax,1):
       for ypix in range (0,self.ypixmax,1):
-        if mask[xpix,ypix] is True:
+      
+        if mask[xpix,ypix] == True:
           datas[xpix,ypix] = self.data[0,:,ypix,xpix]
         else:
           datas[xpix,ypix] = np.NAN
-    
+          
     return datas
   
   
@@ -813,10 +805,10 @@ if __name__=="__main__":
   test_cube = SpectralCube(image,x_space = 'f')
   #datas = test_cube.extract_pixel([8,25])
   #datas = test_cube.extract_image()
-  mask_pix = ([15,17],[16,17],[17,17],[15,16],[16,16],[17,16],[15,15],[16,15],[17,15])
+  mask_pix = [[15,17],[16,17],[17,17],[15,16],[16,16],[17,16],[15,15],[16,15],[17,15]]
+  #mask_pix = [[0,0],[1,1]]
   mask = test_cube.make_mask(mask_pix)
-  datas = test_cube.extract_mask_region(mask)
-  print(datas[0,0],datas[16,16])
+  data = test_cube.extract_mask_region(mask)
   
   #test_axis, test_data, chan_num = test_cube.load_data(pixels = [-10,-25], x_space = 'f')
   
