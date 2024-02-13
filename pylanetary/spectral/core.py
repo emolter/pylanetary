@@ -23,6 +23,31 @@ def centered_list(n):
     centered_list = list(range(-half, half + 1,2))
     return centered_list
 
+def calc_doppler_vel(peak, err, rest_f):
+    '''
+    Calculate the Doppler velocity from the calculated center frequency.
+    
+    Parameters
+    ---------- 
+    peak - the calculated central peak frequency of the spectral line peak, float
+    err - the standard deviation of the calculated central peak frequency, float
+    rest_f - the rest frequency of the transition, float
+    
+    Returns
+    -------
+    v - the calculated Doppler velocity, m/s.
+    wind_err - the Doppler velocity error, calculated through error propagation, m/s.
+    '''
+    a = c.value/rest_f
+    # Doppler equation
+    v = ((-1*peak/rest_f)+1)*c.value # Calculate Doppler shifted winds
+    print('The wind speed is '+str(v)+'m/s')
+    wind_err = np.abs(a*err) # Calculate the error in velocity
+    print('The wind error is '+str(wind_err)+'m/s')
+    
+    return v, wind_err
+    
+    
 # Guide to keys in the nested model dictionary:
 # model[] - Model name, taken from user input, string
 # ref - short reference name of model type, string
@@ -211,7 +236,7 @@ class Spectrum:
     '''
     
     f, (a0,a1) = plt.subplots(2,1,height_ratios = [3,1])
-    a0.vlines(x = self.xaxis, ymin=0, ymax=np.max(self.spec), color = 'grey', linestyles='dashed', label='Rest Frequency')
+    a0.vlines(x = self.rest_f, ymin=0, ymax=np.max(self.spec), color = 'grey', linestyles='dashed', label='Rest Frequency')
     a0.errorbar(self.xaxis, self.spec, yerr=self.RMS, fmt='o', label='Original Data')
     
     if model_key == 'All':
@@ -232,50 +257,22 @@ class Spectrum:
     plt.show()
     
   ###############################################################################
-  
-  def calc_doppler_vel(self, peak, err):
-    '''
-    Calculate the Doppler velocity from the calculated center frequency.
-    
-    Parameters
-    ---------- 
-    peak - the calculated central peak frequency of the spectral line peak, float
-    err - the standard deviation of the calculated central peak frequency, float
-    
-    Returns
-    -------
-    v - the calculated Doppler velocity, m/s.
-    wind_err - the Doppler velocity error, calculated through error propagation, m/s.
-    '''
-
-    peak = peak
-    std = err
-    a = c/self.rest_f
-    # Doppler equation
-    v = ((-1*peak/self.rest_f)+1)*c # Calculate Doppler shifted winds
-    print('The wind speed is '+str(v)+'m/s')
-    wind_err = np.abs(a*std) # Calculate the error in velocity
-    print('The wind error is '+str(wind_err)+'m/s')
-    
-    return v, wind_err
-    
-  ###############################################################################
-   
+'''   
 # Simple single spectra testing case
-#if __name__=="__main__":
+if __name__=="__main__":
   
   # CO [10,25]
   
-  #freq = np.array([345.76770566,345.76868215,345.76965863,345.77063511,345.77161159,345.77258807,345.77356455,345.77454103,345.77551751,345.77649399,345.77747047,345.77844695,345.77942343,345.78039991,345.78137639,345.78235287,345.78332935,345.78430584,345.78528232,345.7862588,345.78723528,345.78821176,345.78918824,345.79016472,345.7911412,345.79211768,345.79309416,345.79407064,345.79504712,345.7960236,345.79700008,345.79797656,345.79895304,345.79992953,345.80090601,345.80188249,345.80285897,345.80383545,345.80481193,345.80578841,345.80676489,345.80774137,345.80871785,345.80969433,345.81067081,345.81164729,345.81262377,345.81360025,345.81457673,345.81555322,345.8165297,345.81750618,345.81848266,345.81945914,345.82043562,345.8214121,345.82238858])
-  #spec = np.array([0.21198112,0.18924561,0.21650964,0.22294408,0.24960007,0.22984277,0.25219446,0.24985315,0.25343025,0.28705364,0.3061584,0.31352046,0.3277193,0.3265509,0.3436137,0.35133913,0.38450843,0.4165357,0.43355167,0.467518,0.49524495,0.5277506,0.5910206,0.64392966,0.7271694,0.89640355,0.8984462,0.76777405,0.6531943,0.59134954,0.55332845,0.50916755,0.46389887,0.4410508,0.4036594,0.40885097,0.37320843,0.3508784,0.34755984,0.31414196,0.29820374,0.27975425,0.28136522,0.26828533,0.26605716,0.24770543,0.2537956,0.22927019,0.219696,0.21160068,0.20004132,0.1939475,0.18222019,0.16944197,0.17536835,0.16506103,0.16306329])
+  freq = np.array([345.76770566,345.76868215,345.76965863,345.77063511,345.77161159,345.77258807,345.77356455,345.77454103,345.77551751,345.77649399,345.77747047,345.77844695,345.77942343,345.78039991,345.78137639,345.78235287,345.78332935,345.78430584,345.78528232,345.7862588,345.78723528,345.78821176,345.78918824,345.79016472,345.7911412,345.79211768,345.79309416,345.79407064,345.79504712,345.7960236,345.79700008,345.79797656,345.79895304,345.79992953,345.80090601,345.80188249,345.80285897,345.80383545,345.80481193,345.80578841,345.80676489,345.80774137,345.80871785,345.80969433,345.81067081,345.81164729,345.81262377,345.81360025,345.81457673,345.81555322,345.8165297,345.81750618,345.81848266,345.81945914,345.82043562,345.8214121,345.82238858])
+  spec = np.array([0.21198112,0.18924561,0.21650964,0.22294408,0.24960007,0.22984277,0.25219446,0.24985315,0.25343025,0.28705364,0.3061584,0.31352046,0.3277193,0.3265509,0.3436137,0.35133913,0.38450843,0.4165357,0.43355167,0.467518,0.49524495,0.5277506,0.5910206,0.64392966,0.7271694,0.89640355,0.8984462,0.76777405,0.6531943,0.59134954,0.55332845,0.50916755,0.46389887,0.4410508,0.4036594,0.40885097,0.37320843,0.3508784,0.34755984,0.31414196,0.29820374,0.27975425,0.28136522,0.26828533,0.26605716,0.24770543,0.2537956,0.22927019,0.219696,0.21160068,0.20004132,0.1939475,0.18222019,0.16944197,0.17536835,0.16506103,0.16306329])
   
-  #test = Spectrum(spec, freq = freq,rest_f = 345.79598990,x_space = 'f', RMS = 0.017530593)
+  test = Spectrum(spec, freq = freq,rest_f = 345.79598990,x_space = 'f', RMS = 0.017530593)
   #test = Spectrum(spec, freq = freq) #HCN
   #test.make_initial_guess(fit_type = 'Moffat', outfile = 'moffat_guess')
-  #test_peak, test_std, chi, chi_red = test.fit_profile(fit_type = 'Moffat', initial_fit_guess = 'moffat_guess.sav')
-  #test_wind, test_err = test.calc_doppler_vel(peak = test_peak, err = test_std)
+  test_peak, test_std, chi, chi_red = test.fit_profile(fit_type = 'Moffat', initial_fit_guess = 'moffat_guess.sav')
+  test_wind, test_err = calc_doppler_vel(peak = test_peak, err = test_std, rest_f = 345.79598990)
   #test_wind, test_err = test.calc_doppler_vel(rest_freq = 354.50547790, peak = test_peak, err = test_std) # HCN
-
+'''
 
 ###############################################################################
 ###############################################################################
@@ -498,7 +495,7 @@ class SpectralCube:
           results['std'].append(std) 
           results['chi'].append(chi)
           results['redchi'].append(chi_red)
-        elif s_n <= SN:
+        elif s_n <= SN or np.isnan(s_n): 
           results['x'].append(xpix)
           results['y'].append(ypix)
           results['center'].append(np.NAN)
@@ -506,10 +503,11 @@ class SpectralCube:
           results['chi'].append(np.NAN)
           results['redchi'].append(np.NAN)
           
+          
     # Save the model results in a pickle file
     lenx = np.shape(datas)[0]
     leny = np.shape(datas)[1]
-    breakpoint()
+    #breakpoint()
     results['x']=np.reshape(results['x'],(lenx,leny))
     results['y']=np.reshape(results['y'],(lenx,leny))
     results['center']=np.reshape(results['center'],(lenx,leny))
@@ -521,7 +519,47 @@ class SpectralCube:
     
     picklefile.close()
     
+  ###############################################################################  
+  
+  def wind_calc_new(self, picklefile, restfreq, outfile):
+    '''
+    Parameters
+    ----------
+    picklefile - path to the pickle file of calculated doppler shifts, string
+    restfreq - the rest frequency of the molecular transition, float
+    outfile - the name/path of the wind pickle file, string
     
+    '''
+    
+    r = pickle.load(open(picklefile,"rb"),encoding='latin-1') 
+    peaks = np.array(r['center'])
+    std = r['std']
+    
+    x_max = peaks.shape[0]
+    y_max = peaks.shape[1]
+    
+    new_pickle = open(outfile+'.pickle', 'wb')
+    print('Numerical wind results will be saved in the '+outfile+'.pickle file')
+    results = {'x':[],'y':[],'v':[],'v_err':[]} # Define output dictionary fields
+    
+    for xpix in range (0,x_max,1):
+      for ypix in range (0,y_max,1):
+        v, wind_err = calc_doppler_vel(peaks[xpix,ypix], std[xpix,ypix], restfreq)
+        
+        results['x'].append(xpix)
+        results['y'].append(ypix)
+        results['v'].append(v)
+        results['v_err'].append(wind_err)
+    
+    lenx = np.shape(r['center'])[0]
+    leny = np.shape(r['center'])[1]
+    
+    results['x']=np.reshape(results['x'],(lenx,leny))
+    results['y']=np.reshape(results['y'],(lenx,leny))  
+    results['v']=np.reshape(results['v'],(lenx,leny))
+    results['v_err']=np.reshape(results['v_err'],(lenx,leny))  
+    
+    pickle.dump(results,new_pickle)
     
   ###############################################################################  
    
@@ -731,13 +769,15 @@ if __name__=="__main__":
   test_cube = SpectralCube(image,x_space = 'f')
   #datas = test_cube.extract_pixel([8,25])
   #datas = test_cube.extract_image()
-  #mask_pix = [[15,17],[16,17],[17,17],[15,16],[16,16],[17,16],[15,15],[16,15],[17,15]]
+  mask_pix = [[15,17],[16,17],[17,17],[15,16],[16,16],[17,16],[15,15],[16,15],[17,15]]
   #mask_pix = [[0,0],[1,1]]
-  #mask = test_cube.make_mask(mask_pix)
-  #data = test_cube.extract_mask_region(mask)
-  data = test_cube.extract_image()
+  mask = test_cube.make_mask(mask_pix)
+  data = test_cube.extract_mask_region(mask)
+  #data = test_cube.extract_image()
   
   test_cube.fit_data(data, fit_type = 'Moffat', outfile = 'development_testing_wind', RMS = 0.017530593, SN = 6,initial_fit_guess = '/homes/metogra/skathryn/Research/Scripts/co_moffat_modelresult.sav')
+  
+  test_cube.wind_calc_new(picklefile = 'development_testing_wind.pickle', restfreq = 345.79598990, outfile = 'development_testing_wind_calc')
   
   #test_cube.fit_cube(datas = test_data, fit_type = 'Moffat', xaxis = test_axis, outfile = 'development_testing_wind', RMS = 0.017530593, initial_fit_guess = '/homes/metogra/skathryn/Research/Scripts/co_moffat_modelresult.sav',SN = 6)
   
