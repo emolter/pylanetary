@@ -13,7 +13,8 @@ import scipy.io
 from astropy.io import fits
 from astropy.stats import sigma_clipped_stats
 from astropy.constants import c
-#from pylanetary.utils import *
+from pylanetary.utils import *
+import time
 import pdb
 
 def centered_list(n):
@@ -521,7 +522,7 @@ class SpectralCube:
     
   ###############################################################################  
   
-  def wind_calc_new(self, picklefile, restfreq, outfile):
+  def wind_calc(self, picklefile, restfreq, outfile):
     '''
     Parameters
     ----------
@@ -560,65 +561,10 @@ class SpectralCube:
     results['v_err']=np.reshape(results['v_err'],(lenx,leny))  
     
     pickle.dump(results,new_pickle)
-    
-  ###############################################################################  
-   
-  def wind_calc(self, picklefile, restfreq, outfile):
-  
-    '''
-    Parameters
-    ----------
-    picklefile - path to the pickle file of calculated doppler shifts, string
-    restfreq - the rest frequency of the molecular transition, float
-    outfile - the name/path of the wind pickle file, string
-    
-    '''
-    r = pickle.load(open(picklefile,"rb"),encoding='latin-1') 
-    peaks = np.array(r['center'])
-    std = r['std']
-    a = c/restfreq # Ratio for calculating errors through error propagation
-    
-    # Load the pickle file
-    picklefile = open(outfile+'.pickle', 'wb')
-    print('Numerical wind results will be saved in the '+outfile+'.pickle file')
-    results = {'x':[],'y':[],'v':[],'v_err':[]} # Define output dictionary fields
-    
-    if peaks.ndim == 1: # If the pickle file has one entry (ie. a single pixel)
-      x = peaks
-      v = ((-1*x/restfreq)+1)*c # Calculate Doppler shifted winds
-      print('The wind speed is '+str(v)+'m/s')
-      err = np.abs(a*np.array(std)) # Calculate the error in velocity
-      print('The wind error is '+str(err)+'m/s')
-      results['x'].append(r['x'])
-      results['y'].append(r['y'])
-      results['v'].append(v)
-      results['v_err'].append(err)
-    else: # Pickle file contains a row, column, or full image
-      for (xpix,ypix), value in np.ndenumerate(peaks):
-        x = peaks[xpix,ypix]
-        v = ((-1*x/restfreq)+1)*c # Calculate Doppler shifted winds
-        print('The wind speed is '+str(v)+'m/s')
-        err = np.abs(a*std[xpix,ypix]) # Calculate the error in velocity through error propagation
-        print('The wind error is '+str(err)+'m/s')
-        results['x'].append(xpix)
-        results['y'].append(ypix)
-        results['v'].append(v)
-        results['v_err'].append(err)
         
-      # Save the model results in an updated pickle file
-      lenx = np.shape(r['center'])[0]
-      leny = np.shape(r['center'])[1]
-      
-      results['x']=np.reshape(results['x'],(lenx,leny))
-      results['y']=np.reshape(results['y'],(lenx,leny))  
-      results['v']=np.reshape(results['v'],(lenx,leny))
-      results['v_err']=np.reshape(results['v_err'],(lenx,leny))  
-    
-      pickle.dump(results,picklefile)
-      
   ###############################################################################
   
-  def plot_data(self, picklefile, platescale, object, title, cont_label, date = None, location = None, spatial = None, variable = None, cmap = None, limits = None, contours = None, hatch = None, savefig = None):
+  def plot_data(self, picklefile, platescale, body, title, cont_label, date = None, location = None, spatial = None, variable = None, cmap = None, limits = None, contours = None, hatch = None, savefig = None):
    #spatial, dist, planetrad, subobslat, ccw, bmaj, bmin, bpa, title, cont_label, variable = None, cmap = None, limits = None, contours = None, hatch = None, savefig = None):
   
     '''
@@ -629,7 +575,7 @@ class SpectralCube:
     ----------
     picklefile - path to the pickle file of calculated doppler winds, string
     platescale - ,float
-    object - name of the planetary object you are studying, string.
+    body - name of the planetary object you are studying, string.
     title - plot title, string
     cont_label - label for the contour bar, string
     
@@ -646,9 +592,9 @@ class SpectralCube:
     '''
     
     # Define planet parameters with Pylanetary Body class
-    planet = Body('object')
-    dist = planet.semi_major_axis
-    planetrad = planet.req
+    planet = Body(body)
+    dist = planet.semi_major_axis.value
+    planetrad = planet.req.value
     subobslat = planet.ephem['PDObsLat']
     ccw = planet.ephem['NPole_ang']
     
@@ -708,9 +654,9 @@ class SpectralCube:
     cb.ax.tick_params(labelsize = 20)
     
     # Add the beam ellipse
-    width = bmin*725.27*dist
-    height = bmaj*725.27*dist
-    beam = Ellipse(xy=[-3.0e4,-3.2e4], width=bmin*725.27*dist, height=bmaj*725.27*dist, angle=bpa)
+    width = self.bmin*725.27*dist
+    height = self.bmaj*725.27*dist
+    beam = Ellipse(xy=[-3.0e4,-3.2e4], width=self.bmin*725.27*dist, height=self.bmaj*725.27*dist, angle=self.bpa)
     beam.set_facecolor('none')
     beam.set_edgecolor('black')
     if hatch == True: 
@@ -764,24 +710,30 @@ class SpectralCube:
 # Testing case for image cube analysis
 
 if __name__=="__main__":
+  t0 = time.time()
   image = '/homes/metogra/skathryn/Research/Data/ContSub/CO/CS20/Neptune_Pri_X50a4_CS20_narrow_square_2.fits'
   #image = '/homes/metogra/skathryn/Research/Data/ContSub/HCN/CS12/Neptune_Pri_X50a4_HCN_CS12_narrow_square_2.fits'
   test_cube = SpectralCube(image,x_space = 'f')
   #datas = test_cube.extract_pixel([8,25])
   #datas = test_cube.extract_image()
-  mask_pix = [[15,17],[16,17],[17,17],[15,16],[16,16],[17,16],[15,15],[16,15],[17,15]]
+  #mask_pix = [[15,17],[16,17],[17,17],[15,16],[16,16],[17,16],[15,15],[16,15],[17,15]]
   #mask_pix = [[0,0],[1,1]]
-  mask = test_cube.make_mask(mask_pix)
-  data = test_cube.extract_mask_region(mask)
-  #data = test_cube.extract_image()
+  #mask = test_cube.make_mask(mask_pix)
+  #data = test_cube.extract_mask_region(mask)
+  data = test_cube.extract_image()
   
-  test_cube.fit_data(data, fit_type = 'Moffat', outfile = 'development_testing_wind', RMS = 0.017530593, SN = 6,initial_fit_guess = '/homes/metogra/skathryn/Research/Scripts/co_moffat_modelresult.sav')
+  test_cube.fit_data(data, fit_type = 'Moffat', outfile = 'development_testing_fit', RMS = 0.017530593, SN = 6,initial_fit_guess = '/homes/metogra/skathryn/Research/Scripts/co_moffat_modelresult.sav')
   
-  test_cube.wind_calc_new(picklefile = 'development_testing_wind.pickle', restfreq = 345.79598990, outfile = 'development_testing_wind_calc')
+  test_cube.wind_calc(picklefile = 'development_testing_fit.pickle', restfreq = 345.79598990, outfile = 'development_testing_wind')
   
   #test_cube.fit_cube(datas = test_data, fit_type = 'Moffat', xaxis = test_axis, outfile = 'development_testing_wind', RMS = 0.017530593, initial_fit_guess = '/homes/metogra/skathryn/Research/Scripts/co_moffat_modelresult.sav',SN = 6)
   
   #test_cube.wind_calc(picklefile = '/homes/metogra/skathryn/pylanetary_dev/pylanetary/pylanetary/spectral/development_testing_wind.pickle', restfreq = 345.79598990, outfile = 'development_testing_wind')
   
+  test_cube.plot_data(picklefile = 'development_testing_wind.pickle', platescale = 0.1, body = 'Neptune', title = 'CO Doppler Velocity Map', cont_label = 'Radial Velocity (m/s)', date = '2016-04-30 00:00', location = 'ALMA', spatial = 4e4, limits = [-2000,2000], contours = [21,200])
+  
   #test_cube.plot_data(picklefile = 'development_testing_wind.pickle', platescale = 0.1, spatial = 4e4, dist = 30.4627707075422, planetrad = 24622., subobslat = -26.167088, ccw = -34., bmaj = 0.4416242241859436, bmin = 0.3885720372200012, bpa = 81.32388305664062, title = 'CO Doppler Velocity Map (4/30/16)', cont_label = 'Radial Velocity (m/s)', limits = [-2000,2000], contours = [21,200])
+  t1 = time.time()
+  print('Time to run script: ')
+  print(t1-t0)
   
