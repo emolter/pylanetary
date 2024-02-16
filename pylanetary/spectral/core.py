@@ -26,34 +26,33 @@ def centered_list(n):
 
 def calc_doppler_vel(peak, err, rest_f):
     '''
-    Calculate the Doppler velocity from the calculated center frequency.
+    Calculate the Doppler velocity using the Doppler Equation.
     
     Parameters
     ---------- 
-    peak - the calculated central peak frequency of the spectral line peak, float
-    err - the standard deviation of the calculated central peak frequency, float
-    rest_f - the rest frequency of the transition, float
+    peak : float
+          The calculated central peak frequency of the spectral line peak.
+    err : float
+          The standard deviation of the calculated central peak frequency.
+    rest_f : float
+          The rest frequency of the transition.
     
     Returns
     -------
-    v - the calculated Doppler velocity, m/s.
-    wind_err - the Doppler velocity error, calculated through error propagation, m/s.
+    v : float
+          The calculated Doppler velocity in m/s.
+    wind_err : float
+          The Doppler velocity error, calculated through error propagation, in m/s.
+    
     '''
     a = c.value/rest_f
-    # Doppler equation
-    v = ((-1*peak/rest_f)+1)*c.value # Calculate Doppler shifted winds
+    
+    v = ((-1*peak/rest_f)+1)*c.value
     print('The wind speed is '+str(v)+'m/s')
-    wind_err = np.abs(a*err) # Calculate the error in velocity
+    wind_err = np.abs(a*err)
     print('The wind error is '+str(wind_err)+'m/s')
     
     return v, wind_err
-    
-    
-# Guide to keys in the nested model dictionary:
-# model[] - Model name, taken from user input, string
-# ref - short reference name of model type, string
-# lmfit_func - built-in LMFIT function name, text 
-# label - fit label for plotting - string
     
 model = {}
 model['Gaussian'] = {'ref': 'gauss', 'lmfit_func': GaussianModel(),'label': 'Gaussian Fit','color':'orange'}
@@ -67,18 +66,15 @@ model['Moffat'] = {'ref': 'mof','lmfit_func':MoffatModel(),'label': 'Moffat Fit'
 
 class Spectrum:
   '''
-  Examples
-  --------
-  Initialize a Spectrum object:
+  Analysis tools for a single spectrum.
+    
+  Example usage:
+  
+  from pylanetary.spectral import Spectrum
   your_spec = Spectrum(spec, freq = freq,rest_f = 345.79598990,RMS = 0.017530593)
   
-  Calculate the best fit of the spectrum using a Lorentzian fit:
-  test_peak, test_std, chi, chi_red = test.fit_profile(fit_type = 'Lorentzian')
-  
-  Calculate the best fit of the spectrum with all line shapes and save the figure:
   test_peak, test_std, chi, chi_red = test.fit_profile(fit_type = 'Moffat', plot_name = 'line_comparison.png')
   
-  Calculate the Doppler shifted winds:
   test_wind, test_err = test.calc_doppler_vel(peak = test_peak, err = test_std)
   '''
   
@@ -86,25 +82,41 @@ class Spectrum:
   
   def __init__(self, spec, rest_f, x_space, wl = None, freq = None, RMS = None):
     '''
+    Input string instantiates object using numpy arrays of the x-axis and the spectral intensity axis.
+    
     Parameters
     ----------
-    spec = intensity axis, numpy array of floats (required)
-    rest_f = rest frequency of molecular transition, float (required for fit_profile and calc_doppler_vel) 
-    x_space - identifier for choosing wavelength or frequency space for the model fit, string. Input 'F' or 'f' for frequency space, 'W' or 'w' for wavelength space. 
-    wl = wavelength axis, optional. One of wl or freq must be specified
-    freq = frequency axis, optional. One of wl or freq must be specified.
-    RMS (optional) - numerical value of the data's RMS, float. If not specified, an RMS value is estimated through sigma clipping.
+    spec : numpy array
+          The intensity/vertical axis of the spectrum
+    rest_f : float
+          The rest frequency of molecular transition being examined
+    x_space : string
+          An identifier for choosing wavelength or frequency space for the model fit. Input 'F' or 'f' for frequency space, 'W' or 'w' for wavelength space. 
+    wl : numpy array, optional
+          The wavelength axis of the spectrum. Default is None.
+    freq: numpy array, optional
+          The frequency axis of the spectrum. Default is None.
+    RMS : float, optional 
+          The numerical value of the data's RMS. If not specified, an RMS value is estimated through sigma clipping (see here: https://docs.astropy.org/en/stable/api/astropy.stats.sigma_clipped_stats.html).
     
-    Calculated Attributes
-    ---------------------
-    xaxis - the frequency axis used for all calculations. Determined by the x_space parameter.
-    wl_res - wavelength resoltuion
-    freq_res - frequency resolution
-    chan_num - number of wavelength/frequency channels
+    Attributes
+    ----------
+    xaxis : numpy array
+          The x-axis used for all calculations. Determined by the x_space parameter.
+    wl_res : float
+          The wavelength resoltuion of the x-axis.
+    freq_res : float
+          The frequency resolution of the x-axis.
+    chan_num : float
+          The number of wavelength/frequency channels in the data.
     
     '''
+    
     self.wl = wl
     self.freq = freq
+    
+    if self.wl is None and self.freq is None:
+      raise ValueError('You did not provide an input for the x-axis. Please include a frequency (freq) or wavelength (wl) array.')
 
     if self.wl is None:
       self.wl = c/self.freq
@@ -134,12 +146,14 @@ class Spectrum:
   
   def make_initial_guess(self, fit_type, outfile):
     '''
-    A LMFIT wrapper to save a model fit as an initial guess. This can improve the final results when fitting an image cube.
+    A LMFIT wrapper to save a model fit as an initial guess.
     
     Parameters
     ----------
-    fit_type - the type of line shape used to generate the initial guess. the 'All' fit type is not allowed and will result in an error.
-    outfile - name of the output file, string.
+    fit_type : string
+          The type of line shape used to generate the initial guess. A value of 'All' will result in an error.
+    outfile : string
+          The name of the output file save file. the file extension '.sav' will be added.
     
     '''
     
@@ -152,39 +166,63 @@ class Spectrum:
     
   def fit_profile(self, fit_type, showplots = True, plot_name = None, initial_fit_guess = None):
     '''
-    Calculate the best fit of a Spectral object using the LMFIT algorithm. The line shapes can be plotted for visual comparison.
+    Calculate the best fit of a Spectral object using the LMFIT algorithm.
     
     Parameters
     ----------
-    fit_type - the type of line shape used to fit the spectra, string. Options are:
-        All: Fit the spectrum with all line 5 line shape options. Data is always plotted.
-        Gaussian: fit the spectrum with a Gaussian function
-        Lorentzian: fit the spectrum with a Lorentzian function
-        Voigt: fit the spectrum with a Voigt function
-        PseudoV: fit the spectrum with a Pseudo-Voigt function
-        Moffat: fit the spectrum with a Moffat function
-        A description of all line shapes can be found at https://lmfit.github.io/lmfit-py/builtin_models.html
-        
-    showplots - indicator of whether to plot. Default is True.
-    plot_name - name of the saved figure, optional. Default is None.
-    initial_fit_guess (optional) - path to a saved LMFIT result to use as the initial guess. This can be beneficial if some spectra are very noisy. It is recommended that you use a pixel with as small a Doppler shift as possible to make your initial guess. Default is None.
+    fit_type : string
+          The type of line shape used to fit the spectra, string. Options are:
+            All: Fit the spectrum with all line 5 line shape options. Data is always plotted.
+            Gaussian: fit the spectrum with a Gaussian function
+            Lorentzian: fit the spectrum with a Lorentzian function
+            Voigt: fit the spectrum with a Voigt function
+            PseudoV: fit the spectrum with a Pseudo-Voigt function
+            Moffat: fit the spectrum with a Moffat function
+            A description of all line shapes can be found at https://lmfit.github.io/lmfit-py/builtin_models.html
+    showplots : bool, optional
+          The indicator of whether to plot the best fit line shape or a comparison of line shapes. Default is True, which produces plots.
+    plot_name : string, optional
+          The name of a saved figure. Default is None, which does not save a plot.
+    initial_fit_guess: string, optional.
+          The path to a saved LMFIT result to use as the initial guess. Default is None; the LMFIT .guess method is used. 
     
     Returns
     -------
-    peak - frequency or wavelength value of the line peak, LMFIT's 'center' parameter.
-    err - standard deviation of the frequency or wavelength value.
-    chi - calculated Chi-squared statistic of the line fit.
-    chi_red - calculated reduced Chi-squared statistic of the line fit.
+    peak : float
+          The frequency or wavelength value of the line peak, which is LMFIT's 'center' parameter.
+    err : float
+          The standard deviation of the peak frequency or wavelength value.
+    chi :
+          The calculated Chi-squared statistic of the line fit.
+    chi_red :
+          The calculated reduced Chi-squared statistic of the line fit.
+    
+    Notes
+    -----
+    Guide to keys in the nested model dictionary:
+          model[] : 
+                The Model name, taken from the user input.
+          ref : 
+                A short reference name of model type.
+          lmfit_func: 
+                The built-in LMFIT function name, needed to properly interface with the LMFIT package.
+          label :
+                The label for the legend included in the final plots.
+          color : 
+                The color of the line for a given fit type when plotting.
+    
+    An initial fit guess is not necessary, but can be very beneficial if the spectra are noisy. If your fit is failing, try including an intial guess to improve the performance of LMFIT. It is recommended that you use a pixel with as small a Doppler shift as possible to make your initial guess save file.
+    
     '''
     
     if fit_type != 'All':
-      if initial_fit_guess == None: # If no initial guess is given, calculate one using the built-in LMFIT .guess method
+      if initial_fit_guess == None:
         pars = model[fit_type]['lmfit_func'].guess(self.spec,x=self.xaxis)
-      else: # Load initial guess if parameter is provided
-        inital = load_modelresult(initial_fit_guess) # Inital guess that is best fit from center pixel
+      else:
+        inital = load_modelresult(initial_fit_guess)
         pars = inital.params
       fit_result = model[fit_type]['lmfit_func'].fit(self.spec,pars,x=self.xaxis,scale_covar=False)
-      print(fit_result.fit_report()) # Print out the best fit parameters and statistics
+      print(fit_result.fit_report())
     elif fit_type == 'All':
       fit_result = {}
       for key in model:
@@ -195,7 +233,6 @@ class Spectrum:
     else:
       raise ValueError('fit_type must be one of the following options: Gaussian, Lorentzian, Voigt, PseudoV, Moffat, or All')
     
-    # Calculate statistics manually for single fit type
     if fit_type != 'All':
       chi = np.sum(((np.subtract(self.spec,fit_result.best_fit)/self.RMS))**2)
       chi_red = chi/(self.chan_num - 4)
@@ -216,23 +253,28 @@ class Spectrum:
       peak = 0
       err = 0
     
-    return peak, err, chi, chi_red # think about what happens if lmfit results are unreasonable… but this should probably happen elsewhere
+    return peak, err, chi, chi_red
     
   ############################################################################### 
   
   def plot_lines(self, line_result, model_key, x_label = 'Frequency (GHz)', y_label = 'Intensity (mJy)', residual_label = 'Residuals', plot_title = 'Comparison of Line Shapes'):
     '''
-    Plot the original data and best fit line shape for visual comparison.
+    Plot the original data and best fit line shape.
     
     Parameters
     ----------
-    line_result - the LMFIT best fit result.
-    model_key - the name of the line shape used to calculate the fit.
-    
-    x_label - x axis label for the main and residual plot, optional. Default is 'Frequency (GHz)'.
-    y_label - y axis label for the main plot, optional. Default is 'Intensity (mJy)'.
-    residual_label - y axis label for the residual plot, optional. Default is 'Residuals'.
-    plot_title - title for the plot, optional. Default is 'Comparison of Line shapes'.
+    line_result : LMFIT fit object
+          The LMFIT best fit result, calculated using fit_profile.
+    model_key : string
+          The name of the line shape used to calculate the fit.
+    x_label : string, optional
+          The x-axis label for the main and residual plot. Default is 'Frequency (GHz)'.
+    y_label : string, optional
+          The y-axis label for the main plot. Default is 'Intensity (mJy)'.
+    residual_label : string, optional.
+          The y-axis label for the residual plot. Default is 'Residuals'.
+    plot_title : string, optional
+          The title for the plot. Default is 'Comparison of Line shapes'.
     
     '''
     
@@ -258,76 +300,86 @@ class Spectrum:
     plt.show()
     
   ###############################################################################
-'''   
+  
+# This section is used for testing purposes during development. It will be removed when the code is ready to be fully merged with the main branch.
+   
 # Simple single spectra testing case
-if __name__=="__main__":
+#if __name__=="__main__":
   
   # CO [10,25]
   
-  freq = np.array([345.76770566,345.76868215,345.76965863,345.77063511,345.77161159,345.77258807,345.77356455,345.77454103,345.77551751,345.77649399,345.77747047,345.77844695,345.77942343,345.78039991,345.78137639,345.78235287,345.78332935,345.78430584,345.78528232,345.7862588,345.78723528,345.78821176,345.78918824,345.79016472,345.7911412,345.79211768,345.79309416,345.79407064,345.79504712,345.7960236,345.79700008,345.79797656,345.79895304,345.79992953,345.80090601,345.80188249,345.80285897,345.80383545,345.80481193,345.80578841,345.80676489,345.80774137,345.80871785,345.80969433,345.81067081,345.81164729,345.81262377,345.81360025,345.81457673,345.81555322,345.8165297,345.81750618,345.81848266,345.81945914,345.82043562,345.8214121,345.82238858])
-  spec = np.array([0.21198112,0.18924561,0.21650964,0.22294408,0.24960007,0.22984277,0.25219446,0.24985315,0.25343025,0.28705364,0.3061584,0.31352046,0.3277193,0.3265509,0.3436137,0.35133913,0.38450843,0.4165357,0.43355167,0.467518,0.49524495,0.5277506,0.5910206,0.64392966,0.7271694,0.89640355,0.8984462,0.76777405,0.6531943,0.59134954,0.55332845,0.50916755,0.46389887,0.4410508,0.4036594,0.40885097,0.37320843,0.3508784,0.34755984,0.31414196,0.29820374,0.27975425,0.28136522,0.26828533,0.26605716,0.24770543,0.2537956,0.22927019,0.219696,0.21160068,0.20004132,0.1939475,0.18222019,0.16944197,0.17536835,0.16506103,0.16306329])
+  #freq = np.array([345.76770566,345.76868215,345.76965863,345.77063511,345.77161159,345.77258807,345.77356455,345.77454103,345.77551751,345.77649399,345.77747047,345.77844695,345.77942343,345.78039991,345.78137639,345.78235287,345.78332935,345.78430584,345.78528232,345.7862588,345.78723528,345.78821176,345.78918824,345.79016472,345.7911412,345.79211768,345.79309416,345.79407064,345.79504712,345.7960236,345.79700008,345.79797656,345.79895304,345.79992953,345.80090601,345.80188249,345.80285897,345.80383545,345.80481193,345.80578841,345.80676489,345.80774137,345.80871785,345.80969433,345.81067081,345.81164729,345.81262377,345.81360025,345.81457673,345.81555322,345.8165297,345.81750618,345.81848266,345.81945914,345.82043562,345.8214121,345.82238858])
+  #spec = np.array([0.21198112,0.18924561,0.21650964,0.22294408,0.24960007,0.22984277,0.25219446,0.24985315,0.25343025,0.28705364,0.3061584,0.31352046,0.3277193,0.3265509,0.3436137,0.35133913,0.38450843,0.4165357,0.43355167,0.467518,0.49524495,0.5277506,0.5910206,0.64392966,0.7271694,0.89640355,0.8984462,0.76777405,0.6531943,0.59134954,0.55332845,0.50916755,0.46389887,0.4410508,0.4036594,0.40885097,0.37320843,0.3508784,0.34755984,0.31414196,0.29820374,0.27975425,0.28136522,0.26828533,0.26605716,0.24770543,0.2537956,0.22927019,0.219696,0.21160068,0.20004132,0.1939475,0.18222019,0.16944197,0.17536835,0.16506103,0.16306329])
   
-  test = Spectrum(spec, freq = freq,rest_f = 345.79598990,x_space = 'f', RMS = 0.017530593)
-  #test = Spectrum(spec, freq = freq) #HCN
+  #test = Spectrum(spec, freq = freq,rest_f = 345.79598990,x_space = 'f', RMS = 0.017530593)
+  
   #test.make_initial_guess(fit_type = 'Moffat', outfile = 'moffat_guess')
-  test_peak, test_std, chi, chi_red = test.fit_profile(fit_type = 'Moffat', initial_fit_guess = 'moffat_guess.sav')
-  test_wind, test_err = calc_doppler_vel(peak = test_peak, err = test_std, rest_f = 345.79598990)
-  #test_wind, test_err = test.calc_doppler_vel(rest_freq = 354.50547790, peak = test_peak, err = test_std) # HCN
-'''
-
+  #test_peak, test_std, chi, chi_red = test.fit_profile(fit_type = 'Moffat', initial_fit_guess = 'moffat_guess.sav')
+  #test_wind, test_err = calc_doppler_vel(peak = test_peak, err = test_std, rest_f = 345.79598990)
+  
 ###############################################################################
 ###############################################################################
   
 class SpectralCube:
   '''
-  Examples
-  --------
-  Initilaize the class:
-  cube = SpectralCube(your_image_path)
+  Analysis tools for a FITS image cube.
   
-  Load an entire image cube in frequency space:
+  Example Usage, full image analysis:
   
-  Load a single row in wavelength space:
+  cube = SpectralCube(your_image_path, x_space = 'f')
   
-  Load a single pixel in frequency space:
-  
-  Example Workflow
-  ----------------
+  data = cube.extract_image()
+  cube.fit_data(data, fit_type = 'Moffat', outfile = 'development_testing_fit', RMS = 0.017530593, SN = 6,initial_fit_guess = '/homes/metogra/skathryn/Research/Scripts/co_moffat_modelresult.sav')
+  test_cube.wind_calc(picklefile = 'development_testing_fit.pickle', restfreq = 345.79598990, outfile = 'development_testing_wind')
+  test_cube.plot_data(picklefile = 'development_testing_wind.pickle', platescale = 0.1, body = 'Neptune', title = 'CO Doppler Velocity Map', cont_label = 'Radial Velocity (m/s)', date = '2016-04-30 00:00', location = 'ALMA', spatial = 4e4, limits = [-2000,2000], contours = [21,200])
   
   '''
   ###############################################################################
   
   def __init__(self, imagepath, x_space):
     '''
+    Input string instantiates object using the FITS image path.
+    
     Parameters
     ----------
-    imagepath - path to FITS image file, string (required)
-    x_space - identifier for choosing wavelength or frequency space for the model fit, string. Input 'F' or 'f' for frequency space, 'W' or 'w' for wavelength space.
+    imagepath : string
+          The path to FITS image file.
+    x_space : string
+          The identifier for choosing wavelength or frequency space for the model fit. Input 'F' or 'f' for frequency space, 'W' or 'w' for wavelength space.
     
     Attributes
     ----------
-    chan_num - number of frequency channels
-    i0 - reference pixel
-    df - channel width (Hz)
-    f0 - rest frequency (Hz)
-    xpixmax - x-dimension size
-    ypixmax - y-dimension size
-    bmaj - semi-major axis of the restoring beam, arcsec. 
-    bmin - semi-minor axis of the restoring beam, arcsec.
-    bpa - position angle of the restoring beam, degrees.
-    data - spectral data
-    freqspec - frequency grid around the rest frequency
-    wl_spec - wavelength grid around the rest wavelength
+    chan_num : float
+          The number of frequency channels. Pulled from image header.
+    i0 : float
+          The reference pixel of the image. Pulled from image header.
+    df : float
+          The channel width in Hz. Pulled from image header.
+    f0 : float
+          The rest frequency of the image in Hz. Pulled from image header.
+    xpixmax : float
+          The x-dimension size in pixels. Pulled from image header.
+    ypixmax : float
+          The y-dimension size in pixels. Pulled from image header.
+    bmaj : float
+          The semi-major axis of the restoring beam in arcsec. Pulled from image header. 
+    bmin : float
+          The semi-minor axis of the restoring beam in arcsec. Pulled from the image header.
+    bpa : float
+          The position angle of the restoring beam in degrees. Pulled from the image header.
+    data : numpy array
+          The spectral data pulled from the image cube.
+    freqspec : numpy array
+          The frequency grid around the rest frequency, which can be used as the x-axis.
+    wl_spec : numpy array
+          The wavelength grid around the rest wavelength, which can be used as the x-axis.
     
     '''  
-    self.imagepath = imagepath
     self.x_space = x_space
     
-    fits_file = fits.open(self.imagepath)
+    fits_file = fits.open(imagepath)
     hdr = fits_file[0].header
-    #print(hdr)
-    #breakpoint()
-    # Pull necessary info from the FITS header
+    
     self.chan_num = hdr['NAXIS3'] 
     self.i0 = hdr['CRPIX3'] 
     self.df = hdr['CDELT3'] 
@@ -350,9 +402,9 @@ class SpectralCube:
     self.freqspec = ((np.arange(self.chan_num) - self.i0) * self.df + self.f0)/1e9
     self.wl_spec = c/self.freqspec
       
-    if x_space == 'F' or x_space == 'f':
+    if self.x_space == 'F' or self.x_space == 'f':
       self.xaxis = self.freqspec
-    elif x_space == 'W' or x_space == 'w':
+    elif self.x_space == 'W' or self.x_space == 'w':
       self.xaxis = self.wl_spec
     else:
       raise ValueError('You did not choose frequency or wavelength space. Please input F/f for frequency, W/w for wavelength.')
@@ -361,15 +413,17 @@ class SpectralCube:
   
   def extract_pixel(self, pixel):
     '''
-    Extract the spectral axis for a single pixel
+    Extract the spectral axis for a single pixel.
     
     Parameters
     ----------
-    pixel - indexes of the pixel to be fitted, list.
+    pixel : list
+          The indexes of the pixel to be fitted.
     
     Returns
     -------
-    datas - numpy array containing spectral axis
+    datas : numpy array
+          The spectral axis of the pixel.
     
     '''
     print('Fitting pixel ['+str(pixel[0])+','+str(pixel[1])+']')
@@ -384,11 +438,13 @@ class SpectralCube:
     
   def extract_image(self):
     '''
-    Extract the spectral axis for the entire image cube
+    Extract the spectral axis for the entire image cube.
     
     Returns
     -------
-    datas - 3D numpy array containing the spectral axis
+    datas : numpy array
+          The 3D array containing the spectral axis for each pixel.
+    
     '''
     
     print('Fitting the entire image')
@@ -405,15 +461,17 @@ class SpectralCube:
   
   def make_mask(self,pixels):
     '''
-    Make a boolean array to act as a mask for extracting pixels
+    Make a boolean array mask from extracting a sub-image of pixels.
     
     Parameters
     ----------
-    pixels - tuple of pixel values to include in the mask. These pixels will be given a value of True.
+    pixels : tuple
+          The pixel values to include in the mask. These pixels will be given a value of True and their spectra extracted.
     
     Returns
     -------
-    mask - the boolean array mask
+    mask : bool
+          A 2D boolean array where pixels with values of True are extracted, and values of False are not.
     
     '''
     
@@ -430,15 +488,17 @@ class SpectralCube:
     
   def extract_mask_region(self,mask):
     '''
-    Extract pixels defined in a boolean array
+    Extract pixels defined in a boolean array.
     
     Parameters
     ----------
-    mask - 2D boolean array of the size [xpixmax,ypixmax]. Pixels with a value of True are extracted for fitting.
+    mask : bool
+          2D boolean array of the size [xpixmax,ypixmax]. Pixels with a value of True are extracted for fitting.
     
     Returns
     -------
-    datas - 3D numpy array containing the spectral axis. Masked pixels are NAN. 
+    datas : numpy array
+          The 3D numpy array containing the spectral axis. Masked pixels are NAN. 
     
     '''
     datas = np.empty((self.xpixmax,self.ypixmax),dtype=np.ndarray)
@@ -458,38 +518,39 @@ class SpectralCube:
   
   def fit_data(self, datas, fit_type, outfile, initial_fit_guess = None, RMS = None, SN = None):
     '''
+    Calculate the best fit for the spectra at each pixel.
+    
     Parameters
     ----------
-    datas - array of spectral data to be fit. Use the datas output from the load_data method.
-    fit_type - the type of line shape used to fit the spectra, string.
-    outfile - name of the saved output pickle file, string. The 'pickle' file type is automatically appied, no need to include it here.
-
-    initial_fit_guess (optional) - a saved LMFIT result to use instead of the built in guess function, string. This can be beneficial if some spectra are very noisy. If desired, it is recommended that you save the model result of the image's central pixel to use as the inital guess. See LMFIT documentation (https://lmfit.github.io/lmfit-py/model.html#saving-and-loading-modelresults) 
-    RMS (optional) - numerical value of the data's RMS, float. If not provided, an estimate is calculated using Astropy's siga_clipped_stats
-    SN (optional) - Signal to noise ratio minimum, float. Default is value is 1. This is used to mask out bad data; any pixel witha S/N lower than this value will not be fit.
+    datas : numpy array
+          The array of spectral data to be fit.
+    fit_type : string
+          The type of line shape used to fit the spectra. Options are Gaussian, Lorentzian, Voigt, PseudoV, Moffat, and All. It is not recommended that you use the option of all for anything more than a single pixel.
+    outfile : string
+          The name of the saved output pickle file. The 'pickle' file extension is automatically included.
+    initial_fit_guess : string, optional
+          The name of a saved LMFIT result to use as an intitial guess instead of the LMFIT guess function. Default is None.
+    RMS : float, optional
+          The numerical value of the data's RMS. Default is None; if not provided, an estimate is calculated using Astropy's siga_clipped_stats (https://docs.astropy.org/en/stable/api/astropy.stats.sigma_clipped_stats.html)
+    SN : float
+          The Signal to noise ratio minimum, which is used to mask out noisy data. Any pixel with a S/N ratio lower than this calue will not be fit. Default is value is 1. 
     
     '''
     
     if SN == None:
       SN = 1
     
-    # Initialize output file
     picklefile = open(outfile+'.pickle', 'wb')
     print('Numerical results will be saved in the '+outfile+'.pickle file')
-    results = {'x':[],'y':[],'center':[],'std':[],'chi':[],'redchi':[]} # Define output dictionary fields
+    results = {'x':[],'y':[],'center':[],'std':[],'chi':[],'redchi':[]}
     
-    
-    #for (xpix,ypix), value in np.ndenumerate(datas):
     for xpix in range (0,self.xpixmax,1):
       for ypix in range (0,self.ypixmax,1): 
-        #breakpoint()
         s_n = abs(np.max(datas[xpix,ypix])/RMS)
-        
         if s_n > SN:
           print('Modeling spectrum at pixel '+str(xpix)+','+str(ypix))
           spectra = Spectrum(spec = datas[xpix,ypix], freq = self.xaxis, rest_f = 345.79598990, x_space = self.x_space, RMS = RMS) 
           peak, std, chi, chi_red = spectra.fit_profile(fit_type = 'Moffat', initial_fit_guess = initial_fit_guess, showplots = False)
-          # Save output in output dictionary
           results['x'].append(xpix)
           results['y'].append(ypix)
           results['center'].append(peak)
@@ -504,11 +565,9 @@ class SpectralCube:
           results['chi'].append(np.NAN)
           results['redchi'].append(np.NAN)
           
-          
-    # Save the model results in a pickle file
     lenx = np.shape(datas)[0]
     leny = np.shape(datas)[1]
-    #breakpoint()
+    
     results['x']=np.reshape(results['x'],(lenx,leny))
     results['y']=np.reshape(results['y'],(lenx,leny))
     results['center']=np.reshape(results['center'],(lenx,leny))
@@ -517,18 +576,22 @@ class SpectralCube:
     results['redchi']=np.reshape(results['redchi'],(lenx,leny))
       
     pickle.dump(results,picklefile)
-    
     picklefile.close()
     
   ###############################################################################  
   
   def wind_calc(self, picklefile, restfreq, outfile):
     '''
+    Calculate the Doppler wind for each pixel.
+    
     Parameters
     ----------
-    picklefile - path to the pickle file of calculated doppler shifts, string
-    restfreq - the rest frequency of the molecular transition, float
-    outfile - the name/path of the wind pickle file, string
+    picklefile : string
+          The path to the pickle file of calculated doppler shifts.
+    restfreq : float
+          The rest frequency of the molecular transition.
+    outfile : string
+          The name of the wind results' pickle file.
     
     '''
     
@@ -541,7 +604,7 @@ class SpectralCube:
     
     new_pickle = open(outfile+'.pickle', 'wb')
     print('Numerical wind results will be saved in the '+outfile+'.pickle file')
-    results = {'x':[],'y':[],'v':[],'v_err':[]} # Define output dictionary fields
+    results = {'x':[],'y':[],'v':[],'v_err':[]}
     
     for xpix in range (0,x_max,1):
       for ypix in range (0,y_max,1):
@@ -561,37 +624,48 @@ class SpectralCube:
     results['v_err']=np.reshape(results['v_err'],(lenx,leny))  
     
     pickle.dump(results,new_pickle)
+    new_pickle.close()
         
   ###############################################################################
   
-  def plot_data(self, picklefile, platescale, body, title, cont_label, date = None, location = None, spatial = None, variable = None, cmap = None, limits = None, contours = None, hatch = None, savefig = None):
-   #spatial, dist, planetrad, subobslat, ccw, bmaj, bmin, bpa, title, cont_label, variable = None, cmap = None, limits = None, contours = None, hatch = None, savefig = None):
-  
+  def plot_data(self, picklefile, platescale, body, cont_label, title = None, date = None, location = None, spatial = None, variable = None, cmap = None, limits = None, contours = None, hatch = None, savefig = None):
     '''
     Plot the calculated winds on a 2D plane. 
     This algorithm was originally written by Dr. Martin Cordiner for use on Titan (Cordiner et al. 2020).
     
     Parameters
     ----------
-    picklefile - path to the pickle file of calculated doppler winds, string
-    platescale - ,float
-    body - name of the planetary object you are studying, string.
-    title - plot title, string
-    cont_label - label for the contour bar, string
-    
-    date - date of the observation in 'YYYY-MM-DD 00:00' format, optional. Default is the current date.
-    location - location of the observing device, default is None. Options include ALMA, VLA, ?
-    spatial - numerical value for spatial axes bounds in km, float. If not specified, the value is selected so the image is 1.5 planet diameters wide.
-    variable (optional) - name of the variable plotted, string. Default is the Doppler velocities. Options include 'v' and 'v_err'.
-    cmap (optional) - name of Matplotlib colormap for plotting. Default is blue/white/red gradient. 
-    limits (optional) - limits of the wind colorbar, list. Default is 0 to 1.
-    contours (optional) - numerical info for contour lines, list. First value is the number of lines to plot. Second value is the multiplicative factor for the contor values. Example: for [13,200] 13 contour lines between -2200 and 2200 m/s are plotted. Default is [11,10] (11 contour lines from -100 to 100)
-    hatch (optional) - boolean for if the plotted beam is hatched or not. Default is False (no hatch marks)
-    savefig (optional) - file path for the saved figure, string. The figure is not saved if this parameter is None.
+    picklefile : string
+          The path to the pickle file of calculated doppler winds and errors.
+    platescale : float
+          The platescale of the data.
+    body : string
+          The name of the planetary object you are studying.
+    cont_label : string
+          The label for the contour bar, which corresponds to the pixel color.
+    title : string, optional
+          The plot title. Default is None.
+    date : string, optional
+          The date of the observation in 'YYYY-MM-DD 00:00' format. Default is the current date.
+    location : string, optional
+          The name of the observing device, the JPL observatory code. Default is the center of the Earth.
+    spatial : float, optional
+          The numerical value for spatial axes bounds in km. If not specified, the value is selected so the image is 1.5 planet diameters wide.
+    variable : string, optional
+          The name of the variable, either winds or errors, to be plotted. Default is the Doppler velocities (v). Options include 'v' and 'v_err'.
+    cmap : string, optional
+          The name of Matplotlib colormap for plotting. Default is blue/white/red gradient. 
+    limits : list, optional
+          The limits of the wind colorbar, list. Default is 0 to 1.
+    contours : list, optional
+          The defintion of the contour lines. The first value is the number of lines to plot. Second value is the multiplicative factor for the contor values. Example: for [13,200] specifices 13 contour lines between -2200 and 2200 m/s. Default is [11,10] (11 contour lines from -100 to 100)
+    hatch : bool, optional
+          An indicator of if the restoring beam is hatched or not. Default is False (no hatch marks).
+    savefig : string, optional
+          The file name/path for the saved figure. Default is None, which does not save a figure.
     
     '''
     
-    # Define planet parameters with Pylanetary Body class
     planet = Body(body)
     dist = planet.semi_major_axis.value
     planetrad = planet.req.value
@@ -600,31 +674,29 @@ class SpectralCube:
     
     # Define basic plotting parameters
     matplotlib.rcParams["contour.negative_linestyle"]='solid'
-    planetgridcolor='black' # Planet disc color
-    kmscale=725.27*dist*platescale # image pixel size in km
+    planetgridcolor='black'
+    kmscale=725.27*dist*platescale
     
     if spatial is None:
       spatial = planetrad*1.25
     
-    #Define the colorbar color map
     if cmap == None: 
       cmap = LinearSegmentedColormap.from_list('mycmap', (['blue','white','red']))
     else:
       cmap = cmap
-    # Define the limits of the colorbar. Defualt is 0 to 1.
+    
     if limits == None:
       norm = None
     else:
       norm = colors.Normalize(vmin=limits[0],vmax=limits[1])
       
-    # Define the plotted contour levels. Default is 11 contour lines from -100 to 100
     if contours == None:
       levels = np.array(centered_list[10]) * 10
     else:
       levels = np.array(centered_list(contours[0])) * contours[1]
     
     # Load the data
-    r = pickle.load(open(picklefile,"rb"),encoding='latin-1') # Load the pickle file with calculated winds
+    r = pickle.load(open(picklefile,"rb"),encoding='latin-1') 
     if variable == None:
       data = r['v']
     else:
@@ -633,18 +705,17 @@ class SpectralCube:
     subobslat = np.deg2rad(subobslat)
     ccw = np.deg2rad(ccw)
     
-     # Define spatial axes
+    
     x = ((r['x']-len(r['x'])/2.))*kmscale
     y = (r['y']-len(r['y'])/2.)*kmscale
     
     # Initialize the figure
     fig = plt.figure()
     ax = fig.add_subplot(1,1,1)
-    # Plot the data
     c=ax.imshow(data.transpose(),extent=[x.min(), x.max(), y.min(), y.max()],origin='lower',interpolation='nearest',norm=norm,zorder=-21,cmap=cmap)
     co=ax.contour(data.transpose(),levels=levels,extent=[x.min(), x.max(), y.min(), y.max()],origin='lower',colors='k',linewidths=0.75,zorder=-20)
-    # Add labels and define text sizes
-    ax.clabel(co,fmt="%d",fontsize=13) # Contour label text size
+    
+    ax.clabel(co,fmt="%d",fontsize=13)
     ax.set_xlabel('Distance (km)', fontsize = 20)
     ax.set_ylabel('Distance (km)', fontsize = 20)
     ax.tick_params(axis='both',labelsize=18)
@@ -680,21 +751,21 @@ class SpectralCube:
     northz = np.sin(subobslat) 
     with np.errstate(divide='ignore',invalid='ignore'): 
         zcoord = np.sqrt((planetrad)**2 - x**2 - y**2)
-        dprod = (northx*x + northy*y + northz*zcoord)/(planetrad) #dot product of north pole vector and each vector in model planet
-        z_lat = 90. - np.degrees(np.arccos(dprod)) #latitude of each point on the 2-d grid
+        dprod = (northx*x + northy*y + northz*zcoord)/(planetrad)
+        z_lat = 90. - np.degrees(np.arccos(dprod))
     ax.contour(z_lat,colors=planetgridcolor,extent=[-spatial, spatial, -spatial, spatial],linestyles='dashed',zorder=0,alpha=0.5,levels=latlevel)
     ax.contour(z_lat,colors=planetgridcolor,extent=[-spatial, spatial, -spatial, spatial],levels=[0],linestyles='solid',zorder=0)
 
     #Longitude lines
     xma=np.ma.masked_where(np.isnan(zcoord),x)
     yma=np.ma.masked_where(np.isnan(zcoord),y)
-    # Rotate the x,y coordinates
+    
     xr = np.cos(ccw)*xma + np.sin(ccw)*yma
     yr = -np.sin(ccw)*xma + np.cos(ccw)*yma
-    # Rotate the z coordinate
+    
     projz = (zcoord - (yr * np.tan(subobslat))) * np.cos(subobslat)
-    z_long = np.rad2deg(np.arctan2(xr,projz)) #longitude
-    # Projected distances of each x,z point from the polar vector
+    z_long = np.rad2deg(np.arctan2(xr,projz))
+    
     projx = (xma - (-yma * np.tan(ccw))) * np.cos(ccw) 
     projz = (zcoord - (yma * np.tan(subobslat))) * np.cos(subobslat)
     ax.contour(z_long,12,colors=planetgridcolor,extent=[-spatial, spatial, -spatial, spatial],linestyles='dotted',zorder=0)
@@ -706,33 +777,31 @@ class SpectralCube:
       fig.savefig(savefig.png, bbox_inches='tight')
       
   ###############################################################################
-    
-# Testing case for image cube analysis
+
+# This section is used for testing purposes during development. It will be removed when the code is ready to be fully merged with the main branch.
 
 if __name__=="__main__":
   t0 = time.time()
   image = '/homes/metogra/skathryn/Research/Data/ContSub/CO/CS20/Neptune_Pri_X50a4_CS20_narrow_square_2.fits'
-  #image = '/homes/metogra/skathryn/Research/Data/ContSub/HCN/CS12/Neptune_Pri_X50a4_HCN_CS12_narrow_square_2.fits'
   test_cube = SpectralCube(image,x_space = 'f')
-  #datas = test_cube.extract_pixel([8,25])
-  #datas = test_cube.extract_image()
-  #mask_pix = [[15,17],[16,17],[17,17],[15,16],[16,16],[17,16],[15,15],[16,15],[17,15]]
-  #mask_pix = [[0,0],[1,1]]
-  #mask = test_cube.make_mask(mask_pix)
-  #data = test_cube.extract_mask_region(mask)
-  data = test_cube.extract_image()
   
-  test_cube.fit_data(data, fit_type = 'Moffat', outfile = 'development_testing_fit', RMS = 0.017530593, SN = 6,initial_fit_guess = '/homes/metogra/skathryn/Research/Scripts/co_moffat_modelresult.sav')
+  # full image analysis
   
-  test_cube.wind_calc(picklefile = 'development_testing_fit.pickle', restfreq = 345.79598990, outfile = 'development_testing_wind')
+  #data = test_cube.extract_image()
+  #test_cube.fit_data(data, fit_type = 'Moffat', outfile = 'development_testing_fit', RMS = 0.017530593, SN = 6,initial_fit_guess = '/homes/metogra/skathryn/Research/Scripts/co_moffat_modelresult.sav')
+  #test_cube.wind_calc(picklefile = 'development_testing_fit.pickle', restfreq = 345.79598990, outfile = 'development_testing_wind')
+  #test_cube.plot_data(picklefile = 'development_testing_wind.pickle', platescale = 0.1, body = 'Neptune', title = 'CO Doppler Velocity Map', cont_label = 'Radial Velocity (m/s)', date = '2016-04-30 00:00', location = 'ALMA', spatial = 4e4, limits = [-2000,2000], contours = [21,200])
   
-  #test_cube.fit_cube(datas = test_data, fit_type = 'Moffat', xaxis = test_axis, outfile = 'development_testing_wind', RMS = 0.017530593, initial_fit_guess = '/homes/metogra/skathryn/Research/Scripts/co_moffat_modelresult.sav',SN = 6)
+  # sub-image analysis - 3x3 sub-image at the center
   
-  #test_cube.wind_calc(picklefile = '/homes/metogra/skathryn/pylanetary_dev/pylanetary/pylanetary/spectral/development_testing_wind.pickle', restfreq = 345.79598990, outfile = 'development_testing_wind')
+  mask_pix = [[15,17],[16,17],[17,17],[15,16],[16,16],[17,16],[15,15],[16,15],[17,15]]
+  mask = test_cube.make_mask(mask_pix)
+  data = test_cube.extract_mask_region(mask)
   
-  test_cube.plot_data(picklefile = 'development_testing_wind.pickle', platescale = 0.1, body = 'Neptune', title = 'CO Doppler Velocity Map', cont_label = 'Radial Velocity (m/s)', date = '2016-04-30 00:00', location = 'ALMA', spatial = 4e4, limits = [-2000,2000], contours = [21,200])
+  test_cube.fit_data(data, fit_type = 'Moffat', outfile = 'development_testing_fit_subim', RMS = 0.017530593, SN = 6,initial_fit_guess = '/homes/metogra/skathryn/Research/Scripts/co_moffat_modelresult.sav')
+  test_cube.wind_calc(picklefile = 'development_testing_fit_subim.pickle', restfreq = 345.79598990, outfile = 'development_testing_wind_subim')
+  test_cube.plot_data(picklefile = 'development_testing_wind_subim.pickle', platescale = 0.1, body = 'Neptune', title = 'CO Doppler Velocity Map Sub-Image', cont_label = 'Radial Velocity (m/s)', date = '2016-04-30 00:00', location = 'ALMA', spatial = 4e4, limits = [-2000,2000])
   
-  #test_cube.plot_data(picklefile = 'development_testing_wind.pickle', platescale = 0.1, spatial = 4e4, dist = 30.4627707075422, planetrad = 24622., subobslat = -26.167088, ccw = -34., bmaj = 0.4416242241859436, bmin = 0.3885720372200012, bpa = 81.32388305664062, title = 'CO Doppler Velocity Map (4/30/16)', cont_label = 'Radial Velocity (m/s)', limits = [-2000,2000], contours = [21,200])
   t1 = time.time()
   print('Time to run script: ')
   print(t1-t0)
