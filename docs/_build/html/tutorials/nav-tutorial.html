@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Navigation Workflow" href="nav-examples.html" /><link rel="prev" title="Tutorials" href="index.html" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Navigation Workflow" href="nav-examples.html" /><link rel="prev" title="Planetary Body Attributes &amp; Ephemerides" href="body-tutorial.html" />
 
     <!-- Generated with Sphinx 7.2.6 and Furo 2023.09.10 -->
         <title>Navigation Basics - pylanetary documentation</title>
@@ -166,10 +166,11 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">Tutorials</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="body-tutorial.html">Planetary Body Attributes &amp; Ephemerides</a></li>
 <li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Navigation Basics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="nav-examples.html">Navigation Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rings-tutorial.html">Rings Tutorial</a></li>
-<li class="toctree-l2"><a class="reference internal" href="utils-tutorial.html">Utils Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="unit-conversions.html">Unit Conversions</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
@@ -548,13 +549,9 @@ Canny x,y shift is 126.830078125 -8.416015625
 <img alt="../_images/tutorials_nav-tutorial_18_0.png" src="../_images/tutorials_nav-tutorial_18_0.png" />
 </div>
 </div>
-<section id="summary-of-nav.colocate-methods">
-<h3>summary of nav.colocate methods<a class="headerlink" href="#summary-of-nav.colocate-methods" title="Link to this heading">#</a></h3>
-<p>The following was written in support of Souami et al. 2023, in prep. If you use this for your own work, please cite the pylanetary package, and also consider citing the image_registration and astroquery packages.</p>
-<p>The centroid of the stacked Keck frames was found by cross-correlating the images with a limb-darkened disk model of Neptune. The model disk was assumed ellipsoidal, with equatorial and polar radii of 24764 km and 24341 km, respectively <span class="math">\footnote{\url{https://nssdc.gsfc.nasa.gov/planetary/factsheet/neptunefact.html}}</span>. The model was scaled to the distance and orientation of Neptune as viewed from Keck Observatory using the JPL Horizons system, accessed using the
-Astropy-affiliated <span class="math">\texttt{astroquery}</span> Python package. The limb darkening was applied using a Minnaert law with coefficient k = 0.867 <span class="math">\footnote{Wong et al 2018 value in HST blue filter; LMK if anyone finds a better value for the IR somewhere https://doi.org/10.3847/1538-3881/aaa6d6}</span>. The model was convolved with a Gaussian beam to simulate the optics of the telescope. The FWHM of this beam was estimated based on the point-spread function of point sources in the
-field-of-view (e.g., Proteus). The surface brightness of the limb-darkened disk was set to be the approximate surface brightness of Neptune in cloud-free regions. Image registration between model and data was then carried out using a matrix-multiply discrete Fourier transform technique, implemented using the <span class="math">\texttt{chi2_shift}</span> function within the Astropy-affiliated <span class="math">\texttt{image_registration}</span> Python package
-<span class="math">\footnote{\url{https://github.com/keflavich/image_registration}}</span>. Given the RMS noise in the image as input, this technique also yields errors in the shifts using a delta-chi-square criterion. The values of the FWHM, model brightness, and limb-darkening parameter were varied within reasonable ranges, and the resulting x,y position was found not to change by more than 1 sigma in either direction.</p>
+<section id="Learn-More">
+<h3>Learn More<a class="headerlink" href="#Learn-More" title="Link to this heading">#</a></h3>
+<p>We highly recommend checking out the short Navigation Examples tutorial to better understand a typical workflow before applying this to real science data.</p>
 </section>
 </section>
 <section id="Save-as-fits">
@@ -729,14 +726,14 @@ default behavior, simply use: reproject(shape=tuple)</p>
 <img alt="../_images/tutorials_nav-tutorial_27_1.png" src="../_images/tutorials_nav-tutorial_27_1.png" />
 </div>
 </div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
-</pre></div>
-</div>
-</div>
+<section id="summary-of-nav.colocate-methods">
+<h3>summary of nav.colocate methods<a class="headerlink" href="#summary-of-nav.colocate-methods" title="Link to this heading">#</a></h3>
+<p>The following was written in support of Souami et al. 20234. If you use this for your own work, please cite the pylanetary package, and also consider citing the image_registration and astroquery packages.</p>
+<p>The centroid of the stacked Keck frames was found by cross-correlating the images with a limb-darkened disk model of Neptune. The model disk was assumed ellipsoidal, with equatorial and polar radii of 24764 km and 24341 km, respectively <span class="math">\footnote{\url{https://nssdc.gsfc.nasa.gov/planetary/factsheet/neptunefact.html}}</span>. The model was scaled to the distance and orientation of Neptune as viewed from Keck Observatory using the JPL Horizons system, accessed using the
+Astropy-affiliated <span class="math">\texttt{astroquery}</span> Python package. The limb darkening was applied using a Minnaert law with coefficient k = 0.867 <span class="math">\footnote{Wong et al 2018 value in HST blue filter; LMK if anyone finds a better value for the IR somewhere https://doi.org/10.3847/1538-3881/aaa6d6}</span>. The model was convolved with a Gaussian beam to simulate the optics of the telescope. The FWHM of this beam was estimated based on the point-spread function of point sources in the
+field-of-view (e.g., Proteus). The surface brightness of the limb-darkened disk was set to be the approximate surface brightness of Neptune in cloud-free regions. Image registration between model and data was then carried out using a matrix-multiply discrete Fourier transform technique, implemented using the <span class="math">\texttt{chi2_shift}</span> function within the Astropy-affiliated <span class="math">\texttt{image_registration}</span> Python package
+<span class="math">\footnote{\url{https://github.com/keflavich/image_registration}}</span>. Given the RMS noise in the image as input, this technique also yields errors in the shifts using a delta-chi-square criterion. The values of the FWHM, model brightness, and limb-darkening parameter were varied within reasonable ranges, and the resulting x,y position was found not to change by more than 1 sigma in either direction.</p>
+</section>
 </section>
 </section>
 
@@ -754,14 +751,14 @@ default behavior, simply use: reproject(shape=tuple)</p>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="index.html">
+          <a class="prev-page" href="body-tutorial.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Tutorials</div>
+                <div class="title">Planetary Body Attributes &amp; Ephemerides</div>
                 
               </div>
             </a>
@@ -806,13 +803,16 @@ default behavior, simply use: reproject(shape=tuple)</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#Comparing-models-with-data">Comparing models with data</a><ul>
-<li><a class="reference internal" href="#summary-of-nav.colocate-methods">summary of nav.colocate methods</a></li>
+<li><a class="reference internal" href="#Learn-More">Learn More</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#Save-as-fits">Save as fits</a></li>
 <li><a class="reference internal" href="#Reproject-data-onto-rectilinear-grid">Reproject data onto rectilinear grid</a></li>
 <li><a class="reference internal" href="#Polar-projection">Polar projection</a></li>
-<li><a class="reference internal" href="#Custom-Cartopy-projection">Custom Cartopy projection</a></li>
+<li><a class="reference internal" href="#Custom-Cartopy-projection">Custom Cartopy projection</a><ul>
+<li><a class="reference internal" href="#summary-of-nav.colocate-methods">summary of nav.colocate methods</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

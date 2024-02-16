@@ -138,7 +138,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -165,10 +165,11 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="tutorials/index.html">Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/body-tutorial.html">Planetary Body Attributes &amp; Ephemerides</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/nav-tutorial.html">Navigation Basics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/nav-examples.html">Navigation Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/rings-tutorial.html">Rings Tutorial</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tutorials/utils-tutorial.html">Utils Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/unit-conversions.html">Unit Conversions</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
@@ -207,7 +208,7 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
@@ -215,16 +216,27 @@
         <article role="main">
           <section id="pylanetary">
 <h1>pylanetary<a class="headerlink" href="#pylanetary" title="Link to this heading">#</a></h1>
-<p>Open-source solar system science research tools.</p>
+<p>Open-source solar system science research tools, with a focus on giant planet systems.</p>
+<section id="features">
+<h2>Features<a class="headerlink" href="#features" title="Link to this heading">#</a></h2>
 <ul class="simple">
 <li><p>Navigation and re-projection for solar system imaging observations</p></li>
 <li><p>Read/write navigated solar system images and backplanes in the NAV multi-extension fits format</p></li>
-<li><p>Utilities for solar-system-specific unit conversions</p></li>
+<li><p>Solar-system-specific unit conversions like I/F</p></li>
 <li><p>Ring-moon system modeling and model-data comparison</p></li>
-<li><p>(coming soon) Doppler winds from image cubes and compare with simulation output</p></li>
+<li><p>(coming soon) Doppler winds from giant planet radio observations</p></li>
+</ul>
+</section>
+<section id="projects-using-pylanetary">
+<h2>Projects using pylanetary<a class="headerlink" href="#projects-using-pylanetary" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>[Keck Twilight Zone program](<a class="reference external" href="https://www2.keck.hawaii.edu/inst/tda/TwilightZone">https://www2.keck.hawaii.edu/inst/tda/TwilightZone</a>.html#)</p></li>
+<li><p>[HST OPAL program](<a class="reference external" href="https://archive.stsci.edu/hlsp/opal">https://archive.stsci.edu/hlsp/opal</a>)</p></li>
+<li><p>Radio observers of giant planets, incl. Goddard, Berkeley, and Caltech groups</p></li>
 </ul>
 <div class="toctree-wrapper compound">
 </div>
+</section>
 </section>
 
         </article>
@@ -260,8 +272,28 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">pylanetary</a><ul>
+<li><a class="reference internal" href="#features">Features</a></li>
+<li><a class="reference internal" href="#projects-using-pylanetary">Projects using pylanetary</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>

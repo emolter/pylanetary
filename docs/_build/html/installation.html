@@ -165,10 +165,11 @@
 <ul class="current">
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Installation</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="tutorials/index.html">Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/body-tutorial.html">Body: access planet/moon data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/nav-tutorial.html">Navigation Basics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/nav-examples.html">Navigation Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/rings-tutorial.html">Rings Tutorial</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tutorials/utils-tutorial.html">Utils Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/unit-conversions.html">Unit Conversions</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
@@ -217,7 +218,7 @@
 <h1>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h1>
 <ul class="simple">
 <li><p>download the requirements.txt file using the “download raw” option</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">create</span> <span class="pre">-n</span> <span class="pre">pylanetary-tester</span> <span class="pre">python=3.9</span></code> (or any Python from 3.7 to 3.10)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">create</span> <span class="pre">-n</span> <span class="pre">pylanetary-tester</span> <span class="pre">python=3.11</span></code> (or any Python from 3.9 to 3.12)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">activate</span> <span class="pre">pylanetary-tester</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-r</span> <span class="pre">requirements.txt</span></code> in same directory as requirements.txt</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">git+https://github.com/emolter/pylanetary.git&#64;main</span></code></p></li>
@@ -231,6 +232,7 @@
 <li><p>pip install requirements.txt fails instantly with a crazy-looking error message. Try opening requirements.txt, and check that its just ten or so lines of human-readable text. If it’s some huge html soup, that means you didn’t use the “download raw” button when downloading</p></li>
 <li><p>dependency conflicts when running pip install. Try using the option –force-reinstall, e.g., <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">--force-reinstall</span> <span class="pre">-r</span> <span class="pre">requirements.txt</span></code></p></li>
 <li><p>dependency conflicts persist after force-reinstall. Check that your conda is working right. When this happened to a colleague, we found that <code class="docutils literal notranslate"><span class="pre">which</span> <span class="pre">conda</span></code> was returning some ten-line thing with a bunch of brackets instead of just the directory where conda lived. Solution was eventually to manually <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">filelock</span></code> and <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">jsonschema</span></code></p></li>
+<li><p>import error in utils <code class="docutils literal notranslate"><span class="pre">version</span> <span class="pre">'GLIBCXX_3.4.30'</span> <span class="pre">not</span> <span class="pre">found</span> <span class="pre">(required</span> <span class="pre">by</span> <span class="pre">.../scipy/spatial/fft/)</span></code>. This likely means your python version is not at least 3.9.</p></li>
 </ul>
 </section>
 </section>

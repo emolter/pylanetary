@@ -1,0 +1,222 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "32bbcf29",
+   "metadata": {},
+   "source": [
+    "# Planetary Body Attributes & Ephemerides"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "b0055d49",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# imports\n",
+    "from pylanetary.utils import Body\n",
+    "import numpy as np\n",
+    "import matplotlib.pyplot as plt"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "76c07f7b",
+   "metadata": {},
+   "source": [
+    "## The Body utility\n",
+    "\n",
+    "Body is a convenience tool for simultaneously accessing static data and ephemeris information for a given solar system body. \n",
+    "\n",
+    "Given the name of a planet or large moon, loads mass, equatorial and polar radii, orbital parameters, etc, with units. A complete specification of the available data for different body types (planet, moon, small body) is coming soon - for now, check utils/data/bodyname.yaml for what is available. Feel free to add what is useful to you, and submit a pull request if you think it would be useful to others. \n",
+    "\n",
+    "Body also loads an ephemeris from Horizons as an Astropy table using astroquery."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "9210d119",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Jupiter has equatorial, polar radii 71492.0 km, 66854.0 km\n",
+      "Jupiter has a mass of 1.89813e+27 kg and a rotation period of 9.925 h\n",
+      "  targetname      datetime_str        datetime_jd    solar_presence lunar_presence    RA      DEC     RA_app  DEC_app  RA_rate    DEC_rate   AZ  EL   AZ_rate      EL_rate      sat_X      sat_Y   sat_PANG siderealtime airmass magextinct   V      surfbright  illumination illum_defect sat_sep  sat_vis ang_width  PDObsLon  PDObsLat  PDSunLon  PDSunLat SubSol_ang SubSol_dist NPole_ang NPole_dist  EclLon EclLat       r          r_rate       delta       delta_rate  lighttime   vel_sun    vel_obs    elong  elongFlag  alpha  lunar_elong lunar_illum sat_alpha sunTargetPA velocityPA OrbPlaneAng constellation   TDB-UT  ObsEclLon  ObsEclLat   NPole_RA NPole_DEC   GlxLon     GlxLat   solartime earth_lighttime RA_3sigma DEC_3sigma SMAA_3sigma SMIA_3sigma Theta_3sigma Area_3sigma RSS_3sigma r_3sigma r_rate_3sigma SBand_3sigma XBand_3sigma DoppDelay_3sigma true_anom hour_angle alpha_true  PABLon  PABLat\n",
+      "     ---              ---                  d              ---            ---         deg      deg      deg      deg   arcsec / h arcsec / h deg deg arcsec / min arcsec / min   arcsec     arcsec    deg         h         ---      mag      mag   mag / arcsec2      %          arcsec     arcsec    ---     arcsec     deg       deg       deg       deg       deg        arcsec      deg      arcsec     deg    deg         AU         km / s         AU          km / s       min       km / s     km / s     deg      ---      deg       deg          %         deg        deg        deg         deg          ---          s        deg        deg        deg       deg       deg        deg         h           min         arcsec    arcsec      arcsec      arcsec       deg        arcsec2     arcsec      km        km / s         Hz           Hz             s            deg        h         deg       deg     deg  \n",
+      "------------- -------------------- ----------------- -------------- -------------- -------- -------- -------- ------- ---------- ---------- --- --- ------------ ------------ ---------- --------- -------- ------------ ------- ---------- ------ ------------- ------------ ------------ -------- ------- --------- ---------- -------- ---------- -------- ---------- ----------- --------- ---------- ------- ------ -------------- --------- ---------------- ---------- ----------- ---------- ---------- ------- --------- ------- ----------- ----------- --------- ----------- ---------- ----------- ------------- --------- ---------- ---------- --------- --------- ---------- ---------- --------- --------------- --------- ---------- ----------- ----------- ------------ ----------- ---------- -------- ------------- ------------ ------------ ---------------- --------- ---------- ---------- ------- -------\n",
+      "Jupiter (599) 2024-Feb-16 22:27:44 2460357.435925926                               36.85163 13.55608 37.17703 13.6638   20.24777   7.405086  --  --           --           -- 236592.038 93318.397   70.883           --     999         -- -2.247         5.367     99.11266       0.3352 257467.2       *  37.77511 341.477974 3.321298 330.654615   3.5616     251.84        3.54  340.4461     17.633 49.7359  -1.01 4.994368223878 0.3705009 5.21892932831983 26.5051497 43.40451169 13.5960881 34.8759252 71.5187        /T 10.8122        22.7     53.4432   97.6692      71.762    250.787     -0.1803           Ari 69.185123 39.2554843 -0.9641561 268.05798  64.49676 155.720533 -43.123915        --             0.0        --         --          --          --           --          --         --       --            --           --           --               --   35.3806         --    10.8104 44.3273 -0.9926\n"
+     ]
+    }
+   ],
+   "source": [
+    "jup = Body('Jupiter')\n",
+    "print(f'{jup.name} has equatorial, polar radii {jup.req}, {jup.rpol}')\n",
+    "print(f'{jup.name} has a mass of {jup.mass} and a rotation period of {jup.t_rot}')\n",
+    "print(jup.ephem)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "ef5bbca6",
+   "metadata": {},
+   "source": [
+    "Here, no datetime or observer location is specified, so datetime.now() and center of Earth were assumed.  If we instead wanted to observe from the VLA site at the time of the first SL9 impact, we could say:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "id": "30d6e637",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "North pole angle 20.6435 degrees\n"
+     ]
+    }
+   ],
+   "source": [
+    "jup = Body('Jupiter', epoch='1994-07-16 20:13', location='VLA')\n",
+    "print(f'North pole angle {jup.ephem[\"NPole_ang\"]} degrees')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "55cbc166",
+   "metadata": {},
+   "source": [
+    "Note that the location string must be readable by JPL Horizons.\n",
+    "\n",
+    "The ephemeris table is an Astroquery Horizons tool output; below are listed the available keys. See [this astroquery docs page](https://astroquery.readthedocs.io/en/latest/api/astroquery.jplhorizons.HorizonsClass.html#astroquery.jplhorizons.HorizonsClass.ephemerides) for descriptions of these keywords, and [the Horizons page](https://ssd.jpl.nasa.gov/horizons/manual.html#obsquan) for even more details. Note that for some reason, the astroquery wrapper does NOT use the same short names for these parameters as the Horizons system itself."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "id": "f8a18d2f",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "targetname\n",
+      "datetime_str\n",
+      "datetime_jd\n",
+      "solar_presence\n",
+      "lunar_presence\n",
+      "RA\n",
+      "DEC\n",
+      "RA_app\n",
+      "DEC_app\n",
+      "RA_rate\n",
+      "DEC_rate\n",
+      "AZ\n",
+      "EL\n",
+      "AZ_rate\n",
+      "EL_rate\n",
+      "sat_X\n",
+      "sat_Y\n",
+      "sat_PANG\n",
+      "siderealtime\n",
+      "airmass\n",
+      "magextinct\n",
+      "V\n",
+      "surfbright\n",
+      "illumination\n",
+      "illum_defect\n",
+      "sat_sep\n",
+      "sat_vis\n",
+      "ang_width\n",
+      "PDObsLon\n",
+      "PDObsLat\n",
+      "PDSunLon\n",
+      "PDSunLat\n",
+      "SubSol_ang\n",
+      "SubSol_dist\n",
+      "NPole_ang\n",
+      "NPole_dist\n",
+      "EclLon\n",
+      "EclLat\n",
+      "r\n",
+      "r_rate\n",
+      "delta\n",
+      "delta_rate\n",
+      "lighttime\n",
+      "vel_sun\n",
+      "vel_obs\n",
+      "elong\n",
+      "elongFlag\n",
+      "alpha\n",
+      "lunar_elong\n",
+      "lunar_illum\n",
+      "sat_alpha\n",
+      "sunTargetPA\n",
+      "velocityPA\n",
+      "OrbPlaneAng\n",
+      "constellation\n",
+      "TDB-UT\n",
+      "ObsEclLon\n",
+      "ObsEclLat\n",
+      "NPole_RA\n",
+      "NPole_DEC\n",
+      "GlxLon\n",
+      "GlxLat\n",
+      "solartime\n",
+      "earth_lighttime\n",
+      "RA_3sigma\n",
+      "DEC_3sigma\n",
+      "SMAA_3sigma\n",
+      "SMIA_3sigma\n",
+      "Theta_3sigma\n",
+      "Area_3sigma\n",
+      "RSS_3sigma\n",
+      "r_3sigma\n",
+      "r_rate_3sigma\n",
+      "SBand_3sigma\n",
+      "XBand_3sigma\n",
+      "DoppDelay_3sigma\n",
+      "true_anom\n",
+      "hour_angle\n",
+      "alpha_true\n",
+      "PABLon\n",
+      "PABLat\n"
+     ]
+    }
+   ],
+   "source": [
+    "for key in jup.ephem.keys():\n",
+    "    print(key)"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.11.5"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
