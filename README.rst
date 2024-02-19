@@ -24,13 +24,13 @@ data processing and modeling tools for ring, moon, and planet observations
 Installation
 ------------
 
-``pip install python`` (Python 3.9 to 3.12)
+``pip install pylanetary`` (Python 3.9 to 3.12)
 
 Features
 --------
 * Navigation and re-projection for solar system imaging observations (makes use of Cartopy); `Nav Tutorial <https://pylanetary.readthedocs.io/en/latest/nav-tutorial.html>`_ and `example workflow <https://pylanetary.readthedocs.io/en/latest/nav-examples.html>`_.
 
-* Read/write navigated solar system images and backplanes in the NAV multi-extension fits format, originally developed for the HST OPAL program
+* Read/write navigated solar system images and backplanes in the NAV multi-extension fits format, originally developed for the HST OPAL program.
 
 * Easy access to solar system body static data (radius, mass, etc.) and ephemerides; `Body Tutorial <https://pylanetary.readthedocs.io/en/latest/tutorials/body-tutorial.html>`_.
 
@@ -38,7 +38,7 @@ Features
 
 * Ring-moon system modeling and model-data comparison; `Rings Tutorial <https://pylanetary.readthedocs.io/en/latest/rings-tutorial.html>`_.
 
-* (coming soon) Compute Doppler winds from image cubes and compare with simulation output (e.g. EPIC)
+* (coming soon) Compute Doppler winds from image cubes and compare with simulation output (e.g. EPIC).
 
 Usage
 -----

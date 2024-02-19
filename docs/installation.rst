@@ -1,6 +1,8 @@
 Installation
 ************
 
+Simple pip install should work, but we recommend to do so in a clean conda environment, as follows:
+
 * ``conda create -n pylanetary-tester python=3.11`` (or any Python from 3.9 to 3.12)
 * ``conda activate pylanetary-tester``
 * ``pip install pylanetary``
