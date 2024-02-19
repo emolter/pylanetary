@@ -28,13 +28,15 @@ Installation
 
 Features
 --------
-* Navigation and re-projection for solar system imaging observations (makes use of Cartopy); `Tutorial <https://pylanetary.readthedocs.io/en/latest/nav-tutorial.html>`_ and `example workflow <https://pylanetary.readthedocs.io/en/latest/nav-examples.html>`_.
+* Navigation and re-projection for solar system imaging observations (makes use of Cartopy); `Nav Tutorial <https://pylanetary.readthedocs.io/en/latest/nav-tutorial.html>`_ and `example workflow <https://pylanetary.readthedocs.io/en/latest/nav-examples.html>`_.
 
 * Read/write navigated solar system images and backplanes in the NAV multi-extension fits format, originally developed for the HST OPAL program
 
-* Utilities for solar-system-specific unit conversions like I/F; `Tutorial <https://pylanetary.readthedocs.io/en/latest/utils-tutorial.html#I/F-calculation>`_.
+* Easy access to solar system body static data (radius, mass, etc.) and ephemerides; `Body Tutorial <https://pylanetary.readthedocs.io/en/latest/tutorials/body-tutorial.html>`_.
 
-* Ring-moon system modeling and model-data comparison; `Tutorial <https://pylanetary.readthedocs.io/en/latest/rings-tutorial.html>`_.
+* Utilities for solar-system-specific unit conversions like I/F; `Units Tutorial <https://pylanetary.readthedocs.io/en/latest/tutorials/unit-conversions.html>`_.
+
+* Ring-moon system modeling and model-data comparison; `Rings Tutorial <https://pylanetary.readthedocs.io/en/latest/rings-tutorial.html>`_.
 
 * (coming soon) Compute Doppler winds from image cubes and compare with simulation output (e.g. EPIC)
 
