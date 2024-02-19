@@ -1,5 +1,5 @@
-Contributing to Pylanetary
-**************************
+Contributing
+************
 
 Thanks for considering making a contribution!
 

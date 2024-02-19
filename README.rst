@@ -1,3 +1,7 @@
+.. image:: docs/wide-logo.png
+  :width: 400
+  :alt: Pylanetary logo
+
 data processing and modeling tools for ring, moon, and planet observations
 --------------------------------------------------------------------------
 
@@ -16,18 +20,23 @@ data processing and modeling tools for ring, moon, and planet observations
 .. image:: https://zenodo.org/badge/459414964.svg
    :target: https://zenodo.org/badge/latestdoi/459414964
    :alt: Zenodo DOI Badge
-   
 
 Installation
 ------------
 
-* download the requirements.txt file using the "download raw" option
-* ``conda create -n pylanetary-tester python=3.9`` (or any Python from 3.7 to 3.10)
-* ``conda activate pylanetary-tester``
-* ``pip install -r requirements.txt``
-* ``pip install git+https://github.com/emolter/pylanetary.git@main``
-	
-Pylanetary relies on as-yet-unreleased versions of the image\_registration and astroquery packages, and pypi does not support installation of unreleased packages. This is the reason that simply pip install pylanetary will not work right.
+``pip install python`` (Python 3.9 to 3.12)
+
+Features
+--------
+* Navigation and re-projection for solar system imaging observations (makes use of Cartopy); `Tutorial <https://pylanetary.readthedocs.io/en/latest/nav-tutorial.html>`_ and `example workflow <https://pylanetary.readthedocs.io/en/latest/nav-examples.html>`_.
+
+* Read/write navigated solar system images and backplanes in the NAV multi-extension fits format, originally developed for the HST OPAL program
+
+* Utilities for solar-system-specific unit conversions like I/F; `Tutorial <https://pylanetary.readthedocs.io/en/latest/utils-tutorial.html#I/F-calculation>`_.
+
+* Ring-moon system modeling and model-data comparison; `Tutorial <https://pylanetary.readthedocs.io/en/latest/rings-tutorial.html>`_.
+
+* (coming soon) Compute Doppler winds from image cubes and compare with simulation output (e.g. EPIC)
 
 Usage
 -----
@@ -35,18 +44,27 @@ See our `readthedocs page <https://pylanetary.readthedocs.io/en/latest/>`_
 
 Scope and Goal
 --------------
-The idea behind pylanetary is to bring solar system science tools into the open-source Python 3 / Astropy ecosystem. We, and many of our colleagues, rely heavily on useful code snippets passed down from other solar system scientists. But these pieces of code are untested, in multiple languages, closed-source, and have many untracked dependencies. We want to fix that.
+The idea behind pylanetary is to bring solar system science tools into 
+the open-source Python 3 / Astropy ecosystem. We, and many of our colleagues, 
+rely heavily on useful code snippets passed down from other solar system scientists. 
+But these pieces of code are untested, in multiple languages, closed-source, 
+and have many untracked dependencies. We want to fix that.
+The eventual goal is to become Astropy-affiliated, but that is a long way off. 
+We would love your help developing it!  See Contributing.
 
-At present, two main packages are reasonably well-supported:
-1. navigation: Tools to make and use ellipsoidal models of planets/large moons. This subpackage projects planet models into arbitrary observing geometries and pixel scales, compares those models with observational data, assigns latitudes, longitudes, and emission angles to observational data, and projects images onto latitude-longitude grids.
-2. rings: Tools to model planetary ring systems.  This subpackage projects ring models into arbitrary observing geometries and pixel scales, compares those models with observational data, and makes radial and azimuthal profiles of observed rings.
-
-The eventual goal is to become Astropy-affiliated, but that is a long way off. We would love your help developing it!  See Contributing.
+Disclaimer
+----------
+Pylanetary is developed and maintained by a small group of scientists. 
+Most of us are not primarily software engineers, and we do not get paid to do this.
+While we do our best, there is no guarantee that every function works as intended.
+Use these tools with caution, and ensure that what you're getting out makes sense.
+If you do discover a problem, please help us out by submitting an issue
+on our issues page, or fix it yourself! See Contributing.
 
 License
 -------
-This project is Copyright (c) Ned Molter & Chris Moeckel and licensed under
-the terms of the BSD 3-Clause license. This package is based upon
+This project is Copyright (c) Edward Molter & Chris Moeckel and licensed under
+the terms of the GNU general public license. This package is based upon
 the `Astropy package template <https://github.com/astropy/package-template>`_
 which is licensed under the BSD 3-clause license. See the licenses folder for
 more information.
@@ -83,3 +101,8 @@ Note: This disclaimer was originally written by
 `PyCon talk <https://www.youtube.com/watch?v=6Uj746j9Heo>`_, and was adapted by
 pylanetary based on its use in the README file for the
 `MetPy project <https://github.com/Unidata/MetPy>`_.
+
+Logo Credit
+-----------
+Our logo was designed by graphic designer Jacob Waliszewski. 
+Check out his website at `https://www.jwdesignco.com/ <https://www.jwdesignco.com/>`_.
