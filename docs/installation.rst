@@ -1,17 +1,17 @@
 Installation
 ************
 
-* download the requirements.txt file using the "download raw" option
+Simple pip install should work, but we recommend to do so in a clean conda environment, as follows:
+
 * ``conda create -n pylanetary-tester python=3.11`` (or any Python from 3.9 to 3.12)
 * ``conda activate pylanetary-tester``
-* ``pip install -r requirements.txt`` in same directory as requirements.txt
-* ``pip install git+https://github.com/emolter/pylanetary.git@main``
+* ``pip install pylanetary``
 	
-Pylanetary relies on as-yet-unreleased versions of the image\_registration and astroquery packages, and pypi does not support installation of unreleased packages. This is the reason that simply pip install pylanetary will not work right.
-
 Troubleshooting
 ~~~~~~~~~~~~~~~
-Here we attempt to document install issues people have had, and their solutions
+Here we attempt to document install issues people have had, and their solutions.
+Note that many of these issues pre-date the current version of pylanetary, and only arose due to the prior need
+to download requirements.txt, which is no longer necessary for installation.
 
 * requirements.txt not found. Most likely, you never downloaded requirements.txt, or you are not running pip install -r requirements.txt in the same folder where you put requirements.txt
 * pip install requirements.txt fails instantly with a crazy-looking error message. Try opening requirements.txt, and check that its just ten or so lines of human-readable text. If it's some huge html soup, that means you didn't use the "download raw" button when downloading

@@ -1,10 +1,10 @@
 [project]
 name = "pylanetary"
 
-version = "0.0.5"
+version = "0.1.0"
 description = "data processing and modeling tools for ring, moon, and planet observations"
 readme = "README.rst"
-requires-python = ">=3.7"
+requires-python = ">=3.9"
 license = {file = "licenses/LICENSE.txt"}
 keywords = ["astronomy", "astrophysics", "astropy", "solar system", "planetary", "planet"]
 authors = [
@@ -13,7 +13,6 @@ authors = [
 maintainers = [
   {name = "Ned Molter", email = "ned.molter@gmail.com" }
 ]
-
 
 # For a list of valid classifiers, see https://pypi.org/classifiers/
 classifiers = [  
