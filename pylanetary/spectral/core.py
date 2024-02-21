@@ -45,6 +45,9 @@ def calc_doppler_vel(peak, err, rest_f):
           The Doppler velocity error, calculated through error propagation, in m/s.
     
     '''
+    print(c.value)
+    print(err)
+    print(rest_f)
     a = c.value/rest_f
     
     v = ((-1*peak/rest_f)+1)*c.value
@@ -137,7 +140,7 @@ class Spectrum:
       self.RMS,median,rms_std = sigma_clipped_stats(self.spec)
     else:
       self.RMS = RMS
-      
+    
     self.wl_res = self.wl[1] - self.wl[0]
     self.freq_res = self.freq[1] - self.freq[0]
     self.chan_num = np.size(self.wl)
@@ -164,7 +167,7 @@ class Spectrum:
     
   ###############################################################################
     
-  def fit_profile(self, fit_type, showplots = True, plot_name = None, initial_fit_guess = None):
+  def fit_profile(self, fit_type, showplots = True, plot_name = None, initial_fit_guess = None, weight_range = None):
     '''
     Calculate the best fit of a Spectral object using the LMFIT algorithm.
     
@@ -184,7 +187,9 @@ class Spectrum:
     plot_name : string, optional
           The name of a saved figure. Default is None, which does not save a plot.
     initial_fit_guess: string, optional.
-          The path to a saved LMFIT result to use as the initial guess. Default is None; the LMFIT .guess method is used. 
+          The path to a saved LMFIT result to use as the initial guess. Default is None; the LMFIT .guess method is used.
+    weight_range : int, optional
+          How many points centered around the peak frequency to give a higher weight during fit, which causes LMFIT to prioritize fitting these points. These points are given a weighting of 2x(normalized variance), all other points are given a weight of the normalized variance.
     
     Returns
     -------
@@ -215,19 +220,29 @@ class Spectrum:
     
     '''
     
+    if weight_range is not None:
+      sigma = 1/(self.RMS**2)
+      centerpoint = np.argmax(self.spec) 
+      weights = np.full((len(self.xaxis),), sigma/(len(self.xaxis)))
+      for i in range(len(weights)):
+        if i > centerpoint-weight_range and i < centerpoint + weight_range:
+          weights[i] = 2*(sigma/len(self.xaxis))
+    else:
+      weights = None
+
     if fit_type != 'All':
       if initial_fit_guess == None:
-        pars = model[fit_type]['lmfit_func'].guess(self.spec,x=self.xaxis)
+        pars = model[fit_type]['lmfit_func'].guess(self.spec,x=self.xaxis,weights=weights)
       else:
         inital = load_modelresult(initial_fit_guess)
         pars = inital.params
-      fit_result = model[fit_type]['lmfit_func'].fit(self.spec,pars,x=self.xaxis,scale_covar=False)
+      fit_result = model[fit_type]['lmfit_func'].fit(self.spec,pars,x=self.xaxis,weights = weights,scale_covar=False)
       print(fit_result.fit_report())
     elif fit_type == 'All':
       fit_result = {}
       for key in model:
         pars = model[key]['lmfit_func'].guess(self.spec,x=self.xaxis)
-        result = model[key]['lmfit_func'].fit(self.spec,pars,x=self.xaxis,scale_covar=False)
+        result = model[key]['lmfit_func'].fit(self.spec,pars,weights = weights,x=self.xaxis,scale_covar=False)
         print(result.fit_report())
         fit_result[key] = result
     else:
@@ -304,18 +319,18 @@ class Spectrum:
 # This section is used for testing purposes during development. It will be removed when the code is ready to be fully merged with the main branch.
    
 # Simple single spectra testing case
-#if __name__=="__main__":
+if __name__=="__main__":
   
   # CO [10,25]
   
-  #freq = np.array([345.76770566,345.76868215,345.76965863,345.77063511,345.77161159,345.77258807,345.77356455,345.77454103,345.77551751,345.77649399,345.77747047,345.77844695,345.77942343,345.78039991,345.78137639,345.78235287,345.78332935,345.78430584,345.78528232,345.7862588,345.78723528,345.78821176,345.78918824,345.79016472,345.7911412,345.79211768,345.79309416,345.79407064,345.79504712,345.7960236,345.79700008,345.79797656,345.79895304,345.79992953,345.80090601,345.80188249,345.80285897,345.80383545,345.80481193,345.80578841,345.80676489,345.80774137,345.80871785,345.80969433,345.81067081,345.81164729,345.81262377,345.81360025,345.81457673,345.81555322,345.8165297,345.81750618,345.81848266,345.81945914,345.82043562,345.8214121,345.82238858])
-  #spec = np.array([0.21198112,0.18924561,0.21650964,0.22294408,0.24960007,0.22984277,0.25219446,0.24985315,0.25343025,0.28705364,0.3061584,0.31352046,0.3277193,0.3265509,0.3436137,0.35133913,0.38450843,0.4165357,0.43355167,0.467518,0.49524495,0.5277506,0.5910206,0.64392966,0.7271694,0.89640355,0.8984462,0.76777405,0.6531943,0.59134954,0.55332845,0.50916755,0.46389887,0.4410508,0.4036594,0.40885097,0.37320843,0.3508784,0.34755984,0.31414196,0.29820374,0.27975425,0.28136522,0.26828533,0.26605716,0.24770543,0.2537956,0.22927019,0.219696,0.21160068,0.20004132,0.1939475,0.18222019,0.16944197,0.17536835,0.16506103,0.16306329])
+  freq = np.array([345.76770566,345.76868215,345.76965863,345.77063511,345.77161159,345.77258807,345.77356455,345.77454103,345.77551751,345.77649399,345.77747047,345.77844695,345.77942343,345.78039991,345.78137639,345.78235287,345.78332935,345.78430584,345.78528232,345.7862588,345.78723528,345.78821176,345.78918824,345.79016472,345.7911412,345.79211768,345.79309416,345.79407064,345.79504712,345.7960236,345.79700008,345.79797656,345.79895304,345.79992953,345.80090601,345.80188249,345.80285897,345.80383545,345.80481193,345.80578841,345.80676489,345.80774137,345.80871785,345.80969433,345.81067081,345.81164729,345.81262377,345.81360025,345.81457673,345.81555322,345.8165297,345.81750618,345.81848266,345.81945914,345.82043562,345.8214121,345.82238858])
+  spec = np.array([0.21198112,0.18924561,0.21650964,0.22294408,0.24960007,0.22984277,0.25219446,0.24985315,0.25343025,0.28705364,0.3061584,0.31352046,0.3277193,0.3265509,0.3436137,0.35133913,0.38450843,0.4165357,0.43355167,0.467518,0.49524495,0.5277506,0.5910206,0.64392966,0.7271694,0.89640355,0.8984462,0.76777405,0.6531943,0.59134954,0.55332845,0.50916755,0.46389887,0.4410508,0.4036594,0.40885097,0.37320843,0.3508784,0.34755984,0.31414196,0.29820374,0.27975425,0.28136522,0.26828533,0.26605716,0.24770543,0.2537956,0.22927019,0.219696,0.21160068,0.20004132,0.1939475,0.18222019,0.16944197,0.17536835,0.16506103,0.16306329])
   
-  #test = Spectrum(spec, freq = freq,rest_f = 345.79598990,x_space = 'f', RMS = 0.017530593)
+  test = Spectrum(spec, freq = freq,rest_f = 345.79598990,x_space = 'f', RMS = 0.017530593)
   
   #test.make_initial_guess(fit_type = 'Moffat', outfile = 'moffat_guess')
-  #test_peak, test_std, chi, chi_red = test.fit_profile(fit_type = 'Moffat', initial_fit_guess = 'moffat_guess.sav')
-  #test_wind, test_err = calc_doppler_vel(peak = test_peak, err = test_std, rest_f = 345.79598990)
+  test_peak, test_std, chi, chi_red = test.fit_profile(fit_type = 'Moffat', initial_fit_guess = 'moffat_guess.sav',weight_range=7)
+  test_wind, test_err = calc_doppler_vel(peak = test_peak, err = test_std, rest_f = 345.79598990)
   
 ###############################################################################
 ###############################################################################
@@ -780,29 +795,29 @@ class SpectralCube:
 
 # This section is used for testing purposes during development. It will be removed when the code is ready to be fully merged with the main branch.
 
-if __name__=="__main__":
-  t0 = time.time()
-  image = '/homes/metogra/skathryn/Research/Data/ContSub/CO/CS20/Neptune_Pri_X50a4_CS20_narrow_square_2.fits'
-  test_cube = SpectralCube(image,x_space = 'f')
+#if __name__=="__main__":
+  #t0 = time.time()
+  #image = '/homes/metogra/skathryn/Research/Data/ContSub/CO/CS20/Neptune_Pri_X50a4_CS20_narrow_square_2.fits'
+  #test_cube = SpectralCube(image,x_space = 'f')
   
   # full image analysis
   
   #data = test_cube.extract_image()
   #test_cube.fit_data(data, fit_type = 'Moffat', outfile = 'development_testing_fit', RMS = 0.017530593, SN = 6,initial_fit_guess = '/homes/metogra/skathryn/Research/Scripts/co_moffat_modelresult.sav')
   #test_cube.wind_calc(picklefile = 'development_testing_fit.pickle', restfreq = 345.79598990, outfile = 'development_testing_wind')
-  #test_cube.plot_data(picklefile = 'development_testing_wind.pickle', platescale = 0.1, body = 'Neptune', title = 'CO Doppler Velocity Map', cont_label = 'Radial Velocity (m/s)', date = '2016-04-30 00:00', location = 'ALMA', spatial = 4e4, limits = [-2000,2000], contours = [21,200])
+  #test_cube.plot_data(picklefile = 'development_testing_wind.pickle', platescale = 0.1, body = 'Neptune', title = 'CO Doppler Velocity Map', cont_label = 'Radial Velocity (m/s)', date = '2016-04-30 00:00', location = 'ALMA', spatial = 4e4, limits = [-2000,2000], contours = [21,200], variable = 'v_err')
   
   # sub-image analysis - 3x3 sub-image at the center
   
-  mask_pix = [[15,17],[16,17],[17,17],[15,16],[16,16],[17,16],[15,15],[16,15],[17,15]]
-  mask = test_cube.make_mask(mask_pix)
-  data = test_cube.extract_mask_region(mask)
+  #mask_pix = [[15,17],[16,17],[17,17],[15,16],[16,16],[17,16],[15,15],[16,15],[17,15]]
+  #mask = test_cube.make_mask(mask_pix)
+  #data = test_cube.extract_mask_region(mask)
   
-  test_cube.fit_data(data, fit_type = 'Moffat', outfile = 'development_testing_fit_subim', RMS = 0.017530593, SN = 6,initial_fit_guess = '/homes/metogra/skathryn/Research/Scripts/co_moffat_modelresult.sav')
-  test_cube.wind_calc(picklefile = 'development_testing_fit_subim.pickle', restfreq = 345.79598990, outfile = 'development_testing_wind_subim')
-  test_cube.plot_data(picklefile = 'development_testing_wind_subim.pickle', platescale = 0.1, body = 'Neptune', title = 'CO Doppler Velocity Map Sub-Image', cont_label = 'Radial Velocity (m/s)', date = '2016-04-30 00:00', location = 'ALMA', spatial = 4e4, limits = [-2000,2000])
+  #test_cube.fit_data(data, fit_type = 'Moffat', outfile = 'development_testing_fit_subim', RMS = 0.017530593, SN = 6,initial_fit_guess = '/homes/metogra/skathryn/Research/Scripts/co_moffat_modelresult.sav')
+  #test_cube.wind_calc(picklefile = 'development_testing_fit_subim.pickle', restfreq = 345.79598990, outfile = 'development_testing_wind_subim')
+  #test_cube.plot_data(picklefile = 'development_testing_wind_subim.pickle', platescale = 0.1, body = 'Neptune', title = 'CO Doppler Velocity Map Sub-Image', cont_label = 'Radial Velocity (m/s)', date = '2016-04-30 00:00', location = 'ALMA', spatial = 4e4, limits = [-2000,2000])
   
-  t1 = time.time()
-  print('Time to run script: ')
-  print(t1-t0)
+  #t1 = time.time()
+  #print('Time to run script: ')
+  #print(t1-t0)
   
