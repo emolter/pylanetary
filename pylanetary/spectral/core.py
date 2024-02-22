@@ -32,8 +32,6 @@ def calc_doppler_vel(peak, err, rest_f):
     ---------- 
     peak : float
           The calculated central peak frequency of the spectral line peak.
-    err : float
-          The standard deviation of the calculated central peak frequency.
     rest_f : float
           The rest frequency of the transition.
     
@@ -41,22 +39,70 @@ def calc_doppler_vel(peak, err, rest_f):
     -------
     v : float
           The calculated Doppler velocity in m/s.
-    wind_err : float
-          The Doppler velocity error, calculated through error propagation, in m/s.
     
     '''
-    print(c.value)
-    print(err)
-    print(rest_f)
-    a = c.value/rest_f
-    
+
     v = ((-1*peak/rest_f)+1)*c.value
     print('The wind speed is '+str(v)+'m/s')
-    wind_err = np.abs(a*err)
-    print('The wind error is '+str(wind_err)+'m/s')
+
+    return v
+
+def errors_propagation(rest_f, std_dev):
+    '''
+    Calculate the wind errors through error propagation of the Doppler Equation.
+
+    Parameters
+    ----------
+    rest_f : float
+          The rest frequency of the transition.
+    std_dev : float
+          The standard deviation of the center frequency, as calculated by LMFIT.
     
-    return v, wind_err
+    Returns
+    -------
+    wind_err : float
+          The calculated wind error in m/s.
+
+    '''
+
+    a = c.value/rest_f
+    wind_err = np.abs(a*std_dev)
+    print('The wind error is '+str(wind_err)+' m/s')
+
+    return wind_err
+
+def errors_noise_resample(fit_result, fit_type, weights, rest_f, sigma):
+    '''
+    Calculate the wind errors through noise resampling methods.
     
+    Parameters
+    ----------
+    
+    Returns
+    -------
+    
+    '''
+    
+    # In a loop for x number of iterations per pixel:
+    # Step 1: load model fit
+    best_fit = fit_result.best_fit
+    pars = best_fit.params
+    # step 2: add noise to model
+    resample = best_fit + random.normal(loc=0.0,scale=self.RMS,size=len(self.xaxis))
+    # step 3: calculate new fit
+    resample_result = model[fit_type]['lmfit_func'].fit(resample,pars,x=self.xaxis,weights = weights,scale_covar=False)
+    peak = resample_result.params['center']
+    # step 4: calculate wind
+    resample_wind = calc_doppler_vel(peak, rest_f)
+    # step 5: save result
+    
+    # outside of loop
+    # step 6: load velocity parameter space in ascending order
+    # Step 7: find median velocity
+    # step 8: find 1,2, or 3 sigma velocities in each direction
+    # step 8: calculate error range
+    # step 8: report errors to overlying function
+
 model = {}
 model['Gaussian'] = {'ref': 'gauss', 'lmfit_func': GaussianModel(),'label': 'Gaussian Fit','color':'orange'}
 model['Lorentzian'] = {'ref': 'lor','lmfit_func':LorentzianModel(),'label': 'Lorentzian Fit','color':'green'}
@@ -330,7 +376,8 @@ if __name__=="__main__":
   
   #test.make_initial_guess(fit_type = 'Moffat', outfile = 'moffat_guess')
   test_peak, test_std, chi, chi_red = test.fit_profile(fit_type = 'Moffat', initial_fit_guess = 'moffat_guess.sav',weight_range=7)
-  test_wind, test_err = calc_doppler_vel(peak = test_peak, err = test_std, rest_f = 345.79598990)
+  test_wind = calc_doppler_vel(peak = test_peak, rest_f = 345.79598990)
+  test_err = errors_propagation(rest_f,test_std)
   
 ###############################################################################
 ###############################################################################
