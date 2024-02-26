@@ -24,7 +24,7 @@ def centered_list(n):
     centered_list = list(range(-half, half + 1,2))
     return centered_list
 
-def calc_doppler_vel(peak, err, rest_f):
+def calc_doppler_vel(peak, rest_f):
     '''
     Calculate the Doppler velocity using the Doppler Equation.
     
@@ -70,39 +70,7 @@ def errors_propagation(rest_f, std_dev):
     print('The wind error is '+str(wind_err)+' m/s')
 
     return wind_err
-
-def errors_noise_resample(fit_result, fit_type, weights, rest_f, sigma):
-    '''
-    Calculate the wind errors through noise resampling methods.
     
-    Parameters
-    ----------
-    
-    Returns
-    -------
-    
-    '''
-    
-    # In a loop for x number of iterations per pixel:
-    # Step 1: load model fit
-    best_fit = fit_result.best_fit
-    pars = best_fit.params
-    # step 2: add noise to model
-    resample = best_fit + random.normal(loc=0.0,scale=self.RMS,size=len(self.xaxis))
-    # step 3: calculate new fit
-    resample_result = model[fit_type]['lmfit_func'].fit(resample,pars,x=self.xaxis,weights = weights,scale_covar=False)
-    peak = resample_result.params['center']
-    # step 4: calculate wind
-    resample_wind = calc_doppler_vel(peak, rest_f)
-    # step 5: save result
-    
-    # outside of loop
-    # step 6: load velocity parameter space in ascending order
-    # Step 7: find median velocity
-    # step 8: find 1,2, or 3 sigma velocities in each direction
-    # step 8: calculate error range
-    # step 8: report errors to overlying function
-
 model = {}
 model['Gaussian'] = {'ref': 'gauss', 'lmfit_func': GaussianModel(),'label': 'Gaussian Fit','color':'orange'}
 model['Lorentzian'] = {'ref': 'lor','lmfit_func':LorentzianModel(),'label': 'Lorentzian Fit','color':'green'}
@@ -310,11 +278,14 @@ class Spectrum:
     if fit_type != 'All':
       peak = fit_result.params['center']
       err = fit_result.params['center'].stderr
+      best_fit_params = fit_result.params
+      best_fit_data = fit_result.best_fit
     else:
       peak = 0
       err = 0
+      best_fit = np.NAN
     
-    return peak, err, chi, chi_red
+    return peak, err, chi, chi_red, best_fit_params, best_fit_data, weights
     
   ############################################################################### 
   
@@ -362,6 +333,49 @@ class Spectrum:
     
   ###############################################################################
   
+  def errors_noise_resample(self, iters, percentile, fit_result, fit_params, fit_type, weights, rest_f):
+    '''
+    Calculate the wind errors through noise resampling methods.
+    
+    Parameters
+    ----------
+    
+    Returns
+    -------
+    
+    '''
+    
+    MC_results = []
+    #inside loop for x number of iterations
+    for x in range(iters):
+      # Step 1: load model fit
+      best_fit = fit_result
+      pars = fit_params
+      # step 2: add noise to model
+      resample = best_fit + np.random.normal(loc=0.0,scale=self.RMS,size=len(self.xaxis))
+      # step 3: calculate new fit
+      resample_result = model[fit_type]['lmfit_func'].fit(resample,pars,x=self.xaxis,weights = weights,scale_covar=False)
+      peak = resample_result.params['center']
+      # step 4: calculate wind
+      resample_wind = calc_doppler_vel(peak, rest_f)
+      # step 5: save result
+      MC_results.append(resample_wind)
+    
+    # step 6: load velocity parameter space in ascending order
+    values = sorted(MC_results)
+    # Step 7: find median velocity
+    median = scoreatpercentile(values,50.0)
+    # step 8: find the desired percentaile value
+    wind_up = scoreatpercentile(values,50.0+(percentile/2))
+    wind_lo = scoreatpercentile(values,50.0-(percentile/2))
+    # step 8: calculate error range
+    err_up = wind_up - median
+    err_lo = median - wind_lo
+    # step 8: report errors to overlying function
+    return err_up, err_lo
+    
+    ###############################################################################
+  
 # This section is used for testing purposes during development. It will be removed when the code is ready to be fully merged with the main branch.
    
 # Simple single spectra testing case
@@ -375,9 +389,11 @@ if __name__=="__main__":
   test = Spectrum(spec, freq = freq,rest_f = 345.79598990,x_space = 'f', RMS = 0.017530593)
   
   #test.make_initial_guess(fit_type = 'Moffat', outfile = 'moffat_guess')
-  test_peak, test_std, chi, chi_red = test.fit_profile(fit_type = 'Moffat', initial_fit_guess = 'moffat_guess.sav',weight_range=7)
+  test_peak, test_std, chi, chi_red, test_best_fit, test_best_data, weightings = test.fit_profile(fit_type = 'Moffat', initial_fit_guess = 'moffat_guess.sav', weight_range=7)
   test_wind = calc_doppler_vel(peak = test_peak, rest_f = 345.79598990)
-  test_err = errors_propagation(rest_f,test_std)
+  #test_err = errors_propagation(rest_f,test_std)
+  test_err_up, test_err_lo = test.errors_noise_resample(300, 68, test_best_data, test_best_fit, 'Moffat', weightings, 345.79598990)
+  print(test_err_up, test_err_lo)
   
 ###############################################################################
 ###############################################################################
