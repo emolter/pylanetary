@@ -4,6 +4,7 @@ from scipy.stats import scoreatpercentile
 import pickle
 from lmfit.models import GaussianModel,LorentzianModel,VoigtModel,PseudoVoigtModel,MoffatModel
 from lmfit.model import save_modelresult,load_modelresult
+from lmfit import Parameters
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse,Circle
 from matplotlib import colors
@@ -43,7 +44,7 @@ def calc_doppler_vel(peak, rest_f):
     '''
 
     v = ((-1*peak/rest_f)+1)*c.value
-    print('The wind speed is '+str(v)+'m/s')
+    #print('The wind speed is '+str(v)+'m/s')
 
     return v
 
@@ -67,10 +68,70 @@ def errors_propagation(rest_f, std_dev):
 
     a = c.value/rest_f
     wind_err = np.abs(a*std_dev)
-    print('The wind error is '+str(wind_err)+' m/s')
+    #print('The wind error is '+str(wind_err)+' m/s')
 
     return wind_err
+
+def errors_noise_resample(iters, percentile, RMS, xaxis, fit_params, fit_data, fit_type, weights, rest_f):
+    '''
+    Calculate the wind errors through noise resampling methods.
     
+    Parameters
+    ----------
+    iters : int
+          The number of iterations to run for the error resampling.
+    percentile : float
+          The percentile at which to extract the wind error.
+    RMS : float
+          The RMS of the spectrum, needed for scaling of the added noise.
+    xaxis : numpy array
+          The x-axis used for calculating the fit.
+    fit_params : LMFIT parameters object
+          The parameters of the best fit, used to calculate the new models with added noise.
+    fit_data : numpy array
+          The best fit result of the initial LMFIT run. Noise is added to this fit for the error resampling.
+    fit_type : string
+          The line shape used to calculate the model.
+    weights : numpy array
+          The weights for each point in the spectrum.
+    rest_f : float
+          The rest frequency of the transition, needed for calculating the wind speed of the noisy spectra.
+    
+    Returns
+    -------
+    err_lo : float
+          The lower percentile wind error.
+    err_up : float
+          The upper percentile wind error.
+    '''
+    
+    MC_results = []
+    for x in range(iters):
+      best_fit = fit_data
+      pars = fit_params
+      resample = best_fit + np.random.normal(loc=0.0,scale=RMS,size=len(xaxis))
+      resample_result = model[fit_type]['lmfit_func'].fit(resample,pars,x=xaxis,weights = weights,scale_covar=False)
+      
+      peak = resample_result.params['center']
+      resample_wind = calc_doppler_vel(peak, rest_f)
+      MC_results.append(resample_wind)
+    
+    values = sorted(MC_results)
+    median = scoreatpercentile(values,50.0)
+    wind_up = scoreatpercentile(values,50.0+(percentile/2))
+    wind_lo = scoreatpercentile(values,50.0-(percentile/2))
+    err_up = wind_up - median
+    err_lo = median - wind_lo
+    
+    #plt.hist(values)i
+    #plt.vlines(median,ymin=0,ymax=300,color='black')
+    #plt.xlim(2500,3100)
+    #plt.ylim(0,400)
+    #plt.xlabel('Wind values (m/s)')
+    #plt.title('1000 Iterations')
+    #plt.show()
+    return err_up, err_lo
+
 model = {}
 model['Gaussian'] = {'ref': 'gauss', 'lmfit_func': GaussianModel(),'label': 'Gaussian Fit','color':'orange'}
 model['Lorentzian'] = {'ref': 'lor','lmfit_func':LorentzianModel(),'label': 'Lorentzian Fit','color':'green'}
@@ -331,70 +392,29 @@ class Spectrum:
     a0.legend()
     plt.show()
     
-  ###############################################################################
-  
-  def errors_noise_resample(self, iters, percentile, fit_result, fit_params, fit_type, weights, rest_f):
-    '''
-    Calculate the wind errors through noise resampling methods.
-    
-    Parameters
-    ----------
-    
-    Returns
-    -------
-    
-    '''
-    
-    MC_results = []
-    #inside loop for x number of iterations
-    for x in range(iters):
-      # Step 1: load model fit
-      best_fit = fit_result
-      pars = fit_params
-      # step 2: add noise to model
-      resample = best_fit + np.random.normal(loc=0.0,scale=self.RMS,size=len(self.xaxis))
-      # step 3: calculate new fit
-      resample_result = model[fit_type]['lmfit_func'].fit(resample,pars,x=self.xaxis,weights = weights,scale_covar=False)
-      peak = resample_result.params['center']
-      # step 4: calculate wind
-      resample_wind = calc_doppler_vel(peak, rest_f)
-      # step 5: save result
-      MC_results.append(resample_wind)
-    
-    # step 6: load velocity parameter space in ascending order
-    values = sorted(MC_results)
-    # Step 7: find median velocity
-    median = scoreatpercentile(values,50.0)
-    # step 8: find the desired percentaile value
-    wind_up = scoreatpercentile(values,50.0+(percentile/2))
-    wind_lo = scoreatpercentile(values,50.0-(percentile/2))
-    # step 8: calculate error range
-    err_up = wind_up - median
-    err_lo = median - wind_lo
-    # step 8: report errors to overlying function
-    return err_up, err_lo
-    
     ###############################################################################
   
 # This section is used for testing purposes during development. It will be removed when the code is ready to be fully merged with the main branch.
    
 # Simple single spectra testing case
-if __name__=="__main__":
+#if __name__=="__main__":
   
   # CO [10,25]
+  #t0 = time.time()
+  #freq = np.array([345.76770566,345.76868215,345.76965863,345.77063511,345.77161159,345.77258807,345.77356455,345.77454103,345.77551751,345.77649399,345.77747047,345.77844695,345.77942343,345.78039991,345.78137639,345.78235287,345.78332935,345.78430584,345.78528232,345.7862588,345.78723528,345.78821176,345.78918824,345.79016472,345.7911412,345.79211768,345.79309416,345.79407064,345.79504712,345.7960236,345.79700008,345.79797656,345.79895304,345.79992953,345.80090601,345.80188249,345.80285897,345.80383545,345.80481193,345.80578841,345.80676489,345.80774137,345.80871785,345.80969433,345.81067081,345.81164729,345.81262377,345.81360025,345.81457673,345.81555322,345.8165297,345.81750618,345.81848266,345.81945914,345.82043562,345.8214121,345.82238858])
+  #spec = np.array([0.21198112,0.18924561,0.21650964,0.22294408,0.24960007,0.22984277,0.25219446,0.24985315,0.25343025,0.28705364,0.3061584,0.31352046,0.3277193,0.3265509,0.3436137,0.35133913,0.38450843,0.4165357,0.43355167,0.467518,0.49524495,0.5277506,0.5910206,0.64392966,0.7271694,0.89640355,0.8984462,0.76777405,0.6531943,0.59134954,0.55332845,0.50916755,0.46389887,0.4410508,0.4036594,0.40885097,0.37320843,0.3508784,0.34755984,0.31414196,0.29820374,0.27975425,0.28136522,0.26828533,0.26605716,0.24770543,0.2537956,0.22927019,0.219696,0.21160068,0.20004132,0.1939475,0.18222019,0.16944197,0.17536835,0.16506103,0.16306329])
   
-  freq = np.array([345.76770566,345.76868215,345.76965863,345.77063511,345.77161159,345.77258807,345.77356455,345.77454103,345.77551751,345.77649399,345.77747047,345.77844695,345.77942343,345.78039991,345.78137639,345.78235287,345.78332935,345.78430584,345.78528232,345.7862588,345.78723528,345.78821176,345.78918824,345.79016472,345.7911412,345.79211768,345.79309416,345.79407064,345.79504712,345.7960236,345.79700008,345.79797656,345.79895304,345.79992953,345.80090601,345.80188249,345.80285897,345.80383545,345.80481193,345.80578841,345.80676489,345.80774137,345.80871785,345.80969433,345.81067081,345.81164729,345.81262377,345.81360025,345.81457673,345.81555322,345.8165297,345.81750618,345.81848266,345.81945914,345.82043562,345.8214121,345.82238858])
-  spec = np.array([0.21198112,0.18924561,0.21650964,0.22294408,0.24960007,0.22984277,0.25219446,0.24985315,0.25343025,0.28705364,0.3061584,0.31352046,0.3277193,0.3265509,0.3436137,0.35133913,0.38450843,0.4165357,0.43355167,0.467518,0.49524495,0.5277506,0.5910206,0.64392966,0.7271694,0.89640355,0.8984462,0.76777405,0.6531943,0.59134954,0.55332845,0.50916755,0.46389887,0.4410508,0.4036594,0.40885097,0.37320843,0.3508784,0.34755984,0.31414196,0.29820374,0.27975425,0.28136522,0.26828533,0.26605716,0.24770543,0.2537956,0.22927019,0.219696,0.21160068,0.20004132,0.1939475,0.18222019,0.16944197,0.17536835,0.16506103,0.16306329])
-  
-  test = Spectrum(spec, freq = freq,rest_f = 345.79598990,x_space = 'f', RMS = 0.017530593)
+  #test = Spectrum(spec, freq = freq,rest_f = 345.79598990,x_space = 'f', RMS = 0.017530593)
   
   #test.make_initial_guess(fit_type = 'Moffat', outfile = 'moffat_guess')
-  test_peak, test_std, chi, chi_red, test_best_fit, test_best_data, weightings = test.fit_profile(fit_type = 'Moffat', initial_fit_guess = 'moffat_guess.sav', weight_range=7)
-  test_wind = calc_doppler_vel(peak = test_peak, rest_f = 345.79598990)
+  #test_peak, test_std, chi, chi_red, test_best_params, test_best_data, weightings = test.fit_profile(fit_type = 'Moffat', initial_fit_guess = 'moffat_guess.sav', weight_range=7, showplots = False)
+  #test_wind = calc_doppler_vel(peak = test_peak, rest_f = 345.79598990)
   #test_err = errors_propagation(rest_f,test_std)
-  test_err_up, test_err_lo = test.errors_noise_resample(300, 68, test_best_data, test_best_fit, 'Moffat', weightings, 345.79598990)
-  print(test_err_up, test_err_lo)
-  
+  #test_err_up, test_err_lo = errors_noise_resample(300, 68, test.RMS, test.xaxis, test_best_params, test_best_data, 'Moffat', weightings, 345.79598990)
+  #print(test_err_up, test_err_lo)
+  #tf = time.time()
+  #print('Time to run single specturm: ')
+  #print(tf-t0)
 ###############################################################################
 ###############################################################################
   
@@ -594,7 +614,7 @@ class SpectralCube:
   
   ###############################################################################
   
-  def fit_data(self, datas, fit_type, outfile, initial_fit_guess = None, RMS = None, SN = None):
+  def fit_data(self, datas, fit_type, outfile, initial_fit_guess = None, RMS = None, SN = None, weight_range = None):
     '''
     Calculate the best fit for the spectra at each pixel.
     
@@ -612,6 +632,8 @@ class SpectralCube:
           The numerical value of the data's RMS. Default is None; if not provided, an estimate is calculated using Astropy's siga_clipped_stats (https://docs.astropy.org/en/stable/api/astropy.stats.sigma_clipped_stats.html)
     SN : float
           The Signal to noise ratio minimum, which is used to mask out noisy data. Any pixel with a S/N ratio lower than this calue will not be fit. Default is value is 1. 
+    errors : string, optional
+          The method for calculating the errors in the wind speed. Options include error propagation (prop), noise resampling (resample), covariances (covar), and MCMC (MC). The default is error propagation.
     
     '''
     
@@ -620,7 +642,7 @@ class SpectralCube:
     
     picklefile = open(outfile+'.pickle', 'wb')
     print('Numerical results will be saved in the '+outfile+'.pickle file')
-    results = {'x':[],'y':[],'center':[],'std':[],'chi':[],'redchi':[]}
+    results = {'x':[],'y':[],'center':[],'std':[],'chi':[],'redchi':[],'fit_params':[],'fit_data':[]}
     
     for xpix in range (0,self.xpixmax,1):
       for ypix in range (0,self.ypixmax,1): 
@@ -628,13 +650,18 @@ class SpectralCube:
         if s_n > SN:
           print('Modeling spectrum at pixel '+str(xpix)+','+str(ypix))
           spectra = Spectrum(spec = datas[xpix,ypix], freq = self.xaxis, rest_f = 345.79598990, x_space = self.x_space, RMS = RMS) 
-          peak, std, chi, chi_red = spectra.fit_profile(fit_type = 'Moffat', initial_fit_guess = initial_fit_guess, showplots = False)
+          peak, std, chi, chi_red, best_fit_params, best_fit_data, weights = spectra.fit_profile(fit_type = fit_type, initial_fit_guess = initial_fit_guess, showplots = False, weight_range = weight_range)
+          fit_params = best_fit_params.dumps()
+          
           results['x'].append(xpix)
           results['y'].append(ypix)
           results['center'].append(peak)
           results['std'].append(std) 
           results['chi'].append(chi)
           results['redchi'].append(chi_red)
+          results['fit_params'].append([fit_params])
+          results['fit_data'].append([best_fit_data])
+          
         elif s_n <= SN or np.isnan(s_n): 
           results['x'].append(xpix)
           results['y'].append(ypix)
@@ -642,6 +669,10 @@ class SpectralCube:
           results['std'].append(np.NAN) 
           results['chi'].append(np.NAN)
           results['redchi'].append(np.NAN)
+          results['fit_params'].append(np.NAN)
+          results['fit_data'].append(np.NAN)
+    results['fit_params'] = np.array(results['fit_params'], dtype = object)
+    results['fit_data'] = np.array(results['fit_data'],dtype=object)
           
     lenx = np.shape(datas)[0]
     leny = np.shape(datas)[1]
@@ -652,9 +683,12 @@ class SpectralCube:
     results['std']=np.reshape(results['std'],(lenx,leny))
     results['chi']=np.reshape(results['chi'],(lenx,leny))
     results['redchi']=np.reshape(results['redchi'],(lenx,leny))
+    results['fit_params']=np.reshape(results['fit_params'],(lenx,leny))
+    results['fit_data']=np.reshape(results['fit_data'],(lenx,leny))
       
     pickle.dump(results,picklefile)
     picklefile.close()
+    
     
   ###############################################################################  
   
@@ -682,16 +716,15 @@ class SpectralCube:
     
     new_pickle = open(outfile+'.pickle', 'wb')
     print('Numerical wind results will be saved in the '+outfile+'.pickle file')
-    results = {'x':[],'y':[],'v':[],'v_err':[]}
+    results = {'x':[],'y':[],'v':[]}
     
     for xpix in range (0,x_max,1):
       for ypix in range (0,y_max,1):
-        v, wind_err = calc_doppler_vel(peaks[xpix,ypix], std[xpix,ypix], restfreq)
+        v = calc_doppler_vel(peaks[xpix,ypix], restfreq)
         
         results['x'].append(xpix)
         results['y'].append(ypix)
         results['v'].append(v)
-        results['v_err'].append(wind_err)
     
     lenx = np.shape(r['center'])[0]
     leny = np.shape(r['center'])[1]
@@ -699,12 +732,110 @@ class SpectralCube:
     results['x']=np.reshape(results['x'],(lenx,leny))
     results['y']=np.reshape(results['y'],(lenx,leny))  
     results['v']=np.reshape(results['v'],(lenx,leny))
-    results['v_err']=np.reshape(results['v_err'],(lenx,leny))  
     
     pickle.dump(results,new_pickle)
     new_pickle.close()
         
   ###############################################################################
+  
+  def calc_wind_error(self, calc_type, picklefile, iters = None, percentile = None, RMS = None, xaxis = None, fit_type = None, weights = None, rest_f = None):
+    '''
+    Calculate the errors in the Doppler wind speed.
+    
+    Parameters
+    ----------
+    calc_type : string
+          The type of error calculation used. Options include error propagation (prop), noise resampling (resample), covariances (covar), and MCMC (MC).
+    picklefile : string
+          The path to an existing pickle file where the errors will be saved. For the propagation method, this file should contain the standard deviation of the center frequency to calculate the errors.
+    iters : int, optional
+          The number of iterations to run for the error resampling.
+    percentile : float, optional
+          The percentile at which to extract the wind error. Needed for error resampling
+    RMS : float, optional
+          The RMS of the spectrum, needed for scaling of the added noise when conducting error resampling.
+    xaxis : numpy array, optional
+          The x-axis used for calculating the fit.
+    fit_type : string, optional
+          The line shape used to calculate the model.
+    weights : numpy array, optional
+          The weights for each point in the spectrum.
+    rest_f : float, optional
+          The rest frequency of the transition, needed for calculating the wind speed of the noisy spectra.
+          
+    Returns
+    -------
+    
+    
+    Notes
+    -----
+    Parameters needed for the error propagation method:
+    - calc_type
+    - picklefile
+    
+    Parameters needed for the noise resampling method:
+    - calc_type
+    - iters
+    - percentile
+    - RMS
+    - xaxis
+    - fit_params
+    - fit_data
+    - fit_type
+    - weights
+    - rest_f
+    
+    Parameters needed for the covariance method:
+    
+    Parameters needed for the MCMC method:
+    
+    
+    '''
+    results = pickle.load(open(picklefile,"rb"),encoding='latin-1')
+    
+    peak_std = results['std']
+    fit_params = results['fit_params']
+    fit_data = results['fit_data']
+    
+    x_max = fit_params.shape[0]
+    y_max = fit_params.shape[1]
+    
+    results['v_err_up'] = []
+    results['v_err_lo'] = []
+    for xpix in range (0,x_max,1):
+      for ypix in range (0,y_max,1):
+        if calc_type == 'prop':
+          v_err_up = v_err_lo = errors_propagation(rest_f,peak_std[xpix,ypix])      
+        elif calc_type == 'resample':
+            if type(fit_params[xpix,ypix]) == float:
+              v_err_up = v_err_lo = np.NAN
+            elif type(fit_params[xpix,ypix]) == list:
+              print('Calculating errors for pixel '+str(xpix)+','+str(ypix))
+              fit_param = Parameters()  
+              s = fit_params[xpix,ypix][0]
+              fit_param = fit_param.loads(s)
+              v_err_up, v_err_lo = errors_noise_resample(iters, percentile, RMS, xaxis, fit_param, fit_data[xpix,ypix], fit_type, weights, rest_f)
+        elif calc_type == 'covar':
+          continue
+        elif calc_type == 'MC':
+          continue
+        else:
+          raise ValueError('You did not choose an available error calculation method. Please try again')
+        
+        results['v_err_up'].append(v_err_up)
+        results['v_err_lo'].append(v_err_lo)
+        
+    lenx = np.shape(results['x'])[0]
+    leny = np.shape(results['x'])[1]
+    results['v_err_up']=np.reshape(results['v_err_up'],(lenx,leny))    
+    results['v_err_lo']=np.reshape(results['v_err_lo'],(lenx,leny))
+
+    new_pickle = open(picklefile, 'wb')
+    pickle.dump(results,new_pickle)
+    new_pickle.close()
+    
+    
+  ###############################################################################  
   
   def plot_data(self, picklefile, platescale, body, cont_label, title = None, date = None, location = None, spatial = None, variable = None, cmap = None, limits = None, contours = None, hatch = None, savefig = None):
     '''
@@ -730,7 +861,7 @@ class SpectralCube:
     spatial : float, optional
           The numerical value for spatial axes bounds in km. If not specified, the value is selected so the image is 1.5 planet diameters wide.
     variable : string, optional
-          The name of the variable, either winds or errors, to be plotted. Default is the Doppler velocities (v). Options include 'v' and 'v_err'.
+          The name of the variable, either winds or errors, to be plotted. Default is the Doppler velocities (v). Options include 'v', 'v_err_up', and 'v_err_lo'.
     cmap : string, optional
           The name of Matplotlib colormap for plotting. Default is blue/white/red gradient. 
     limits : list, optional
@@ -769,7 +900,7 @@ class SpectralCube:
       norm = colors.Normalize(vmin=limits[0],vmax=limits[1])
       
     if contours == None:
-      levels = np.array(centered_list[10]) * 10
+      levels = np.array(centered_list(10)) * 10
     else:
       levels = np.array(centered_list(contours[0])) * contours[1]
     
@@ -857,18 +988,21 @@ class SpectralCube:
   ###############################################################################
 
 # This section is used for testing purposes during development. It will be removed when the code is ready to be fully merged with the main branch.
-
-#if __name__=="__main__":
-  #t0 = time.time()
-  #image = '/homes/metogra/skathryn/Research/Data/ContSub/CO/CS20/Neptune_Pri_X50a4_CS20_narrow_square_2.fits'
-  #test_cube = SpectralCube(image,x_space = 'f')
+if __name__=="__main__":
+  
+  image = '/homes/metogra/skathryn/Research/Data/ContSub/CO/CS20/Neptune_Pri_X50a4_CS20_narrow_square_2.fits'
+  test_cube = SpectralCube(image,x_space = 'f')
   
   # full image analysis
   
-  #data = test_cube.extract_image()
-  #test_cube.fit_data(data, fit_type = 'Moffat', outfile = 'development_testing_fit', RMS = 0.017530593, SN = 6,initial_fit_guess = '/homes/metogra/skathryn/Research/Scripts/co_moffat_modelresult.sav')
-  #test_cube.wind_calc(picklefile = 'development_testing_fit.pickle', restfreq = 345.79598990, outfile = 'development_testing_wind')
-  #test_cube.plot_data(picklefile = 'development_testing_wind.pickle', platescale = 0.1, body = 'Neptune', title = 'CO Doppler Velocity Map', cont_label = 'Radial Velocity (m/s)', date = '2016-04-30 00:00', location = 'ALMA', spatial = 4e4, limits = [-2000,2000], contours = [21,200], variable = 'v_err')
+  data = test_cube.extract_image()
+  test_cube.fit_data(data, fit_type = 'Moffat', outfile = 'development_testing_fit', RMS = 0.017530593, SN = 6,weight_range = 7,initial_fit_guess = '/homes/metogra/skathryn/Research/Scripts/co_moffat_modelresult.sav')
+  test_cube.wind_calc(picklefile = 'development_testing_fit.pickle', restfreq = 345.79598990, outfile = 'development_testing_wind')
+  t0 = time.time()
+  #test_cube.calc_wind_error(calc_type = 'prop', picklefile = 'development_testing_fit.pickle',rest_f = 345.79598990)
+  test_cube.calc_wind_error(calc_type = 'resample', picklefile = 'development_testing_fit.pickle', iters = 300, percentile = 68, RMS = 0.017530593, xaxis = test_cube.xaxis, fit_type = 'Moffat', weights = None, rest_f = 345.79598990)
+  t1 = time.time()
+  test_cube.plot_data(picklefile = 'development_testing_fit.pickle', platescale = 0.1, body = 'Neptune', title = 'CO Doppler Velocity Error Map - Error Prop', cont_label = 'Radial Velocity Error (m/s)', date = '2016-04-30 00:00', location = 'ALMA', spatial = 4e4, limits = [0,200], variable = 'v_err_up', cmap = 'inferno_r')
   
   # sub-image analysis - 3x3 sub-image at the center
   
@@ -880,7 +1014,6 @@ class SpectralCube:
   #test_cube.wind_calc(picklefile = 'development_testing_fit_subim.pickle', restfreq = 345.79598990, outfile = 'development_testing_wind_subim')
   #test_cube.plot_data(picklefile = 'development_testing_wind_subim.pickle', platescale = 0.1, body = 'Neptune', title = 'CO Doppler Velocity Map Sub-Image', cont_label = 'Radial Velocity (m/s)', date = '2016-04-30 00:00', location = 'ALMA', spatial = 4e4, limits = [-2000,2000])
   
-  #t1 = time.time()
-  #print('Time to run script: ')
-  #print(t1-t0)
+  print('Time to run resample: ')
+  print(t1-t0)
   
