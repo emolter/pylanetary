@@ -25,6 +25,61 @@ def centered_list(n):
     centered_list = list(range(-half, half + 1,2))
     return centered_list
 
+def lmfit_wrapper(fit_type, spec, xaxis, RMS, initial_fit_guess = None, weight_range = None):
+  '''
+  Function to interface with LMFIT and calculate a model fit.
+  
+  Parameters
+  ----------
+  fit_type : string
+        The type of line shape used to fit the spectra, string. Options are:
+          All: Fit the spectrum with all line 5 line shape options. Data is always plotted.
+          Gaussian: fit the spectrum with a Gaussian function
+          Lorentzian: fit the spectrum with a Lorentzian function
+          Voigt: fit the spectrum with a Voigt function
+          PseudoV: fit the spectrum with a Pseudo-Voigt function
+          Moffat: fit the spectrum with a Moffat function
+        A description of all line shapes can be found at https://lmfit.github.io/lmfit-py/builtin_models.html
+  spec : numpy array
+        An arraycontaining the intensity axis of the spectrum.
+  xaxis : numpy array
+        An array containing the frequency or wavelength axis of the spectrum.
+  RMS : float
+        The RMS value of the data.
+  showplots : bool, optional
+        The indicator of whether to plot the best fit line shape or a comparison of line shapes. Default is True, which produces plots.
+  plot_name : string, optional
+        The name of a saved figure. Default is None, which does not save a plot.
+  initial_fit_guess: string, optional.
+        The path to a saved LMFIT result to use as the initial guess. Default is None; the LMFIT .guess method is used.
+  weight_range : int, optional
+        How many points centered around the peak frequency to give a higher weight during fit, which causes LMFIT to prioritize fitting these points. These points are given a weighting of 2x(normalized variance), all other points are given a weight of the normalized variance.
+    
+  Returns
+  -------
+  fit_result : LMFIT object
+        An LMFIT ModelResult object containing the best fit results, parameters, and statistics.
+  weights : numpy array
+        An array containing the weights specified for each point.
+  '''
+  
+  if weight_range is not None:
+    sigma = 1/(RMS**2)
+    centerpoint = np.argmax(spec) 
+    weights = np.full((len(xaxis),), sigma/(len(xaxis)))
+    for i in range(len(weights)):
+      if i > centerpoint-weight_range and i < centerpoint + weight_range:
+        weights[i] = 2*(sigma/len(xaxis))
+      
+  if initial_fit_guess == None:
+    pars = model[fit_type]['lmfit_func'].guess(spec,x=xaxis,weights=weights)
+  else:
+    inital = load_modelresult(initial_fit_guess)
+    pars = inital.params
+  fit_result = model[fit_type]['lmfit_func'].fit(spec,pars,x=xaxis,weights = weights,scale_covar=False)
+  
+  return fit_result, weights
+
 def calc_doppler_vel(peak, rest_f):
     '''
     Calculate the Doppler velocity using the Doppler Equation.
@@ -237,12 +292,12 @@ class Spectrum:
     
     pars = model[fit_type]['lmfit_func'].guess(self.spec,x=self.xaxis)
     fit_result = model[fit_type]['lmfit_func'].fit(self.spec,pars,x=self.xaxis,scale_covar=False)
-    print(fit_result.fit_report())
+    #print(fit_result.fit_report())
     save_modelresult(fit_result, outfile+'.sav')
     
   ###############################################################################
     
-  def fit_profile(self, fit_type, showplots = True, plot_name = None, initial_fit_guess = None, weight_range = None):
+  def fit_profile(self, fit_type, print_results = False, showplots = True, plot_name = None, initial_fit_guess = None, weight_range = None):
     '''
     Calculate the best fit of a Spectral object using the LMFIT algorithm.
     
@@ -295,29 +350,23 @@ class Spectrum:
     
     '''
     
-    if weight_range is not None:
-      sigma = 1/(self.RMS**2)
-      centerpoint = np.argmax(self.spec) 
-      weights = np.full((len(self.xaxis),), sigma/(len(self.xaxis)))
-      for i in range(len(weights)):
-        if i > centerpoint-weight_range and i < centerpoint + weight_range:
-          weights[i] = 2*(sigma/len(self.xaxis))
-    else:
-      weights = None
-
     if fit_type != 'All':
       if initial_fit_guess == None:
-        pars = model[fit_type]['lmfit_func'].guess(self.spec,x=self.xaxis,weights=weights)
+        pars = model[fit_type]['lmfit_func'].guess(self.spec,x=self.xaxis)
       else:
         inital = load_modelresult(initial_fit_guess)
         pars = inital.params
-      fit_result = model[fit_type]['lmfit_func'].fit(self.spec,pars,x=self.xaxis,weights = weights,scale_covar=False)
-      print(fit_result.fit_report())
+      fit_result, weights = lmfit_wrapper(fit_type, self.spec, self.xaxis, self.RMS, initial_fit_guess, weight_range)
+      
+      if print_results is True:
+        print(fit_result.fit_report())
+        
     elif fit_type == 'All':
       fit_result = {}
       for key in model:
         pars = model[key]['lmfit_func'].guess(self.spec,x=self.xaxis)
-        result = model[key]['lmfit_func'].fit(self.spec,pars,weights = weights,x=self.xaxis,scale_covar=False)
+        result, weights = lmfit_wrapper(key, self.spec, self.xaxis, self.RMS, initial_fit_guess, weight_range)
+        #result = model[key]['lmfit_func'].fit(self.spec,pars,weights = weights,x=self.xaxis,scale_covar=False)
         print(result.fit_report())
         fit_result[key] = result
     else:
@@ -345,6 +394,11 @@ class Spectrum:
       peak = 0
       err = 0
       best_fit = np.NAN
+      chi = np.NAN
+      chi_red = np.NAN
+      best_fit_params = np.NAN
+      best_fit_data = np.NAN
+      weights = np.NAN
     
     return peak, err, chi, chi_red, best_fit_params, best_fit_data, weights
     
@@ -407,7 +461,8 @@ class Spectrum:
   #test = Spectrum(spec, freq = freq,rest_f = 345.79598990,x_space = 'f', RMS = 0.017530593)
   
   #test.make_initial_guess(fit_type = 'Moffat', outfile = 'moffat_guess')
-  #test_peak, test_std, chi, chi_red, test_best_params, test_best_data, weightings = test.fit_profile(fit_type = 'Moffat', initial_fit_guess = 'moffat_guess.sav', weight_range=7, showplots = False)
+  #test_peak, test_std, chi, chi_red, test_best_params, test_best_data, weightings = test.fit_profile(fit_type = 'Voigt', weight_range=7, showplots = False)
+  # initial_fit_guess = 'moffat_guess.sav'
   #test_wind = calc_doppler_vel(peak = test_peak, rest_f = 345.79598990)
   #test_err = errors_propagation(rest_f,test_std)
   #test_err_up, test_err_lo = errors_noise_resample(300, 68, test.RMS, test.xaxis, test_best_params, test_best_data, 'Moffat', weightings, 345.79598990)
@@ -635,6 +690,10 @@ class SpectralCube:
     errors : string, optional
           The method for calculating the errors in the wind speed. Options include error propagation (prop), noise resampling (resample), covariances (covar), and MCMC (MC). The default is error propagation.
     
+    Returns
+    -------
+    weights : numpy array
+          An array containing the weightings of each spectral point used in the fit. This is necessary for the error resampling function.
     '''
     
     if SN == None:
@@ -644,51 +703,67 @@ class SpectralCube:
     print('Numerical results will be saved in the '+outfile+'.pickle file')
     results = {'x':[],'y':[],'center':[],'std':[],'chi':[],'redchi':[],'fit_params':[],'fit_data':[]}
     
-    for xpix in range (0,self.xpixmax,1):
-      for ypix in range (0,self.ypixmax,1): 
-        s_n = abs(np.max(datas[xpix,ypix])/RMS)
-        if s_n > SN:
-          print('Modeling spectrum at pixel '+str(xpix)+','+str(ypix))
-          spectra = Spectrum(spec = datas[xpix,ypix], freq = self.xaxis, rest_f = 345.79598990, x_space = self.x_space, RMS = RMS) 
-          peak, std, chi, chi_red, best_fit_params, best_fit_data, weights = spectra.fit_profile(fit_type = fit_type, initial_fit_guess = initial_fit_guess, showplots = False, weight_range = weight_range)
-          fit_params = best_fit_params.dumps()
-          
-          results['x'].append(xpix)
-          results['y'].append(ypix)
-          results['center'].append(peak)
-          results['std'].append(std) 
-          results['chi'].append(chi)
-          results['redchi'].append(chi_red)
-          results['fit_params'].append([fit_params])
-          results['fit_data'].append([best_fit_data])
-          
-        elif s_n <= SN or np.isnan(s_n): 
-          results['x'].append(xpix)
-          results['y'].append(ypix)
-          results['center'].append(np.NAN)
-          results['std'].append(np.NAN) 
-          results['chi'].append(np.NAN)
-          results['redchi'].append(np.NAN)
-          results['fit_params'].append(np.NAN)
-          results['fit_data'].append(np.NAN)
-    results['fit_params'] = np.array(results['fit_params'], dtype = object)
-    results['fit_data'] = np.array(results['fit_data'],dtype=object)
-          
-    lenx = np.shape(datas)[0]
-    leny = np.shape(datas)[1]
+    if datas.ndim == 1:
+      spectra = Spectrum(spec = datas, freq = self.xaxis, rest_f = 345.79598990, x_space = self.x_space, RMS = RMS) 
+      peak, std, chi, chi_red, best_fit_params, best_fit_data, weights = spectra.fit_profile(fit_type = fit_type, print_results = True, initial_fit_guess = initial_fit_guess, showplots = False, weight_range = weight_range)
+      
+      fit_params = best_fit_params.dumps()
+      
+      results['center'].append(peak)
+      results['std'].append(std) 
+      results['chi'].append(chi)
+      results['redchi'].append(chi_red)
+      results['fit_params'].append([fit_params])
+      results['fit_data'].append([best_fit_data])
+      
+    else:
     
-    results['x']=np.reshape(results['x'],(lenx,leny))
-    results['y']=np.reshape(results['y'],(lenx,leny))
-    results['center']=np.reshape(results['center'],(lenx,leny))
-    results['std']=np.reshape(results['std'],(lenx,leny))
-    results['chi']=np.reshape(results['chi'],(lenx,leny))
-    results['redchi']=np.reshape(results['redchi'],(lenx,leny))
-    results['fit_params']=np.reshape(results['fit_params'],(lenx,leny))
-    results['fit_data']=np.reshape(results['fit_data'],(lenx,leny))
+      for xpix in range (0,self.xpixmax,1):
+        for ypix in range (0,self.ypixmax,1): 
+          s_n = abs(np.max(datas[xpix,ypix])/RMS)
+          if s_n > SN:
+            print('Modeling spectrum at pixel '+str(xpix)+','+str(ypix))
+            spectra = Spectrum(spec = datas[xpix,ypix], freq = self.xaxis, rest_f = 345.79598990, x_space = self.x_space, RMS = RMS) 
+            peak, std, chi, chi_red, best_fit_params, best_fit_data, weights = spectra.fit_profile(fit_type = fit_type, print_results = True, initial_fit_guess = initial_fit_guess, showplots = False, weight_range = weight_range)
+            fit_params = best_fit_params.dumps()
+          
+            results['x'].append(xpix)
+            results['y'].append(ypix)
+            results['center'].append(peak)
+            results['std'].append(std) 
+            results['chi'].append(chi)
+            results['redchi'].append(chi_red)
+            results['fit_params'].append([fit_params])
+            results['fit_data'].append([best_fit_data])
+          
+          elif s_n <= SN or np.isnan(s_n): 
+            results['x'].append(xpix)
+            results['y'].append(ypix)
+            results['center'].append(np.NAN)
+            results['std'].append(np.NAN) 
+            results['chi'].append(np.NAN)
+            results['redchi'].append(np.NAN)
+            results['fit_params'].append(np.NAN)
+            results['fit_data'].append(np.NAN)
+      results['fit_params'] = np.array(results['fit_params'], dtype = object)
+      results['fit_data'] = np.array(results['fit_data'],dtype=object)
+          
+      lenx = np.shape(datas)[0]
+      leny = np.shape(datas)[1]
+    
+      results['x']=np.reshape(results['x'],(lenx,leny))
+      results['y']=np.reshape(results['y'],(lenx,leny))
+      results['center']=np.reshape(results['center'],(lenx,leny))
+      results['std']=np.reshape(results['std'],(lenx,leny))
+      results['chi']=np.reshape(results['chi'],(lenx,leny))
+      results['redchi']=np.reshape(results['redchi'],(lenx,leny))
+      results['fit_params']=np.reshape(results['fit_params'],(lenx,leny))
+      results['fit_data']=np.reshape(results['fit_data'],(lenx,leny))
       
     pickle.dump(results,picklefile)
     picklefile.close()
     
+    return weights
     
   ###############################################################################  
   
@@ -995,14 +1070,15 @@ if __name__=="__main__":
   
   # full image analysis
   
-  data = test_cube.extract_image()
-  test_cube.fit_data(data, fit_type = 'Moffat', outfile = 'development_testing_fit', RMS = 0.017530593, SN = 6,weight_range = 7,initial_fit_guess = '/homes/metogra/skathryn/Research/Scripts/co_moffat_modelresult.sav')
+  test_data = test_cube.extract_image()
+  #test_data = test_cube.extract_pixel([16,16])
+  weights = test_cube.fit_data(test_data, fit_type = 'Moffat', outfile = 'development_testing_fit', RMS = 0.017530593, SN = 6,weight_range = 7,initial_fit_guess = '/homes/metogra/skathryn/Research/Scripts/co_moffat_modelresult.sav')
   test_cube.wind_calc(picklefile = 'development_testing_fit.pickle', restfreq = 345.79598990, outfile = 'development_testing_wind')
   t0 = time.time()
   #test_cube.calc_wind_error(calc_type = 'prop', picklefile = 'development_testing_fit.pickle',rest_f = 345.79598990)
-  test_cube.calc_wind_error(calc_type = 'resample', picklefile = 'development_testing_fit.pickle', iters = 300, percentile = 68, RMS = 0.017530593, xaxis = test_cube.xaxis, fit_type = 'Moffat', weights = None, rest_f = 345.79598990)
+  test_cube.calc_wind_error(calc_type = 'resample', picklefile = 'development_testing_fit.pickle', iters = 10, percentile = 68, RMS = 0.017530593, xaxis = test_cube.xaxis, fit_type = 'Moffat', weights = weights, rest_f = 345.79598990)
   t1 = time.time()
-  test_cube.plot_data(picklefile = 'development_testing_fit.pickle', platescale = 0.1, body = 'Neptune', title = 'CO Doppler Velocity Error Map - Error Prop', cont_label = 'Radial Velocity Error (m/s)', date = '2016-04-30 00:00', location = 'ALMA', spatial = 4e4, limits = [0,200], variable = 'v_err_up', cmap = 'inferno_r')
+  #test_cube.plot_data(picklefile = 'development_testing_fit.pickle', platescale = 0.1, body = 'Neptune', title = 'CO Doppler Velocity Error Map - Error Prop', cont_label = 'Radial Velocity Error (m/s)', date = '2016-04-30 00:00', location = 'ALMA', spatial = 4e4, limits = [0,200], variable = 'v_err_up', cmap = 'inferno_r')
   
   # sub-image analysis - 3x3 sub-image at the center
   
