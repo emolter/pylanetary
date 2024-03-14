@@ -165,10 +165,11 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../tutorials/index.html">Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/body-tutorial.html">Planetary Body Attributes &amp; Ephemerides</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/nav-tutorial.html">Navigation Basics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/nav-examples.html">Navigation Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/rings-tutorial.html">Rings Tutorial</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/utils-tutorial.html">Utils Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/unit-conversions.html">Unit Conversions</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
@@ -219,12 +220,286 @@
 <dt class="sig sig-object py" id="pylanetary.navigation.core.ModelBody">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pylanetary.navigation.core.</span></span><span class="sig-name descname"><span class="pre">ModelBody</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">body</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixscale</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.navigation.core.ModelBody" title="Link to this definition">#</a></dt>
 <dd><p>Wrapper to ModelEllipsoid that permits passing an ephemeris</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>body</strong> (<em>pylanetary.utils.Body object</em><em>, </em><em>required</em>) – </p></li>
+<li><p><strong>pixscale</strong> (<em>float</em><em> or </em><em>Quantity</em><em>, </em><em>required.</em>) – [arcsec/px] pixel scale of the input image</p></li>
+<li><p><strong>shape</strong> (<em>tuple</em><em>, </em><em>optional.</em>) – shape of output arrays.
+if None, shape is just larger than diameter / pixscale</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pylanetary.navigation.core.ModelBody.body">
+<span class="sig-name descname"><span class="pre">body</span></span><a class="headerlink" href="#pylanetary.navigation.core.ModelBody.body" title="Link to this definition">#</a></dt>
+<dd><p>see parameters</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pylanetary.utils.Body object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pylanetary.navigation.core.ModelBody.name">
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#pylanetary.navigation.core.ModelBody.name" title="Link to this definition">#</a></dt>
+<dd><p>Name of input body as read from input Body object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pylanetary.navigation.core.ModelBody.ephem">
+<span class="sig-name descname"><span class="pre">ephem</span></span><a class="headerlink" href="#pylanetary.navigation.core.ModelBody.ephem" title="Link to this definition">#</a></dt>
+<dd><p>single line of astroquery.horizons ephemeris
+as read from utils.Body object.
+must have ‘PDObsLon’, ‘PDObsLat’, ‘delta’, and ‘NPole_ang’ fields.
+If you want to modify the ephemeris, modify body.ephem</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Astropy QTable.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pylanetary.navigation.core.ModelBody.pixscale_arcsec">
+<span class="sig-name descname"><span class="pre">pixscale_arcsec</span></span><a class="headerlink" href="#pylanetary.navigation.core.ModelBody.pixscale_arcsec" title="Link to this definition">#</a></dt>
+<dd><p>[arcsec/px] pixel scale of image; see parameters</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pylanetary.navigation.core.ModelBody.pixscale_km">
+<span class="sig-name descname"><span class="pre">pixscale_km</span></span><a class="headerlink" href="#pylanetary.navigation.core.ModelBody.pixscale_km" title="Link to this definition">#</a></dt>
+<dd><p>[km/px] pixel scale of image computed from input pixel scale in arcsec
+and distance from object to body according to body.ephem</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">all</span> <span class="pre">attrs</span> <span class="pre">from</span> <span class="pre">ModelEllipsoid</span></span></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="pylanetary.navigation.core.ModelEllipsoid">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pylanetary.navigation.core.</span></span><span class="sig-name descname"><span class="pre">ModelEllipsoid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ob_lon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ob_lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixscale_km</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">np_ang</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">req</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rpol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">center</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.0,</span> <span class="pre">0.0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sun_lon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sun_lat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">longitude_convention</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'w'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.navigation.core.ModelEllipsoid" title="Link to this definition">#</a></dt>
 <dd><p>Projection of an ellipsoid onto a 2-D array with latitude and longitude grid</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ob_lon</strong> (<em>float</em><em>, </em><em>required.</em>) – [deg] sub-observer planetographic longitude</p></li>
+<li><p><strong>ob_lat</strong> (<em>float</em><em>, </em><em>required.</em>) – [deg] sub-observer planetographic latitude</p></li>
+<li><p><strong>np_ang</strong> (<em>float</em><em>, </em><em>required.</em>) – [deg] north polar angle
+see JPL Horizons ephemeris tool for detailed descriptions
+of ob_lon, ob_lat, np_ang</p></li>
+<li><p><strong>pixscale_km</strong> (<em>float</em><em>, </em><em>required.</em>) – [km] pixel scale</p></li>
+<li><p><strong>req</strong> (<em>float</em><em>, </em><em>required.</em>) – [km] equatorial radius</p></li>
+<li><p><strong>rpol</strong> (<em>float</em><em>, </em><em>required.</em>) – [km] polar radius</p></li>
+<li><p><strong>center</strong> (<em>2-element array-like</em><em>, </em><em>optional</em><em>, </em><em>default</em><em> (</em><em>0</em><em>,</em><em>0</em><em>)</em><em>.</em>) – pixel offset of center of planet from center of image</p></li>
+<li><p><strong>shape</strong> (<em>2-element tuple</em><em>, </em><em>optional.</em>) – shape of output arrays.
+if None, shape is just larger than diameter / pixscale</p></li>
+<li><p><strong>sun_lon</strong> (<em>float</em><em>, </em><em>optional</em><em>, </em><em>default None</em>) – sub-solar longitude. if None, assume same as ob_lon</p></li>
+<li><p><strong>sun_lat</strong> (<em>float</em><em>, </em><em>optional</em><em>, </em><em>default None</em>) – sub_solar latitude. if None, assume same as ob_lat</p></li>
+<li><p><strong>longitude_convention</strong> (<em>str</em><em>, </em><em>optional</em><em>, </em><em>default 'w'</em>) – east or west longitude convention</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pylanetary.navigation.core.ModelEllipsoid.req">
+<span class="sig-name descname"><span class="pre">req</span></span><a class="headerlink" href="#pylanetary.navigation.core.ModelEllipsoid.req" title="Link to this definition">#</a></dt>
+<dd><p>see parameters</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pylanetary.navigation.core.ModelEllipsoid.rpol">
+<span class="sig-name descname"><span class="pre">rpol</span></span><a class="headerlink" href="#pylanetary.navigation.core.ModelEllipsoid.rpol" title="Link to this definition">#</a></dt>
+<dd><p>see parameters</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pylanetary.navigation.core.ModelEllipsoid.ob_lon">
+<span class="sig-name descname"><span class="pre">ob_lon</span></span><a class="headerlink" href="#pylanetary.navigation.core.ModelEllipsoid.ob_lon" title="Link to this definition">#</a></dt>
+<dd><p>see parameters</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pylanetary.navigation.core.ModelEllipsoid.ob_lat">
+<span class="sig-name descname"><span class="pre">ob_lat</span></span><a class="headerlink" href="#pylanetary.navigation.core.ModelEllipsoid.ob_lat" title="Link to this definition">#</a></dt>
+<dd><p>see parameters</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pylanetary.navigation.core.ModelEllipsoid.sun_lon">
+<span class="sig-name descname"><span class="pre">sun_lon</span></span><a class="headerlink" href="#pylanetary.navigation.core.ModelEllipsoid.sun_lon" title="Link to this definition">#</a></dt>
+<dd><p>see parameters</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pylanetary.navigation.core.ModelEllipsoid.sun_lat">
+<span class="sig-name descname"><span class="pre">sun_lat</span></span><a class="headerlink" href="#pylanetary.navigation.core.ModelEllipsoid.sun_lat" title="Link to this definition">#</a></dt>
+<dd><p>see parameters</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pylanetary.navigation.core.ModelEllipsoid.pixscale_km">
+<span class="sig-name descname"><span class="pre">pixscale_km</span></span><a class="headerlink" href="#pylanetary.navigation.core.ModelEllipsoid.pixscale_km" title="Link to this definition">#</a></dt>
+<dd><p>see parameters</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pylanetary.navigation.core.ModelEllipsoid.deg_per_px">
+<span class="sig-name descname"><span class="pre">deg_per_px</span></span><a class="headerlink" href="#pylanetary.navigation.core.ModelEllipsoid.deg_per_px" title="Link to this definition">#</a></dt>
+<dd><p>approximate size of pixel on planet, in degrees, at sub-observer point</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pylanetary.navigation.core.ModelEllipsoid.lat_g">
+<span class="sig-name descname"><span class="pre">lat_g</span></span><a class="headerlink" href="#pylanetary.navigation.core.ModelEllipsoid.lat_g" title="Link to this definition">#</a></dt>
+<dd><p>shape is roughly 2*max(req, rpol)/pixscale.
+planetographic latitudes. NaN where off planet disk</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pylanetary.navigation.core.ModelEllipsoid.lon_w">
+<span class="sig-name descname"><span class="pre">lon_w</span></span><a class="headerlink" href="#pylanetary.navigation.core.ModelEllipsoid.lon_w" title="Link to this definition">#</a></dt>
+<dd><p>same shape as lat_g. west longitudes. NaN where off planet disk</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pylanetary.navigation.core.ModelEllipsoid.mu">
+<span class="sig-name descname"><span class="pre">mu</span></span><a class="headerlink" href="#pylanetary.navigation.core.ModelEllipsoid.mu" title="Link to this definition">#</a></dt>
+<dd><p>same shape as lat_g. cosines of the emission angle. NaN where off planet disk</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pylanetary.navigation.core.ModelEllipsoid.surf_n">
+<span class="sig-name descname"><span class="pre">surf_n</span></span><a class="headerlink" href="#pylanetary.navigation.core.ModelEllipsoid.surf_n" title="Link to this definition">#</a></dt>
+<dd><p>shape (3,x,y) CHECK THIS. Normal vector to the surface
+of the planet at each pixel. NaN where off planet disk</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pylanetary.navigation.core.ModelEllipsoid.sun_n">
+<span class="sig-name descname"><span class="pre">sun_n</span></span><a class="headerlink" href="#pylanetary.navigation.core.ModelEllipsoid.sun_n" title="Link to this definition">#</a></dt>
+<dd><p>shape (3,x,y), solar normal vectors</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pylanetary.navigation.core.ModelEllipsoid.mu0">
+<span class="sig-name descname"><span class="pre">mu0</span></span><a class="headerlink" href="#pylanetary.navigation.core.ModelEllipsoid.mu0" title="Link to this definition">#</a></dt>
+<dd><p>shape (x,y), cosine of solar incidence angle at each pixel</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pylanetary.navigation.core.ModelEllipsoid.image_grid_km_x">
+<span class="sig-name descname"><span class="pre">image_grid_km_x</span></span><a class="headerlink" href="#pylanetary.navigation.core.ModelEllipsoid.image_grid_km_x" title="Link to this definition">#</a></dt>
+<dd><p>shape (x,y), x-coordinates of image grid in km, where 0 is center of planet</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pylanetary.navigation.core.ModelEllipsoid.image_grid_km_y">
+<span class="sig-name descname"><span class="pre">image_grid_km_y</span></span><a class="headerlink" href="#pylanetary.navigation.core.ModelEllipsoid.image_grid_km_y" title="Link to this definition">#</a></dt>
+<dd><p>shape (x,y), y-coordinates of image grid in km, where 0 is center of planet</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Examples</p>
+<p>see notebooks/planetnav-tutorial.ipynb</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="pylanetary.navigation.core.ModelEllipsoid.ldmodel">
 <span class="sig-name descname"><span class="pre">ldmodel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tb</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beam</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">law</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'exp'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">psf_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'gaussian'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.navigation.core.ModelEllipsoid.ldmodel" title="Link to this definition">#</a></dt>
@@ -258,7 +533,40 @@ code will fail</p></li>
 <dl class="py class">
 <dt class="sig sig-object py" id="pylanetary.navigation.core.Nav">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pylanetary.navigation.core.</span></span><span class="sig-name descname"><span class="pre">Nav</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">body</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixscale</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.navigation.core.Nav" title="Link to this definition">#</a></dt>
-<dd><p>functions for comparing a model ellipsoid with observed 2-d imaging data</p>
+<dd><p>Build the model body object,
+and compare a model ellipsoid with observed 2-d imaging data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>np.array</em><em>, </em><em>required.</em>) – 2-D image data</p></li>
+<li><p><strong>body</strong> (<em>pylanetary.utils.Body object</em><em>, </em><em>required.</em>) – </p></li>
+<li><p><strong>pixscale</strong> (<em>float</em><em> or </em><em>Quantity</em><em>, </em><em>required.</em>) – [arcsec] pixel scale of the input image</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pylanetary.navigation.core.Nav.data">
+<span class="sig-name descname"><span class="pre">data</span></span><a class="headerlink" href="#pylanetary.navigation.core.Nav.data" title="Link to this definition">#</a></dt>
+<dd><p>see parameters</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pylanetary.navigation.core.Nav.parent_attrs">
+<span class="sig-name descname"><span class="pre">parent_attrs</span></span><a class="headerlink" href="#pylanetary.navigation.core.Nav.parent_attrs" title="Link to this definition">#</a></dt>
+<dd><p>all attributes of ModelBody and ModelEllipsoid classes</p>
+</dd></dl>
+
+<p class="rubric">Examples</p>
+<p>see notebooks/nav-tutorial.ipynb</p>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>Need to test astropy quantity handling, ensure docstring reflects what really happens</p></li>
+</ul>
 <dl class="py method">
 <dt class="sig sig-object py" id="pylanetary.navigation.core.Nav.colocate">
 <span class="sig-name descname"><span class="pre">colocate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'convolution'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">diagnostic_plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.navigation.core.Nav.colocate" title="Link to this definition">#</a></dt>
@@ -682,13 +990,38 @@ Take dot product with sub-obs or sub-sun vector to find cosine of emission angle
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">Navigation API</a><ul>
-<li><a class="reference internal" href="#pylanetary.navigation.core.ModelBody"><code class="docutils literal notranslate"><span class="pre">ModelBody</span></code></a></li>
+<li><a class="reference internal" href="#pylanetary.navigation.core.ModelBody"><code class="docutils literal notranslate"><span class="pre">ModelBody</span></code></a><ul>
+<li><a class="reference internal" href="#pylanetary.navigation.core.ModelBody.body"><code class="docutils literal notranslate"><span class="pre">ModelBody.body</span></code></a></li>
+<li><a class="reference internal" href="#pylanetary.navigation.core.ModelBody.name"><code class="docutils literal notranslate"><span class="pre">ModelBody.name</span></code></a></li>
+<li><a class="reference internal" href="#pylanetary.navigation.core.ModelBody.ephem"><code class="docutils literal notranslate"><span class="pre">ModelBody.ephem</span></code></a></li>
+<li><a class="reference internal" href="#pylanetary.navigation.core.ModelBody.pixscale_arcsec"><code class="docutils literal notranslate"><span class="pre">ModelBody.pixscale_arcsec</span></code></a></li>
+<li><a class="reference internal" href="#pylanetary.navigation.core.ModelBody.pixscale_km"><code class="docutils literal notranslate"><span class="pre">ModelBody.pixscale_km</span></code></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#pylanetary.navigation.core.ModelEllipsoid"><code class="docutils literal notranslate"><span class="pre">ModelEllipsoid</span></code></a><ul>
+<li><a class="reference internal" href="#pylanetary.navigation.core.ModelEllipsoid.req"><code class="docutils literal notranslate"><span class="pre">ModelEllipsoid.req</span></code></a></li>
+<li><a class="reference internal" href="#pylanetary.navigation.core.ModelEllipsoid.rpol"><code class="docutils literal notranslate"><span class="pre">ModelEllipsoid.rpol</span></code></a></li>
+<li><a class="reference internal" href="#pylanetary.navigation.core.ModelEllipsoid.ob_lon"><code class="docutils literal notranslate"><span class="pre">ModelEllipsoid.ob_lon</span></code></a></li>
+<li><a class="reference internal" href="#pylanetary.navigation.core.ModelEllipsoid.ob_lat"><code class="docutils literal notranslate"><span class="pre">ModelEllipsoid.ob_lat</span></code></a></li>
+<li><a class="reference internal" href="#pylanetary.navigation.core.ModelEllipsoid.sun_lon"><code class="docutils literal notranslate"><span class="pre">ModelEllipsoid.sun_lon</span></code></a></li>
+<li><a class="reference internal" href="#pylanetary.navigation.core.ModelEllipsoid.sun_lat"><code class="docutils literal notranslate"><span class="pre">ModelEllipsoid.sun_lat</span></code></a></li>
+<li><a class="reference internal" href="#pylanetary.navigation.core.ModelEllipsoid.pixscale_km"><code class="docutils literal notranslate"><span class="pre">ModelEllipsoid.pixscale_km</span></code></a></li>
+<li><a class="reference internal" href="#pylanetary.navigation.core.ModelEllipsoid.deg_per_px"><code class="docutils literal notranslate"><span class="pre">ModelEllipsoid.deg_per_px</span></code></a></li>
+<li><a class="reference internal" href="#pylanetary.navigation.core.ModelEllipsoid.lat_g"><code class="docutils literal notranslate"><span class="pre">ModelEllipsoid.lat_g</span></code></a></li>
+<li><a class="reference internal" href="#pylanetary.navigation.core.ModelEllipsoid.lon_w"><code class="docutils literal notranslate"><span class="pre">ModelEllipsoid.lon_w</span></code></a></li>
+<li><a class="reference internal" href="#pylanetary.navigation.core.ModelEllipsoid.mu"><code class="docutils literal notranslate"><span class="pre">ModelEllipsoid.mu</span></code></a></li>
+<li><a class="reference internal" href="#pylanetary.navigation.core.ModelEllipsoid.surf_n"><code class="docutils literal notranslate"><span class="pre">ModelEllipsoid.surf_n</span></code></a></li>
+<li><a class="reference internal" href="#pylanetary.navigation.core.ModelEllipsoid.sun_n"><code class="docutils literal notranslate"><span class="pre">ModelEllipsoid.sun_n</span></code></a></li>
+<li><a class="reference internal" href="#pylanetary.navigation.core.ModelEllipsoid.mu0"><code class="docutils literal notranslate"><span class="pre">ModelEllipsoid.mu0</span></code></a></li>
+<li><a class="reference internal" href="#pylanetary.navigation.core.ModelEllipsoid.image_grid_km_x"><code class="docutils literal notranslate"><span class="pre">ModelEllipsoid.image_grid_km_x</span></code></a></li>
+<li><a class="reference internal" href="#pylanetary.navigation.core.ModelEllipsoid.image_grid_km_y"><code class="docutils literal notranslate"><span class="pre">ModelEllipsoid.image_grid_km_y</span></code></a></li>
 <li><a class="reference internal" href="#pylanetary.navigation.core.ModelEllipsoid.ldmodel"><code class="docutils literal notranslate"><span class="pre">ModelEllipsoid.ldmodel()</span></code></a></li>
 <li><a class="reference internal" href="#pylanetary.navigation.core.ModelEllipsoid.zonalmodel"><code class="docutils literal notranslate"><span class="pre">ModelEllipsoid.zonalmodel()</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#pylanetary.navigation.core.Nav"><code class="docutils literal notranslate"><span class="pre">Nav</span></code></a><ul>
+<li><a class="reference internal" href="#pylanetary.navigation.core.Nav.data"><code class="docutils literal notranslate"><span class="pre">Nav.data</span></code></a></li>
+<li><a class="reference internal" href="#pylanetary.navigation.core.Nav.parent_attrs"><code class="docutils literal notranslate"><span class="pre">Nav.parent_attrs</span></code></a></li>
 <li><a class="reference internal" href="#pylanetary.navigation.core.Nav.colocate"><code class="docutils literal notranslate"><span class="pre">Nav.colocate()</span></code></a></li>
 <li><a class="reference internal" href="#pylanetary.navigation.core.Nav.reproject"><code class="docutils literal notranslate"><span class="pre">Nav.reproject()</span></code></a></li>
 <li><a class="reference internal" href="#pylanetary.navigation.core.Nav.write"><code class="docutils literal notranslate"><span class="pre">Nav.write()</span></code></a></li>

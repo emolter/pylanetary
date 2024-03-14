@@ -24,9 +24,9 @@ Features
 Projects using pylanetary
 -------------------------
 
-* [Keck Twilight Zone program](https://www2.keck.hawaii.edu/inst/tda/TwilightZone.html#)
+* `Keck Twilight Zone program <https://www2.keck.hawaii.edu/inst/tda/TwilightZone.html#>`_
 
-* [HST OPAL program](https://archive.stsci.edu/hlsp/opal)
+* `HST OPAL program <https://archive.stsci.edu/hlsp/opal>`_
 
 * Radio observers of giant planets, incl. Goddard, Berkeley, and Caltech groups
 

@@ -326,6 +326,75 @@ def limb_darkening(mu, a, law='exp', mu0=None):
 class ModelEllipsoid:
     '''
     Projection of an ellipsoid onto a 2-D array with latitude and longitude grid
+
+    Parameters
+    ----------
+    ob_lon : float, required.
+        [deg] sub-observer planetographic longitude
+    ob_lat : float, required.
+        [deg] sub-observer planetographic latitude
+    np_ang : float, required.
+        [deg] north polar angle
+        see JPL Horizons ephemeris tool for detailed descriptions
+        of ob_lon, ob_lat, np_ang
+    pixscale_km : float, required.
+        [km] pixel scale
+    req : float, required.
+        [km] equatorial radius
+    rpol : float, required.
+        [km] polar radius
+    center : 2-element array-like, optional, default (0,0).
+        pixel offset of center of planet from center of image
+    shape : 2-element tuple, optional.
+        shape of output arrays.
+        if None, shape is just larger than diameter / pixscale
+    sun_lon : float, optional, default None
+        sub-solar longitude. if None, assume same as ob_lon
+    sun_lat : float, optional, default None
+        sub_solar latitude. if None, assume same as ob_lat
+    longitude_convention : str, optional, default 'w'
+        east or west longitude convention
+
+    Attributes
+    ----------
+    req : float
+        see parameters
+    rpol : float
+        see parameters
+    ob_lon : float
+        see parameters
+    ob_lat : float
+        see parameters
+    sun_lon : float
+        see parameters
+    sun_lat : float
+        see parameters
+    pixscale_km : float
+        see parameters
+    deg_per_px : float
+        approximate size of pixel on planet, in degrees, at sub-observer point
+    lat_g : np.array
+        shape is roughly 2*max(req, rpol)/pixscale.
+        planetographic latitudes. NaN where off planet disk
+    lon_w : np.array
+        same shape as lat_g. west longitudes. NaN where off planet disk
+    mu : np.array
+        same shape as lat_g. cosines of the emission angle. NaN where off planet disk
+    surf_n : np.array
+        shape (3,x,y) CHECK THIS. Normal vector to the surface
+        of the planet at each pixel. NaN where off planet disk
+    sun_n : np.array
+        shape (3,x,y), solar normal vectors
+    mu0 : np.array
+        shape (x,y), cosine of solar incidence angle at each pixel
+    image_grid_km_x : np.array
+        shape (x,y), x-coordinates of image grid in km, where 0 is center of planet
+    image_grid_km_y : np.array
+        shape (x,y), y-coordinates of image grid in km, where 0 is center of planet
+
+    Examples
+    --------
+    see notebooks/planetnav-tutorial.ipynb
     '''
 
     def __init__(
@@ -343,76 +412,6 @@ class ModelEllipsoid:
             sun_lon=None,
             sun_lat=None,
             longitude_convention='w'):
-        '''
-        Parameters
-        ----------
-        ob_lon : float, required.
-            [deg] sub-observer planetographic longitude
-        ob_lat : float, required.
-            [deg] sub-observer planetographic latitude
-        np_ang : float, required.
-            [deg] north polar angle
-            see JPL Horizons ephemeris tool for detailed descriptions
-            of ob_lon, ob_lat, np_ang
-        pixscale_km : float, required.
-            [km] pixel scale
-        req : float, required.
-            [km] equatorial radius
-        rpol : float, required.
-            [km] polar radius
-        center : 2-element array-like, optional, default (0,0).
-            pixel offset of center of planet from center of image
-        shape : 2-element tuple, optional.
-            shape of output arrays.
-            if None, shape is just larger than diameter / pixscale
-        sun_lon : float, optional, default None
-            sub-solar longitude. if None, assume same as ob_lon
-        sun_lat : float, optional, default None
-            sub_solar latitude. if None, assume same as ob_lat
-        longitude_convention : str, optional, default 'w'
-            east or west longitude convention
-
-        Attributes
-        ----------
-        req : float
-            see parameters
-        rpol : float
-            see parameters
-        ob_lon : float
-            see parameters
-        ob_lat : float
-            see parameters
-        sun_lon : float
-            see parameters
-        sun_lat : float
-            see parameters
-        pixscale_km : float
-            see parameters
-        deg_per_px : float
-            approximate size of pixel on planet, in degrees, at sub-observer point
-        lat_g : np.array
-            shape is roughly 2*max(req, rpol)/pixscale.
-            planetographic latitudes. NaN where off planet disk
-        lon_w : np.array
-            same shape as lat_g. west longitudes. NaN where off planet disk
-        mu : np.array
-            same shape as lat_g. cosines of the emission angle. NaN where off planet disk
-        surf_n : np.array
-            shape (3,x,y) CHECK THIS. Normal vector to the surface
-            of the planet at each pixel. NaN where off planet disk
-        sun_n : np.array
-            shape (3,x,y), solar normal vectors
-        mu0 : np.array
-            shape (x,y), cosine of solar incidence angle at each pixel
-        image_grid_km_x : np.array
-            shape (x,y), x-coordinates of image grid in km, where 0 is center of planet
-        image_grid_km_y : np.array
-            shape (x,y), y-coordinates of image grid in km, where 0 is center of planet
-
-        Examples
-        --------
-        see notebooks/planetnav-tutorial.ipynb
-        '''
 
         self.req, self.rpol = req, rpol
         self.pixscale_km = pixscale_km
@@ -514,38 +513,36 @@ class ModelBody(ModelEllipsoid):
 
     '''
     Wrapper to ModelEllipsoid that permits passing an ephemeris
+
+    Parameters
+    ----------
+    body : pylanetary.utils.Body object, required
+    pixscale : float or Quantity, required.
+        [arcsec/px] pixel scale of the input image
+    shape : tuple, optional.
+        shape of output arrays.
+        if None, shape is just larger than diameter / pixscale
+
+    Attributes
+    ----------
+    body : pylanetary.utils.Body object
+        see parameters
+    name : str
+        Name of input body as read from input Body object
+    ephem : Astropy QTable.
+        single line of astroquery.horizons ephemeris
+        as read from utils.Body object.
+        must have 'PDObsLon', 'PDObsLat', 'delta', and 'NPole_ang' fields.
+        If you want to modify the ephemeris, modify body.ephem
+    pixscale_arcsec : float
+        [arcsec/px] pixel scale of image; see parameters
+    pixscale_km : float
+        [km/px] pixel scale of image computed from input pixel scale in arcsec
+        and distance from object to body according to body.ephem
+    all attrs from ModelEllipsoid
     '''
 
     def __init__(self, body, pixscale, shape=None):
-        '''
-        Parameters
-        ----------
-        body : pylanetary.utils.Body object, required
-        pixscale : float or Quantity, required.
-            [arcsec/px] pixel scale of the input image
-        shape : tuple, optional.
-            shape of output arrays.
-            if None, shape is just larger than diameter / pixscale
-
-        Attributes
-        ----------
-        body : pylanetary.utils.Body object
-            see parameters
-        name : str
-            Name of input body as read from input Body object
-        ephem : Astropy QTable.
-            single line of astroquery.horizons ephemeris
-            as read from utils.Body object.
-            must have 'PDObsLon', 'PDObsLat', 'delta', and 'NPole_ang' fields.
-            If you want to modify the ephemeris, modify body.ephem
-        pixscale_arcsec : float
-            [arcsec/px] pixel scale of image; see parameters
-        pixscale_km : float
-            [km/px] pixel scale of image computed from input pixel scale in arcsec
-            and distance from object to body according to body.ephem
-        parent_attrs :
-            all attributes of ModelEllipsoid
-        '''
 
         self.body = body
         self.name = body.name
@@ -571,36 +568,34 @@ class ModelBody(ModelEllipsoid):
 
 class Nav(ModelBody):
     '''
-    functions for comparing a model ellipsoid with observed 2-d imaging data
+    Build the model body object,
+    and compare a model ellipsoid with observed 2-d imaging data
+
+    Parameters
+    ----------
+    data : np.array, required.
+        2-D image data
+    body : pylanetary.utils.Body object, required.
+    pixscale: float or Quantity, required.
+        [arcsec] pixel scale of the input image
+
+    Attributes
+    ----------
+    data : np.array
+        see parameters
+    parent_attrs :
+        all attributes of ModelBody and ModelEllipsoid classes
+
+    Examples
+    --------
+    see notebooks/nav-tutorial.ipynb
+
+    Notes
+    -----
+    - Need to test astropy quantity handling, ensure docstring reflects what really happens
     '''
 
     def __init__(self, data, body, pixscale):
-        '''
-        Build the model body according to the input ephemeris
-
-        Parameters
-        ----------
-        data : np.array, required.
-            2-D image data
-        body : pylanetary.utils.Body object, required.
-        pixscale: float or Quantity, required.
-            [arcsec] pixel scale of the input image
-
-        Attributes
-        ----------
-        data : np.array
-            see parameters
-        parent_attrs :
-            all attributes of ModelBody and ModelEllipsoid classes
-
-        Examples
-        --------
-        see notebooks/nav-tutorial.ipynb
-
-        Notes
-        -----
-        - Need to test astropy quantity handling, ensure docstring reflects what really happens
-        '''
 
         # TO DO: fix these all to accept Astropy quantities
         self.data = data

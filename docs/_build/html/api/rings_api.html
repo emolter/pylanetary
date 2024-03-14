@@ -165,10 +165,11 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../tutorials/index.html">Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/body-tutorial.html">Planetary Body Attributes &amp; Ephemerides</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/nav-tutorial.html">Navigation Basics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/nav-examples.html">Navigation Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/rings-tutorial.html">Rings Tutorial</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/utils-tutorial.html">Utils Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/unit-conversions.html">Unit Conversions</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
@@ -219,6 +220,31 @@
 <dt class="sig sig-object py" id="pylanetary.rings.core.Ring">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pylanetary.rings.core.</span></span><span class="sig-name descname"><span class="pre">Ring</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">omega</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params_sys</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.Ring" title="Link to this definition">#</a></dt>
 <dd><p>model of a planetary ring</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>a</strong> (<em>float</em><em> or </em><em>Quantity</em><em>, </em><em>required.</em>) – semimajor axis. assumes km if not an astropy Quantity</p></li>
+<li><p><strong>e</strong> (<em>float</em><em>, </em><em>required.</em>) – eccentricity</p></li>
+<li><p><strong>w</strong> (<em>float</em><em> or </em><em>Quantity</em><em>, </em><em>required.</em>) – argument of periapsis. assumes degrees if not an astropy Quantity</p></li>
+<li><p><strong>i</strong> (<em>float</em><em> or </em><em>Quantity</em><em>, </em><em>required.</em>) – inclination. assumes degrees if not an astropy Quantity</p></li>
+<li><p><strong>omega</strong> (<em>float</em><em> or </em><em>Quantity</em><em>, </em><em>required.</em>) – longitude of ascending node. assumes degrees if not an astropy Quantity</p></li>
+<li><p><strong>width</strong> (<em>float</em><em> or </em><em>Quantity</em><em>, </em><em>optional. default 1 km</em><em> (</em><em>i.e.</em><em>, </em><em>very thin</em><em>)</em><em>.</em>) – full width of ring. assumes km if not an astropy Quantity</p></li>
+<li><p><strong>flux</strong> (<em>float</em><em> or </em><em>Quantity</em><em>, </em><em>optional. default 1.0.</em>) – ring flux density</p></li>
+<li><p><strong>params_sys</strong> (<em>np.array</em><em>, </em><em>optional</em>) – shape (3,).
+[w, i, omega] of ring system plane relative to observer</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">same</span> <span class="pre">as</span> <span class="pre">parameters</span></span></dt>
+<dd></dd></dl>
+
+<p class="rubric">Examples</p>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>Passing astropy Quantities is not yet tested</p></li>
+</ul>
 <dl class="py method">
 <dt class="sig sig-object py" id="pylanetary.rings.core.Ring.as_2d_array">
 <span class="sig-name descname"><span class="pre">as_2d_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixscale</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">focus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beam</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.Ring.as_2d_array" title="Link to this definition">#</a></dt>
@@ -280,15 +306,16 @@ angles in radians from 0 to 2*pi corresponding to lower corner of wedge</p></li>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
-<p>current implementation removes foreshortening correction “magically”
+<ul class="simple">
+<li><p>current implementation removes foreshortening correction “magically”
 by making the angular width of the wedges in the image plane
 see ring-system-modeling-tutorial.ipynb for a more detailed
-explanation and example</p>
-<p class="rubric">Notes</p>
-<p>This is computationally expensive!
+explanation and example.</p></li>
+<li><p>This is computationally expensive!
 a better implementation would be to make a photutils object
 for wedges of an ellipse. but this requires Cython and
-a lot of geometry</p>
+a lot of geometry</p></li>
+</ul>
 </dd></dl>
 
 <dl class="py method">
@@ -328,6 +355,134 @@ also returns the dictionary from project_ellipse_double</p>
 <a class="reference external" href="https://pds-rings.seti.org/uranus/uranus_rings_table.html">https://pds-rings.seti.org/uranus/uranus_rings_table.html</a>
 with Planetary Ring Node ephemeris
 and JPL Horizons ephemeris</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>body</strong> (<em>pylanetary.utils.Body object</em><em>, </em><em>required.</em>) – one of Jupiter, Saturn, Uranus, Neptune</p></li>
+<li><p><strong>location</strong> (str, array-like, or <cite>~astropy.coordinates.EarthLocation</cite>, optional.) – If str, named observeratory supported by the ring node, e.g. JWST.
+If array-like, observer’s location as a
+3-element array of Earth longitude, latitude, altitude
+that istantiates an <cite>~astropy.coordinates.EarthLocation</cite> object.
+Longitude and latitude should be anything that initializes an
+<cite>~astropy.coordinates.Angle</cite> object, and altitude should
+initialize an <cite>~astropy.units.Quantity</cite> object (with units
+of length).
+If <code class="docutils literal notranslate"><span class="pre">None</span></code>, then the geofocus is used.
+Unfortunately, it is not presently possible to get location information
+directly from the Body object, because the JPL Horizons query tool
+that Body uses requires a Horizons obs code, whereas the Planetary
+Ring Node query tool requires the format specified here.
+To prevent weird results, you should ensure that Body.jpl_hor_id
+matches the location you are inputting here!</p></li>
+<li><p><strong>ringnames</strong> (<em>list</em><em>, </em><em>optional.</em>) – names of rings to include in the model
+if no ringnames provided then all rings are assumed.
+Case-sensitive! Typically capitalized, e.g. “Alpha”</p></li>
+<li><p><strong>fluxes</strong> (<em>list</em><em>, </em><em>np.array</em><em>, or </em><em>&quot;default&quot;</em><em>, </em><em>optional. default &quot;default&quot;.</em>) – brightnesses associated with rings specified in ringnames.
+surface brightness units are expected, e.g. brightness temperature
+if fluxes == ‘default’, optical depths are read in from the static table
+and exponentiated to more closely resemble surface brightness units
+so the result is the attenuation, ATT = 1 - exp(ringtable[‘Optical Depth’])
+assuming the emittance is small (violated for thermal observations, obviously)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pylanetary.rings.core.RingSystemModelObservation.planetname">
+<span class="sig-name descname"><span class="pre">planetname</span></span><a class="headerlink" href="#pylanetary.rings.core.RingSystemModelObservation.planetname" title="Link to this definition">#</a></dt>
+<dd><p>name of planet</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pylanetary.rings.core.RingSystemModelObservation.rings">
+<span class="sig-name descname"><span class="pre">rings</span></span><a class="headerlink" href="#pylanetary.rings.core.RingSystemModelObservation.rings" title="Link to this definition">#</a></dt>
+<dd><p>dictionary of ringmodel.Ring objects, with ring names as keys
+note ring names are case-sensitive! Typically capitalized, e.g. “Alpha”</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pylanetary.rings.core.RingSystemModelObservation.ringtable">
+<span class="sig-name descname"><span class="pre">ringtable</span></span><a class="headerlink" href="#pylanetary.rings.core.RingSystemModelObservation.ringtable" title="Link to this definition">#</a></dt>
+<dd><p>ephemeris data from ring node query tool
+as well as time-invariant parameters for each ring from static table</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Astropy table</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pylanetary.rings.core.RingSystemModelObservation.systemtable">
+<span class="sig-name descname"><span class="pre">systemtable</span></span><a class="headerlink" href="#pylanetary.rings.core.RingSystemModelObservation.systemtable" title="Link to this definition">#</a></dt>
+<dd><p>ephemeris data for ring system from ring node query tool</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Astropy table</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pylanetary.rings.core.RingSystemModelObservation.bodytable">
+<span class="sig-name descname"><span class="pre">bodytable</span></span><a class="headerlink" href="#pylanetary.rings.core.RingSystemModelObservation.bodytable" title="Link to this definition">#</a></dt>
+<dd><p>ephemeris data for satellites from ring node query tool</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Astropy table</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pylanetary.rings.core.RingSystemModelObservation.ephem">
+<span class="sig-name descname"><span class="pre">ephem</span></span><a class="headerlink" href="#pylanetary.rings.core.RingSystemModelObservation.ephem" title="Link to this definition">#</a></dt>
+<dd><p>JPL Horizons ephemeris</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Astropy table</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pylanetary.rings.core.RingSystemModelObservation.np_ang">
+<span class="sig-name descname"><span class="pre">np_ang</span></span><a class="headerlink" href="#pylanetary.rings.core.RingSystemModelObservation.np_ang" title="Link to this definition">#</a></dt>
+<dd><p>north polar angle</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Examples</p>
+<ul class="simple">
+<li><p>Need an example of how to add a custom ring
+should be possible by just adding a ringmodel.Ring() object
+into the dict self.ring</p></li>
+<li><p>Need an example of how to modify ring data
+should be possible by just changing the ringmodel.Ring() object
+in the dict self.ring</p></li>
+</ul>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>Not yet understood why omega must equal 0 for individual rings
+relative to ring system in order to make argument of periapsis agree
+with the Planetary Ring Node.</p></li>
+<li><p>Make this work nicely with utils.Body object</p></li>
+<li><p>implement default epoch and location</p></li>
+<li><p>lookup table to avoid needing to specify both location and horizons_loc</p></li>
+</ul>
 <dl class="py method">
 <dt class="sig sig-object py" id="pylanetary.rings.core.RingSystemModelObservation.as_2d_array">
 <span class="sig-name descname"><span class="pre">as_2d_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixscale</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">focus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beam</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylanetary.rings.core.RingSystemModelObservation.as_2d_array" title="Link to this definition">#</a></dt>
@@ -673,6 +828,13 @@ corresponding to n vectors</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#pylanetary.rings.core.RingSystemModelObservation"><code class="docutils literal notranslate"><span class="pre">RingSystemModelObservation</span></code></a><ul>
+<li><a class="reference internal" href="#pylanetary.rings.core.RingSystemModelObservation.planetname"><code class="docutils literal notranslate"><span class="pre">RingSystemModelObservation.planetname</span></code></a></li>
+<li><a class="reference internal" href="#pylanetary.rings.core.RingSystemModelObservation.rings"><code class="docutils literal notranslate"><span class="pre">RingSystemModelObservation.rings</span></code></a></li>
+<li><a class="reference internal" href="#pylanetary.rings.core.RingSystemModelObservation.ringtable"><code class="docutils literal notranslate"><span class="pre">RingSystemModelObservation.ringtable</span></code></a></li>
+<li><a class="reference internal" href="#pylanetary.rings.core.RingSystemModelObservation.systemtable"><code class="docutils literal notranslate"><span class="pre">RingSystemModelObservation.systemtable</span></code></a></li>
+<li><a class="reference internal" href="#pylanetary.rings.core.RingSystemModelObservation.bodytable"><code class="docutils literal notranslate"><span class="pre">RingSystemModelObservation.bodytable</span></code></a></li>
+<li><a class="reference internal" href="#pylanetary.rings.core.RingSystemModelObservation.ephem"><code class="docutils literal notranslate"><span class="pre">RingSystemModelObservation.ephem</span></code></a></li>
+<li><a class="reference internal" href="#pylanetary.rings.core.RingSystemModelObservation.np_ang"><code class="docutils literal notranslate"><span class="pre">RingSystemModelObservation.np_ang</span></code></a></li>
 <li><a class="reference internal" href="#pylanetary.rings.core.RingSystemModelObservation.as_2d_array"><code class="docutils literal notranslate"><span class="pre">RingSystemModelObservation.as_2d_array()</span></code></a></li>
 </ul>
 </li>
