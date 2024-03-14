@@ -484,25 +484,21 @@ class Body:
     jup.epoch_datetime)
     output> Jupiter is currently 5.93796102228318 AU  AU from the Earth with apparent size  33.2009 arcsec
     today = 2023-04-26 16:32:54
+
+    Parameters
+    ----------
+    name : str, required.
+        Body name string, example "Jupiter" will load Jupiter.yaml
+    epoch : astropy.time.Time, optional.
+        The epoch at which to retrieve the ephemeris of the body.
+        If not set, the current time will be used.
+    location : str, optional.
+        JPL Horizons observatory code.
+        If not set, center of Earth will be used.
     """
 
     def __init__(self, name, epoch=None, location=None):
-        """
-        Input string instantiates object using file name of string to
-        populate attributes. Astropy quantity objects utilized for data
-        with astropy units.
 
-        Parameters
-        ----------
-        name : str, required.
-            Body name string, example "Jupiter" will load Jupiter.yaml
-        epoch : astropy.time.Time, optional.
-            The epoch at which to retrieve the ephemeris of the body.
-            If not set, the current time will be used.
-        location : str, optional.
-            JPL Horizons observatory code.
-            If not set, center of Earth will be used.
-        """
         self.name = name.lower().capitalize()
         with importlib.resources.open_binary(body_info, f"{self.name}.yaml") as file:
             yaml_bytes = file.read()

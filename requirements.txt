@@ -1,5 +1,5 @@
 astropy>=4.3.0
-astroquery>=0.4.7.dev8893,<=0.4.7.dev9008
+astroquery<=0.4.7.dev8893,>=0.4.7.dev8749
 beautifulsoup4==4.11.1
 cartopy
 extension_helpers==1.0.0
