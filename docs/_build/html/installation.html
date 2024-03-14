@@ -165,7 +165,7 @@
 <ul class="current">
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Installation</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="tutorials/index.html">Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="tutorials/body-tutorial.html">Body: access planet/moon data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/body-tutorial.html">Planetary Body Attributes &amp; Ephemerides</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/nav-tutorial.html">Navigation Basics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/nav-examples.html">Navigation Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/rings-tutorial.html">Rings Tutorial</a></li>
@@ -216,17 +216,17 @@
         <article role="main">
           <section id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h1>
+<p>Simple pip install should work, but we recommend to do so in a clean conda environment, as follows:</p>
 <ul class="simple">
-<li><p>download the requirements.txt file using the “download raw” option</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">create</span> <span class="pre">-n</span> <span class="pre">pylanetary-tester</span> <span class="pre">python=3.11</span></code> (or any Python from 3.9 to 3.12)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">activate</span> <span class="pre">pylanetary-tester</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-r</span> <span class="pre">requirements.txt</span></code> in same directory as requirements.txt</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">git+https://github.com/emolter/pylanetary.git&#64;main</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">pylanetary</span></code></p></li>
 </ul>
-<p>Pylanetary relies on as-yet-unreleased versions of the image_registration and astroquery packages, and pypi does not support installation of unreleased packages. This is the reason that simply pip install pylanetary will not work right.</p>
 <section id="troubleshooting">
 <h2>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading">#</a></h2>
-<p>Here we attempt to document install issues people have had, and their solutions</p>
+<p>Here we attempt to document install issues people have had, and their solutions.
+Note that many of these issues pre-date the current version of pylanetary, and only arose due to the prior need
+to download requirements.txt, which is no longer necessary for installation.</p>
 <ul class="simple">
 <li><p>requirements.txt not found. Most likely, you never downloaded requirements.txt, or you are not running pip install -r requirements.txt in the same folder where you put requirements.txt</p></li>
 <li><p>pip install requirements.txt fails instantly with a crazy-looking error message. Try opening requirements.txt, and check that its just ten or so lines of human-readable text. If it’s some huge html soup, that means you didn’t use the “download raw” button when downloading</p></li>

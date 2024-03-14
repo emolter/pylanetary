@@ -45,7 +45,7 @@ The minimum requirements for a new feature are:
 	 
  * For any major new functionality or workflow, make an example Jupyter notebook::
  
-     notebooks/feature-tutorial.ipynb
+     docs/tutorials/feature-tutorial.ipynb
 
 Important Guidelines
 --------------------
