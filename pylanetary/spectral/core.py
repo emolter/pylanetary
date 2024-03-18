@@ -1076,9 +1076,9 @@ if __name__=="__main__":
   test_cube.wind_calc(picklefile = 'development_testing_fit.pickle', restfreq = 345.79598990, outfile = 'development_testing_wind')
   t0 = time.time()
   #test_cube.calc_wind_error(calc_type = 'prop', picklefile = 'development_testing_fit.pickle',rest_f = 345.79598990)
-  test_cube.calc_wind_error(calc_type = 'resample', picklefile = 'development_testing_fit.pickle', iters = 10, percentile = 68, RMS = 0.017530593, xaxis = test_cube.xaxis, fit_type = 'Moffat', weights = weights, rest_f = 345.79598990)
+  test_cube.calc_wind_error(calc_type = 'resample', picklefile = 'development_testing_fit.pickle', iters = 1000, percentile = 68, RMS = 0.017530593, xaxis = test_cube.xaxis, fit_type = 'Moffat', weights = weights, rest_f = 345.79598990)
   t1 = time.time()
-  #test_cube.plot_data(picklefile = 'development_testing_fit.pickle', platescale = 0.1, body = 'Neptune', title = 'CO Doppler Velocity Error Map - Error Prop', cont_label = 'Radial Velocity Error (m/s)', date = '2016-04-30 00:00', location = 'ALMA', spatial = 4e4, limits = [0,200], variable = 'v_err_up', cmap = 'inferno_r')
+  test_cube.plot_data(picklefile = 'development_testing_fit.pickle', platescale = 0.1, body = 'Neptune', title = 'CO Doppler Velocity Error Map - Error Prop', cont_label = 'Radial Velocity Error (m/s)', date = '2016-04-30 00:00', location = 'ALMA', spatial = 4e4, limits = [0,200], variable = 'v_err_up', cmap = 'inferno_r')
   
   # sub-image analysis - 3x3 sub-image at the center
   
