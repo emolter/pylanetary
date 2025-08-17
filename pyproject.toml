@@ -94,25 +94,15 @@ packages = ["pylanetary"]
 [tool.setuptools.package-data]
 pylanetary = ["*.txt", "*.npy", "*.hdf5", "*.yaml"]
 
-[tool.pytest.ini_options]
-minversion = "2.0"
-addopts = "--doctest-rst"
-testpaths = ["pylanetary", "docs"]
-astropy_header = "true"
-doctest_plus = "enabled"
-text_file_format = "rst"
-
 
 [tool.coverage.run]
 omit = [
-  "pylanetary/_astropy_init*",
   "pylanetary/conftest.py",
   "pylanetary/*setup_package*",
   "pylanetary/tests/*",
   "pylanetary/*/tests/*",
   "pylanetary/extern/*",
   "pylanetary/version*",
-  "*/pylanetary/_astropy_init*",
   "*/pylanetary/conftest.py",
   "*/pylanetary/*setup_package*",
   "*/pylanetary/tests/*",
