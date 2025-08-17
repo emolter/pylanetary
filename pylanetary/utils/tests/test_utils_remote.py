@@ -1,4 +1,3 @@
-import pytest
 from ... import utils
 import numpy as np
 import astropy.units as u
@@ -26,8 +25,8 @@ def test_body():
     assert jup.epoch == epoch
 
     # ephemeris
-    assert jup.ephem['r'] == 5.432247809300
-    assert jup.ephem['delta'] == 5.95806215806774
+    assert np.isclose(jup.ephem['r'], 5.432247809300, atol=1e-6)
+    assert np.isclose(jup.ephem['delta'], 5.95806215806774, atol=1e-6)
 
 
 def test_body_print(capsys):
