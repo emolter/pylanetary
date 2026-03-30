@@ -53,14 +53,19 @@ dependencies = [
   "scipy>=1.7.0",
   "setuptools>=68.0.0",
   "setuptools_scm>=7.0.5",
-  "sphinx_astropy>=1.7.0",
-  "sphinx-pyproject",
-  "nbsphinx",
 ]
 
 [project.optional-dependencies] 
 test = ["pytest-astropy"]
-docs = ["sphinx-astropy", "sphinx-pyproject"]
+docs = [
+  "sphinx>=7.0.0",
+  "sphinx-astropy>=1.9.0",
+  "sphinx-pyproject",
+  "nbsphinx",
+  "sphinx-copybutton",
+  "furo",
+  "ipython",
+]
 
 [project.urls]
 "Source" = "https://github.com/emolter/pylanetary"
